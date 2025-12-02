@@ -1,0 +1,3 @@
+{
+  "/api/landing-html/[slug]/route": "app/api/landing-html/[slug]/route.js"
+}

@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Volumes/D/next/engage3/components/tempcomponent/YouTube.tsx"],"sourcesContent":["import React from \"react\";\n\nexport default function YouTube({ videoId }: { videoId: string }) {\n  return (\n    <div className=\"w-full aspect-video relative mt-5\">\n      <iframe\n        src={`https://www.youtube.com/embed/O-JXUhhIRHU`}\n        className=\"absolute top-0 left-0 w-full h-full rounded-lg\"\n        allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture\"\n        allowFullScreen\n      ></iframe>\n    </div>\n  );\n}\n"],"names":[],"mappings":";;;;;;AAEe,SAAS,QAAQ,EAAE,OAAO,EAAuB;IAC9D,qBACE,8OAAC;QAAI,WAAU;kBACb,cAAA,8OAAC;YACC,KAAK,CAAC,yCAAyC,CAAC;YAChD,WAAU;YACV,OAAM;YACN,eAAe;;;;;;;;;;;AAIvB"}}]
+}

@@ -1,0 +1,489 @@
+{
+    "1":{
+      "id": "product-1763964582961",
+      "formData": {
+          "name": "Allen Cooper Ankle Boot S3",
+          "sku": "25006",
+          "category": "accessories",
+          "price": "45858",
+          "description": "MacBook Pro Landing\nA Global powerhouse in leather, footwear, garments, PPE, safety gear, equestrian products, and premium accessories.",
+          "videoUrl": "https://youtu.be/lNZq7ElGCxw?si=BTgC2LsAIOqfNGdd",
+          "metaTitle": "EngageIQ",
+          "metaDescription": "EngageIQ Description",
+          "keywords": "keyword1",
+          "urlSlug": "engageI",
+          "isActive": true
+      },
+      "images": [
+          {
+              "id": "img-1763964915601-0",
+              "name": "IMG-20250728-WA0007.jpg",
+              "url": "/F2.jpg",
+              "savedPath": "/Volumes/D/next/engage-update/public/upload/productgallery/product-1763965014902-fk1s9f.jpg"
+          },
+          {
+              "id": "img-1763964915602-1",
+              "name": "IMG-20250728-WA0017.jpg",
+              "url": "/F1.jpg",
+              "savedPath": "/Volumes/D/next/engage-update/public/upload/productgallery/product-1763965014903-kju0k2.jpg"
+          }
+      ],
+      "pdfs": [
+          {
+              "id": "pdf-1763964927975-0",
+              "name": "0bfc8d08faaa7ecf2d6fc4a7c362724c.pdf",
+              "url": "/upload/productdocs/0bfc8d08faaa7ecf2d6fc4a7c362724c-1763965014905-mrp9xy.pdf",
+              "size": 62220,
+              "savedPath": "/Volumes/D/next/engage-update/public/upload/productdocs/0bfc8d08faaa7ecf2d6fc4a7c362724c-1763965014905-mrp9xy.pdf"
+          }
+      ],
+      "gallery": [
+          {
+              "id": "gallery-1763964934913-2",
+              "name": "CZM-X5002GX-WHITE_1_aed6bd10-a6e2-4425-b0ea-26166b945f97.webp",
+              "url": "/F3.jpg",
+              "savedPath": "/Volumes/D/next/engage-update/public/upload/productgallery/gallery-1763965014904-afndfu.webp"
+          },
+          {
+              "id": "gallery-1763964934913-3",
+              "name": "CZM-X5002GX-WHITE_3_be88aba7-0f03-4d1f-b7b2-44becff36338.webp",
+              "url": "/F4.jpg",
+              "savedPath": "/Volumes/D/next/engage-update/public/upload/productgallery/gallery-1763965014905-5bvua4.webp"
+          }
+      ],
+      "tags": [
+          "myshoe"
+      ],
+      "custom_fields": {
+          "9": "Fiberglass Toe Cap and Metal-Free, Anti Puncture & Penetration Protection",
+          "10": "Genuine Full Grain Nubuck Leather with Cushioned Lycra",
+          "11": "Breathable Functional Textile Lining",
+          "12": "PU Cushioned Custom Fit",
+          "13": "Dual-Density PU Outsole – Slip & Abrasion Resistant",
+          "14": "Non-Metal Fittings",
+          "15": ""
+      },
+      "custom_fields_meta": [
+          {
+              "id": 9,
+              "name": "Protection",
+              "type": "text",
+              "required": false,
+              "value": "Fiberglass Toe Cap and Metal-Free, Anti Puncture & Penetration Protection"
+          },
+          {
+              "id": 10,
+              "name": "Upper",
+              "type": "text",
+              "required": true,
+              "value": "Genuine Full Grain Nubuck Leather with Cushioned Lycra"
+          },
+          {
+              "id": 11,
+              "name": "Lining",
+              "type": "text",
+              "required": true,
+              "value": "Breathable Functional Textile Lining"
+          },
+          {
+              "id": 12,
+              "name": "Footbed",
+              "type": "text",
+              "required": false,
+              "value": "PU Cushioned Custom Fit"
+          },
+          {
+              "id": 13,
+              "name": "Sole",
+              "type": "text",
+              "required": false,
+              "value": "Dual-Density PU Outsole – Slip & Abrasion Resistant"
+          },
+          {
+              "id": 14,
+              "name": "Fitting",
+              "type": "text",
+              "required": false,
+              "value": "Non-Metal Fittings"
+          },
+          {
+              "id": 15,
+              "name": "Price",
+              "type": "number",
+              "required": true,
+              "value": ""
+          }
+      ],
+      "createdAt": "2025-11-24T06:16:54.881Z",
+      "updatedAt": "2025-11-24T06:16:54.881Z",
+      "version": "1.0",
+      "status": "published",
+      "landing_page_id": "2"
+    },
+    "2":{
+      "id": "product-1763964582961",
+      "formData": {
+          "name": "Allen Cooper Ankle Boot S3",
+          "sku": "25006",
+          "category": "accessories",
+          "price": "45858",
+          "description": "MacBook Pro Landing\nA Global powerhouse in leather, footwear, garments, PPE, safety gear, equestrian products, and premium accessories.",
+          "videoUrl": "https://youtu.be/lNZq7ElGCxw?si=BTgC2LsAIOqfNGdd",
+          "metaTitle": "EngageIQ",
+          "metaDescription": "EngageIQ Description",
+          "keywords": "keyword1",
+          "urlSlug": "engageI",
+          "isActive": true
+      },
+      "images": [
+        {
+            "id": "img-1763964915601-0",
+            "name": "IMG-20250728-WA0007.jpg",
+            "url": "/F2.jpg",
+            "savedPath": "/Volumes/D/next/engage-update/public/upload/productgallery/product-1763965014902-fk1s9f.jpg"
+        },
+        {
+            "id": "img-1763964915602-1",
+            "name": "IMG-20250728-WA0017.jpg",
+            "url": "/F1.jpg",
+            "savedPath": "/Volumes/D/next/engage-update/public/upload/productgallery/product-1763965014903-kju0k2.jpg"
+        }
+      ],
+      "pdfs": [
+          {
+              "id": "pdf-1763964927975-0",
+              "name": "0bfc8d08faaa7ecf2d6fc4a7c362724c.pdf",
+              "url": "/upload/productdocs/0bfc8d08faaa7ecf2d6fc4a7c362724c-1763965014905-mrp9xy.pdf",
+              "size": 62220,
+              "savedPath": "/Volumes/D/next/engage-update/public/upload/productdocs/0bfc8d08faaa7ecf2d6fc4a7c362724c-1763965014905-mrp9xy.pdf"
+          }
+      ],
+      "gallery": [
+          {
+              "id": "gallery-1763964934913-2",
+              "name": "CZM-X5002GX-WHITE_1_aed6bd10-a6e2-4425-b0ea-26166b945f97.webp",
+              "url": "/upload/productgallery/gallery-1763965014904-afndfu.webp",
+              "savedPath": "/Volumes/D/next/engage-update/public/upload/productgallery/gallery-1763965014904-afndfu.webp"
+          },
+          {
+              "id": "gallery-1763964934913-3",
+              "name": "CZM-X5002GX-WHITE_3_be88aba7-0f03-4d1f-b7b2-44becff36338.webp",
+              "url": "/upload/productgallery/gallery-1763965014905-5bvua4.webp",
+              "savedPath": "/Volumes/D/next/engage-update/public/upload/productgallery/gallery-1763965014905-5bvua4.webp"
+          }
+      ],
+      "tags": [
+          "myshoe"
+      ],
+      "custom_fields": {
+          "9": "Fiberglass Toe Cap and Metal-Free, Anti Puncture & Penetration Protection",
+          "10": "Genuine Full Grain Nubuck Leather with Cushioned Lycra",
+          "11": "Breathable Functional Textile Lining",
+          "12": "PU Cushioned Custom Fit",
+          "13": "Dual-Density PU Outsole – Slip & Abrasion Resistant",
+          "14": "Non-Metal Fittings",
+          "15": ""
+      },
+      "custom_fields_meta": [
+          {
+              "id": 9,
+              "name": "Protection",
+              "type": "text",
+              "required": false,
+              "value": "Fiberglass Toe Cap and Metal-Free, Anti Puncture & Penetration Protection"
+          },
+          {
+              "id": 10,
+              "name": "Upper",
+              "type": "text",
+              "required": true,
+              "value": "Genuine Full Grain Nubuck Leather with Cushioned Lycra"
+          },
+          {
+              "id": 11,
+              "name": "Lining",
+              "type": "text",
+              "required": true,
+              "value": "Breathable Functional Textile Lining"
+          },
+          {
+              "id": 12,
+              "name": "Footbed",
+              "type": "text",
+              "required": false,
+              "value": "PU Cushioned Custom Fit"
+          },
+          {
+              "id": 13,
+              "name": "Sole",
+              "type": "text",
+              "required": false,
+              "value": "Dual-Density PU Outsole – Slip & Abrasion Resistant"
+          },
+          {
+              "id": 14,
+              "name": "Fitting",
+              "type": "text",
+              "required": false,
+              "value": "Non-Metal Fittings"
+          },
+          {
+              "id": 15,
+              "name": "Price",
+              "type": "number",
+              "required": true,
+              "value": ""
+          }
+      ],
+      "createdAt": "2025-11-24T06:16:54.881Z",
+      "updatedAt": "2025-11-24T06:16:54.881Z",
+      "version": "1.0",
+      "status": "published",
+      "landing_page_id": "2"
+    },
+    "3":{
+      "id": "product-1763964582961",
+      "formData": {
+          "name": "Allen Cooper Ankle Boot S3",
+          "sku": "25006",
+          "category": "accessories",
+          "price": "45858",
+          "description": "MacBook Pro Landing\nA Global powerhouse in leather, footwear, garments, PPE, safety gear, equestrian products, and premium accessories.",
+          "videoUrl": "https://youtu.be/lNZq7ElGCxw?si=BTgC2LsAIOqfNGdd",
+          "metaTitle": "EngageIQ",
+          "metaDescription": "EngageIQ Description",
+          "keywords": "keyword1",
+          "urlSlug": "engageI",
+          "isActive": true
+      },
+      "images": [
+          {
+              "id": "img-1763964915601-0",
+              "name": "IMG-20250728-WA0007.jpg",
+              "url": "/upload/productgallery/product-1763965014902-fk1s9f.jpg",
+              "savedPath": "/Volumes/D/next/engage-update/public/upload/productgallery/product-1763965014902-fk1s9f.jpg"
+          },
+          {
+              "id": "img-1763964915602-1",
+              "name": "IMG-20250728-WA0017.jpg",
+              "url": "/upload/productgallery/product-1763965014903-kju0k2.jpg",
+              "savedPath": "/Volumes/D/next/engage-update/public/upload/productgallery/product-1763965014903-kju0k2.jpg"
+          }
+      ],
+      "pdfs": [
+          {
+              "id": "pdf-1763964927975-0",
+              "name": "0bfc8d08faaa7ecf2d6fc4a7c362724c.pdf",
+              "url": "/upload/productdocs/0bfc8d08faaa7ecf2d6fc4a7c362724c-1763965014905-mrp9xy.pdf",
+              "size": 62220,
+              "savedPath": "/Volumes/D/next/engage-update/public/upload/productdocs/0bfc8d08faaa7ecf2d6fc4a7c362724c-1763965014905-mrp9xy.pdf"
+          }
+      ],
+      "gallery": [
+          {
+              "id": "gallery-1763964934913-2",
+              "name": "CZM-X5002GX-WHITE_1_aed6bd10-a6e2-4425-b0ea-26166b945f97.webp",
+              "url": "/upload/productgallery/gallery-1763965014904-afndfu.webp",
+              "savedPath": "/Volumes/D/next/engage-update/public/upload/productgallery/gallery-1763965014904-afndfu.webp"
+          },
+          {
+              "id": "gallery-1763964934913-3",
+              "name": "CZM-X5002GX-WHITE_3_be88aba7-0f03-4d1f-b7b2-44becff36338.webp",
+              "url": "/upload/productgallery/gallery-1763965014905-5bvua4.webp",
+              "savedPath": "/Volumes/D/next/engage-update/public/upload/productgallery/gallery-1763965014905-5bvua4.webp"
+          }
+      ],
+      "tags": [
+          "myshoe"
+      ],
+      "custom_fields": {
+          "9": "Fiberglass Toe Cap and Metal-Free, Anti Puncture & Penetration Protection",
+          "10": "Genuine Full Grain Nubuck Leather with Cushioned Lycra",
+          "11": "Breathable Functional Textile Lining",
+          "12": "PU Cushioned Custom Fit",
+          "13": "Dual-Density PU Outsole – Slip & Abrasion Resistant",
+          "14": "Non-Metal Fittings",
+          "15": ""
+      },
+      "custom_fields_meta": [
+          {
+              "id": 9,
+              "name": "Protection",
+              "type": "text",
+              "required": false,
+              "value": "Fiberglass Toe Cap and Metal-Free, Anti Puncture & Penetration Protection"
+          },
+          {
+              "id": 10,
+              "name": "Upper",
+              "type": "text",
+              "required": true,
+              "value": "Genuine Full Grain Nubuck Leather with Cushioned Lycra"
+          },
+          {
+              "id": 11,
+              "name": "Lining",
+              "type": "text",
+              "required": true,
+              "value": "Breathable Functional Textile Lining"
+          },
+          {
+              "id": 12,
+              "name": "Footbed",
+              "type": "text",
+              "required": false,
+              "value": "PU Cushioned Custom Fit"
+          },
+          {
+              "id": 13,
+              "name": "Sole",
+              "type": "text",
+              "required": false,
+              "value": "Dual-Density PU Outsole – Slip & Abrasion Resistant"
+          },
+          {
+              "id": 14,
+              "name": "Fitting",
+              "type": "text",
+              "required": false,
+              "value": "Non-Metal Fittings"
+          },
+          {
+              "id": 15,
+              "name": "Price",
+              "type": "number",
+              "required": true,
+              "value": ""
+          }
+      ],
+      "createdAt": "2025-11-24T06:16:54.881Z",
+      "updatedAt": "2025-11-24T06:16:54.881Z",
+      "version": "1.0",
+      "status": "published",
+      "landing_page_id": "2"
+    },
+    "4":{
+      "id": "product-1763964582961",
+      "formData": {
+          "name": "Allen Cooper Ankle Boot S3",
+          "sku": "25006",
+          "category": "accessories",
+          "price": "45858",
+          "description": "MacBook Pro Landing\nA Global powerhouse in leather, footwear, garments, PPE, safety gear, equestrian products, and premium accessories.",
+          "videoUrl": "https://youtu.be/lNZq7ElGCxw?si=BTgC2LsAIOqfNGdd",
+          "metaTitle": "EngageIQ",
+          "metaDescription": "EngageIQ Description",
+          "keywords": "keyword1",
+          "urlSlug": "engageI",
+          "isActive": true
+      },
+      "images": [
+          {
+              "id": "img-1763964915601-0",
+              "name": "IMG-20250728-WA0007.jpg",
+              "url": "/upload/productgallery/product-1763965014902-fk1s9f.jpg",
+              "savedPath": "/Volumes/D/next/engage-update/public/upload/productgallery/product-1763965014902-fk1s9f.jpg"
+          },
+          {
+              "id": "img-1763964915602-1",
+              "name": "IMG-20250728-WA0017.jpg",
+              "url": "/upload/productgallery/product-1763965014903-kju0k2.jpg",
+              "savedPath": "/Volumes/D/next/engage-update/public/upload/productgallery/product-1763965014903-kju0k2.jpg"
+          }
+      ],
+      "pdfs": [
+          {
+              "id": "pdf-1763964927975-0",
+              "name": "0bfc8d08faaa7ecf2d6fc4a7c362724c.pdf",
+              "url": "/upload/productdocs/0bfc8d08faaa7ecf2d6fc4a7c362724c-1763965014905-mrp9xy.pdf",
+              "size": 62220,
+              "savedPath": "/Volumes/D/next/engage-update/public/upload/productdocs/0bfc8d08faaa7ecf2d6fc4a7c362724c-1763965014905-mrp9xy.pdf"
+          }
+      ],
+      "gallery": [
+          {
+              "id": "gallery-1763964934913-2",
+              "name": "CZM-X5002GX-WHITE_1_aed6bd10-a6e2-4425-b0ea-26166b945f97.webp",
+              "url": "/upload/productgallery/gallery-1763965014904-afndfu.webp",
+              "savedPath": "/Volumes/D/next/engage-update/public/upload/productgallery/gallery-1763965014904-afndfu.webp"
+          },
+          {
+              "id": "gallery-1763964934913-3",
+              "name": "CZM-X5002GX-WHITE_3_be88aba7-0f03-4d1f-b7b2-44becff36338.webp",
+              "url": "/upload/productgallery/gallery-1763965014905-5bvua4.webp",
+              "savedPath": "/Volumes/D/next/engage-update/public/upload/productgallery/gallery-1763965014905-5bvua4.webp"
+          }
+      ],
+      "tags": [
+          "myshoe"
+      ],
+      "custom_fields": {
+          "9": "Fiberglass Toe Cap and Metal-Free, Anti Puncture & Penetration Protection",
+          "10": "Genuine Full Grain Nubuck Leather with Cushioned Lycra",
+          "11": "Breathable Functional Textile Lining",
+          "12": "PU Cushioned Custom Fit",
+          "13": "Dual-Density PU Outsole – Slip & Abrasion Resistant",
+          "14": "Non-Metal Fittings",
+          "15": ""
+      },
+      "custom_fields_meta": [
+          {
+              "id": 9,
+              "name": "Protection",
+              "type": "text",
+              "required": false,
+              "value": "Fiberglass Toe Cap and Metal-Free, Anti Puncture & Penetration Protection"
+          },
+          {
+              "id": 10,
+              "name": "Upper",
+              "type": "text",
+              "required": true,
+              "value": "Genuine Full Grain Nubuck Leather with Cushioned Lycra"
+          },
+          {
+              "id": 11,
+              "name": "Lining",
+              "type": "text",
+              "required": true,
+              "value": "Breathable Functional Textile Lining"
+          },
+          {
+              "id": 12,
+              "name": "Footbed",
+              "type": "text",
+              "required": false,
+              "value": "PU Cushioned Custom Fit"
+          },
+          {
+              "id": 13,
+              "name": "Sole",
+              "type": "text",
+              "required": false,
+              "value": "Dual-Density PU Outsole – Slip & Abrasion Resistant"
+          },
+          {
+              "id": 14,
+              "name": "Fitting",
+              "type": "text",
+              "required": false,
+              "value": "Non-Metal Fittings"
+          },
+          {
+              "id": 15,
+              "name": "Price",
+              "type": "number",
+              "required": true,
+              "value": ""
+          }
+      ],
+      "createdAt": "2025-11-24T06:16:54.881Z",
+      "updatedAt": "2025-11-24T06:16:54.881Z",
+      "version": "1.0",
+      "status": "published",
+      "landing_page_id": "2"
+    }
+
+      
+      }
+  
