@@ -854,3 +854,143 @@ It can also happen if the client has a browser extension installed which messes 
 [00:07:05.664] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
 [00:07:05.664] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/landing-pages/new","route":"/landing-pages/new"}
 [00:07:05.664] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://localhost:3000/landing-pages/new color: rgb(120, 120, 120) color: inherit {"dp":"/landing-pages/new","o":"http://localhost:3000/landing-pages/new","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1764657822412}
+[00:12:40.789] Server  LOG      ✓ Compiled in 132ms
+[00:12:41.750] Browser ERROR   ./app/landing-pages/new/page.tsx:3:17
+Ecmascript file had an error
+  1 | import dynamic from "next/dynamic";
+  2 |
+> 3 | const Builder = dynamic(() => import("./page.client"), { ssr: false });
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function Page() {
+  6 |   return <Builder />;
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+[00:12:43.378] Server  ERROR    ⨯ ./app/landing-pages/new/page.tsx:3:17
+Ecmascript file had an error
+  1 | import dynamic from "next/dynamic";
+  2 |
+> 3 | const Builder = dynamic(() => import("./page.client"), { ssr: false });
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function Page() {
+  6 |   return <Builder />;
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+
+
+[00:12:43.497] Browser ERROR   ./app/landing-pages/new/page.tsx:3:17
+Ecmascript file had an error
+  1 | import dynamic from "next/dynamic";
+  2 |
+> 3 | const Builder = dynamic(() => import("./page.client"), { ssr: false });
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function Page() {
+  6 |   return <Builder />;
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+[00:12:43.891] Browser ERROR   uncaughtError: Error: ./app/landing-pages/new/page.tsx:3:17
+Ecmascript file had an error
+  1 | import dynamic from "next/dynamic";
+  2 |
+> 3 | const Builder = dynamic(() => import("./page.client"), { ssr: false });
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function Page() {
+  6 |   return <Builder />;
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+
+
+[00:12:44.038] Browser ERROR   ./app/landing-pages/new/page.tsx:3:17
+Ecmascript file had an error
+  1 | import dynamic from "next/dynamic";
+  2 |
+> 3 | const Builder = dynamic(() => import("./page.client"), { ssr: false });
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function Page() {
+  6 |   return <Builder />;
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+[00:12:44.038] Browser ERROR   ./app/landing-pages/new/page.tsx:3:17
+Ecmascript file had an error
+  1 | import dynamic from "next/dynamic";
+  2 |
+> 3 | const Builder = dynamic(() => import("./page.client"), { ssr: false });
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function Page() {
+  6 |   return <Builder />;
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+[00:16:03.751] Browser ERROR   ./app/landing-pages/new/page.tsx:3:17
+Ecmascript file had an error
+  1 | import dynamic from "next/dynamic";
+  2 |
+> 3 | const Builder = dynamic(() => import("./page.client"), { ssr: false });
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function Page() {
+  6 |   return <Builder />;
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+[00:16:06.395] Server  ERROR    ⨯ ./app/landing-pages/new/page.tsx:3:17
+Ecmascript file had an error
+  1 | import dynamic from "next/dynamic";
+  2 |
+> 3 | const Builder = dynamic(() => import("./page.client"), { ssr: false });
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function Page() {
+  6 |   return <Builder />;
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+
+
+[00:16:06.474] Browser ERROR   uncaughtError: Error: ./app/landing-pages/new/page.tsx:3:17
+Ecmascript file had an error
+  1 | import dynamic from "next/dynamic";
+  2 |
+> 3 | const Builder = dynamic(() => import("./page.client"), { ssr: false });
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function Page() {
+  6 |   return <Builder />;
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+
+
+[00:16:06.609] Browser ERROR   ./app/landing-pages/new/page.tsx:3:17
+Ecmascript file had an error
+  1 | import dynamic from "next/dynamic";
+  2 |
+> 3 | const Builder = dynamic(() => import("./page.client"), { ssr: false });
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function Page() {
+  6 |   return <Builder />;
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+[00:16:06.609] Browser ERROR   ./app/landing-pages/new/page.tsx:3:17
+Ecmascript file had an error
+  1 | import dynamic from "next/dynamic";
+  2 |
+> 3 | const Builder = dynamic(() => import("./page.client"), { ssr: false });
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | export default function Page() {
+  6 |   return <Builder />;
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+[00:16:26.748] Server  LOG      ✓ Compiled in 67ms
+[00:16:27.751] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
+[00:16:27.751] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/landing-pages/new","route":"/landing-pages/new"}
+[00:16:27.751] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://localhost:3000/landing-pages/new color: rgb(120, 120, 120) color: inherit {"dp":"/landing-pages/new","o":"http://localhost:3000/landing-pages/new","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1764658383939}
+[00:16:30.183] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
+[00:16:30.183] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/landing-pages/new","route":"/landing-pages/new"}
+[00:16:30.183] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://localhost:3000/landing-pages/new color: rgb(120, 120, 120) color: inherit {"dp":"/landing-pages/new","o":"http://localhost:3000/landing-pages/new","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1764658386930}
+[00:16:31.530] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
+[00:16:31.530] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/landing-pages/new","route":"/landing-pages/new"}
+[00:16:31.530] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://localhost:3000/landing-pages/new color: rgb(120, 120, 120) color: inherit {"dp":"/landing-pages/new","o":"http://localhost:3000/landing-pages/new","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1764658388276}
