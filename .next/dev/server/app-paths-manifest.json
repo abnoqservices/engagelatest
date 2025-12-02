@@ -1,3 +1,6 @@
 {
-  "/landing-pages/new/page": "app/landing-pages/new/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/landing-pages/new/page": "app/landing-pages/new/page.js",
+  "/landing-pages/page": "app/landing-pages/page.js",
+  "/products/new/page": "app/products/new/page.js"
 }
