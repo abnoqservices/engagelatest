@@ -1,21 +1,24 @@
 "use client";
-import React from "react";
-import Template1 from "@/components/Template1";
-import Template2 from "@/components/Template2";
 
-// 👉 Create a Type for the expected data structure
+import React from "react";
+import dynamic from "next/dynamic";
+
+// Dynamically load templates (avoids SSR issues)
+const Template1 = dynamic(() => import("@/components/Template1"), { ssr: false });
+const Template2 = dynamic(() => import("@/components/Template2"), { ssr: false });
+
 interface PreviewData {
   templateName: string;
   sections?: any[];
-  [key: string]: any; // allow extra fields
+  [key: string]: any;
 }
 
 interface PerviewProps {
-  data: PreviewData; // ← assign type to props
+  data: PreviewData;
 }
 
 const Perview: React.FC<PerviewProps> = ({ data }) => {
-  function getTemplateComponent(type: string) {
+  const getTemplateComponent = (type: string) => {
     switch (type) {
       case "modern":
         return Template1;
@@ -24,8 +27,7 @@ const Perview: React.FC<PerviewProps> = ({ data }) => {
       default:
         return null;
     }
-  }
-console.log(data);
+  };
 
   const ContentComponent = getTemplateComponent(data.templateName);
 

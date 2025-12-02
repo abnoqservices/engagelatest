@@ -1,25 +1,27 @@
+"use client";
 
 import React from "react";
-import dynamic from "next/dynamic";
+import { SECTION_COMPONENTS } from "@/components/tempcomponent";
 
 const Template1 = ({ data }) => {
   return (
     <div className="min-h-screen bg-white">
       {data?.sections?.map((item, index) => {
-        const SectionName = item.section;
+        const Component = SECTION_COMPONENTS[item.section];
 
-        // Dynamically load component
-        const Component = dynamic(
-          () => import(`@/components/tempcomponent/${SectionName}.tsx`),
-          { ssr: false, loading: () => <p>Loading {SectionName}...</p> }
-        );
+        if (!Component) {
+          return (
+            <div key={index} className="p-4 text-red-600">
+              ⚠️ Component "{item.section}" not found.
+            </div>
+          );
+        }
 
         return (
-          <Component
-            key={index}
-            data={item.fields}
-           
-          />
+          item.enabled && (
+            <Component key={item.section} data={item.fields} />
+
+          )
         );
       })}
     </div>
