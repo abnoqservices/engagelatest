@@ -1,1 +1,43 @@
-{}
+{
+  "[project]/components/Template2.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/components/Template2.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/components_Template2_tsx_4fad89f1._.js",
+      "static/chunks/components_Template2_tsx_e45bf86c._.js"
+    ]
+  },
+  "[project]/components/Template1.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/components/Template1.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/components_tempcomponent_1129c921._.js",
+      "static/chunks/components_92f461d7._.js",
+      "static/chunks/components_Template1_tsx_e45bf86c._.js",
+      "static/chunks/components_tempcomponent_Header_tsx_5421f32e._.js",
+      "static/chunks/components_tempcomponent_Header_tsx_b092cc2a._.js",
+      "static/chunks/node_modules_swiper_80165f0d._.js",
+      "static/chunks/components_tempcomponent_slider_tsx_c0ebf87c._.js",
+      "static/chunks/node_modules_swiper_a2b46751._.css",
+      "static/chunks/components_tempcomponent_slider_tsx_b092cc2a._.js",
+      "static/chunks/node_modules_swiper_9bee3e5e._.js",
+      "static/chunks/components_tempcomponent_sliderTwo_tsx_38467e2f._.js",
+      "static/chunks/node_modules_swiper_d17cbdf3._.css",
+      "static/chunks/components_tempcomponent_sliderTwo_tsx_b092cc2a._.js",
+      "static/chunks/node_modules_swiper_13c050bb._.js",
+      "static/chunks/components_tempcomponent_sliderThree_tsx_0d7d48f4._.js",
+      "static/chunks/node_modules_swiper_51abba42._.css",
+      "static/chunks/components_tempcomponent_sliderThree_tsx_b092cc2a._.js",
+      "static/chunks/components_tempcomponent_Description_tsx_bc91fbfb._.js",
+      "static/chunks/components_tempcomponent_Description_tsx_b092cc2a._.js",
+      "static/chunks/_a9b274c1._.js",
+      "static/chunks/components_tempcomponent_Specification_tsx_b092cc2a._.js",
+      "static/chunks/components_tempcomponent_YouTube_tsx_1244d9cc._.js",
+      "static/chunks/components_tempcomponent_YouTube_tsx_b092cc2a._.js",
+      "static/chunks/components_tempcomponent_CTA_tsx_d67646d2._.js",
+      "static/chunks/components_tempcomponent_CTA_tsx_b092cc2a._.js",
+      "static/chunks/_50c65861._.js",
+      "static/chunks/components_tempcomponent_Social_tsx_b092cc2a._.js",
+      "static/chunks/components_tempcomponent_Contact_tsx_69928f78._.js",
+      "static/chunks/components_tempcomponent_Contact_tsx_b092cc2a._.js"
+    ]
+  }
+}

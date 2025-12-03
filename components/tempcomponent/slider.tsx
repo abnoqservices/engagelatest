@@ -1,76 +1,39 @@
 "use client";
 import React from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination, Autoplay } from "swiper/modules";
+import { Pagination, Autoplay } from "swiper/modules";
+
 import "swiper/css";
-import "swiper/css/navigation";
 import "swiper/css/pagination";
 
-export interface SlideItem {
-  id: string | number;
-  image: string;
-  title?: string;
-  subtitle?: string;
-}
+const DEFAULT_IMAGE = "https://lh3.googleusercontent.com/hzTpTV1Qwyi4crcaB_lEaRTg603ttzm_6Uw8SwBC-iQ9-PeWdFdNpejyPzFdVqWLBjf8o58sDjs8M9wV01MCyjJ3XX6GBIiUrLRiQi9ui8m0tp0"; // 1080x1080 default image
 
-interface SliderProps {
-  slides: SlideItem[];
-}
-
-const Slider: React.FC<SliderProps> = () => {
-  const slides = [
-  {
-    id: 1,
-    image: "/F1.jpg",
-    title: "Modern Design",
-    subtitle: "Beautiful layouts for your landing page",
-  },
-  {
-    id: 2,
-    image: "/F2.jpg",
-    title: "High Performance",
-    subtitle: "Fast and optimized loading speed",
-  },
-  {
-    id: 3,
-    image: "/F3.jpg",
-    title: "Mobile Friendly",
-    subtitle: "Fully responsive on all devices",
-  },
-];
+export default function Slider({ data }: { data: any[] }) {
+  const slides = data.map((item, index) => ({
+    id: index + 1,
+    image: item.url && item.url.trim() !== "" ? item.url : DEFAULT_IMAGE,
+  }));
 
   return (
     <div className="w-full max-w-[1200px] mx-auto">
- <Swiper
-  effect="fade"
-  fadeEffect={{ crossFade: true }}
-  loop={true}
-  autoplay={{ delay: 3000 }}
-  pagination={{ clickable: true }}
- 
->
-  {slides.map((item) => (
-    <SwiperSlide key={item.id}>
-               <div className="relative w-full ">
-                 <img
-                   src={item.image}
-                   alt={item.title}
-                   className="w-full h-full object-cover rounded-xl"
-                 />
-   
-                 {(item.title || item.subtitle) && (
-                   <div className="absolute bottom-6 left-6 text-white drop-shadow-lg">
-                     <h2 className="text-2xl font-bold">{item.title}</h2>
-                     <p className="text-lg">{item.subtitle}</p>
-                   </div>
-                 )}
-               </div>
-             </SwiperSlide>
-  ))}
-</Swiper>
-
+      <Swiper
+        loop={true}
+        autoplay={{ delay: 3000 }}
+        pagination={{ clickable: true }}
+      >
+        {slides.map((item) => (
+          <SwiperSlide key={item.id}>
+            {/* SQUARE CONTAINER */}
+            <div className="relative w-full max-w-[400px] mx-auto aspect-square">
+              <img
+                src={item.image}
+                alt="Slide Image"
+                className="w-full h-full object-cover rounded-xl"
+              />
+            </div>
+          </SwiperSlide>
+        ))}
+      </Swiper>
     </div>
   );
-};
-
-export default Slider;
+}

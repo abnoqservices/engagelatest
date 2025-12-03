@@ -4,7 +4,7 @@
 
 __turbopack_context__.s([
     "default",
-    ()=>__TURBOPACK__default__export__
+    ()=>sliderThree
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$swiper$2f$swiper$2d$react$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/swiper/swiper-react.mjs [app-client] (ecmascript)");
@@ -19,25 +19,26 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$swiper$2f$mo
 ;
 ;
 ;
-const sliderThree = ()=>{
-    const slides = [
+function sliderThree({ data }) {
+    // Extract images
+    const imageFields = data.filter((f)=>f.name === "image");
+    // Extract title/subtitle
+    const titleField = data.find((f)=>f.name === "title");
+    const subtitleField = data.find((f)=>f.name === "subtitle");
+    const title = titleField?.value || "";
+    const subtitle = subtitleField?.value || "";
+    // Slides preparation
+    const slides = imageFields.length > 0 ? imageFields.map((img, index)=>({
+            id: index + 1,
+            image: img?.url || "https://lh3.googleusercontent.com/hzTpTV1Qwyi4crcaB_lEaRTg603ttzm_6Uw8SwBC-iQ9-PeWdFdNpejyPzFdVqWLBjf8o58sDjs8M9wV01MCyjJ3XX6GBIiUrLRiQi9ui8m0tp0",
+            title,
+            subtitle
+        })) : [
         {
             id: 1,
-            image: "/F1.jpg",
-            title: "Modern Design",
-            subtitle: "Beautiful layouts for your landing page"
-        },
-        {
-            id: 2,
-            image: "/F2.jpg",
-            title: "High Performance",
-            subtitle: "Fast and optimized loading speed"
-        },
-        {
-            id: 3,
-            image: "/F3.jpg",
-            title: "Mobile Friendly",
-            subtitle: "Fully responsive on all devices"
+            image: "https://lh3.googleusercontent.com/hzTpTV1Qwyi4crcaB_lEaRTg603ttzm_6Uw8SwBC-iQ9-PeWdFdNpejyPzFdVqWLBjf8o58sDjs8M9wV01MCyjJ3XX6GBIiUrLRiQi9ui8m0tp0",
+            title,
+            subtitle
         }
     ];
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -58,13 +59,9 @@ const sliderThree = ()=>{
                 delay: 2500
             },
             loop: true,
-            style: {
-                width: "100%",
-                height: "100%"
-            },
             children: slides.map((item)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$swiper$2f$swiper$2d$react$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SwiperSlide"], {
                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "relative w-full",
+                        className: "relative w-full max-w-[400px] mx-auto aspect-square",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
                                 src: item.image,
@@ -72,57 +69,56 @@ const sliderThree = ()=>{
                                 className: "w-full h-full object-cover rounded-xl"
                             }, void 0, false, {
                                 fileName: "[project]/components/tempcomponent/sliderThree.tsx",
-                                lineNumber: 57,
+                                lineNumber: 61,
                                 columnNumber: 15
-                            }, ("TURBOPACK compile-time value", void 0)),
+                            }, this),
                             (item.title || item.subtitle) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "absolute bottom-6 left-6 text-white drop-shadow-lg",
+                                className: "absolute bottom-6 left-1/2 -translate-x-1/2 text-white drop-shadow-lg text-center w-auto px-4 py-2 bg-black/40 rounded-lg inline-block",
                                 children: [
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
                                         className: "text-2xl font-bold",
                                         children: item.title
                                     }, void 0, false, {
                                         fileName: "[project]/components/tempcomponent/sliderThree.tsx",
-                                        lineNumber: 65,
-                                        columnNumber: 19
-                                    }, ("TURBOPACK compile-time value", void 0)),
+                                        lineNumber: 69,
+                                        columnNumber: 14
+                                    }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                         className: "text-lg",
                                         children: item.subtitle
                                     }, void 0, false, {
                                         fileName: "[project]/components/tempcomponent/sliderThree.tsx",
-                                        lineNumber: 66,
-                                        columnNumber: 19
-                                    }, ("TURBOPACK compile-time value", void 0))
+                                        lineNumber: 70,
+                                        columnNumber: 14
+                                    }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/tempcomponent/sliderThree.tsx",
-                                lineNumber: 64,
-                                columnNumber: 17
-                            }, ("TURBOPACK compile-time value", void 0))
+                                lineNumber: 68,
+                                columnNumber: 14
+                            }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/tempcomponent/sliderThree.tsx",
-                        lineNumber: 56,
+                        lineNumber: 60,
                         columnNumber: 13
-                    }, ("TURBOPACK compile-time value", void 0))
+                    }, this)
                 }, item.id, false, {
                     fileName: "[project]/components/tempcomponent/sliderThree.tsx",
-                    lineNumber: 55,
+                    lineNumber: 58,
                     columnNumber: 11
-                }, ("TURBOPACK compile-time value", void 0)))
+                }, this))
         }, void 0, false, {
             fileName: "[project]/components/tempcomponent/sliderThree.tsx",
-            lineNumber: 44,
+            lineNumber: 48,
             columnNumber: 7
-        }, ("TURBOPACK compile-time value", void 0))
+        }, this)
     }, void 0, false, {
         fileName: "[project]/components/tempcomponent/sliderThree.tsx",
-        lineNumber: 43,
+        lineNumber: 47,
         columnNumber: 5
-    }, ("TURBOPACK compile-time value", void 0));
-};
-const __TURBOPACK__default__export__ = sliderThree;
+    }, this);
+}
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
 }

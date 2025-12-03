@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 14, "column": 0}, "map": {"version":3,"sources":["file:///Volumes/D/next/engage3/app/landing-pages/new/page.tsx"],"sourcesContent":["import dynamic from \"next/dynamic\";\n\nconst Builder = dynamic(() => import(\"./page.client\"), { ssr: false });\n\nexport default function Page() {\n  return <Builder />;\n}\n"],"names":[],"mappings":";;;;;AAAA;;;;AAEA,MAAM,UAAU,IAAA,0KAAO,EAAC;;;;;;IAAiC,KAAK;;AAE/C,SAAS;IACtB,qBAAO,8OAAC;;;;;AACV"}}]
-}

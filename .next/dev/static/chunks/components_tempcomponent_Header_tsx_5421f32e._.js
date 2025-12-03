@@ -14,41 +14,55 @@ function Header({ data }) {
     const titleField = data?.find((field)=>field.name === "title");
     const logoUrl = logoField?.url || "/F1.jpg"; // fallback image
     const title = titleField?.value || "Your Brand Name";
+    const subtitleField = data?.find((field)=>field.name === "subtitle");
+    const subtitle = subtitleField?.value || "Your subtitle text goes here. This can be one or two lines long.";
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-        className: "card-header",
+        className: " flex flex-col items-center text-center py-6 px-4",
         children: [
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
-                src: logoUrl,
-                alt: "Brand Logo",
-                className: "card-header-logo",
-                onError: (e)=>{
-                    e.currentTarget.src = "/fallback-logo.png"; // fallback if blob fails
-                }
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "rounded-full shadow-xl p-1 mb-4",
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "w-24 h-24 rounded-full overflow-hidden",
+                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
+                        src: logoUrl,
+                        alt: "Brand Logo",
+                        className: "w-full h-full object-cover",
+                        onError: (e)=>e.currentTarget.src = "/fallback-logo.png"
+                    }, void 0, false, {
+                        fileName: "[project]/components/tempcomponent/Header.tsx",
+                        lineNumber: 18,
+                        columnNumber: 9
+                    }, this)
+                }, void 0, false, {
+                    fileName: "[project]/components/tempcomponent/Header.tsx",
+                    lineNumber: 17,
+                    columnNumber: 7
+                }, this)
             }, void 0, false, {
                 fileName: "[project]/components/tempcomponent/Header.tsx",
-                lineNumber: 14,
-                columnNumber: 7
+                lineNumber: 16,
+                columnNumber: 5
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
-                className: "card-header-title",
+                className: "text-3xl font-bold text-gray-900 mb-2",
                 children: title
             }, void 0, false, {
                 fileName: "[project]/components/tempcomponent/Header.tsx",
-                lineNumber: 24,
-                columnNumber: 7
+                lineNumber: 28,
+                columnNumber: 5
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                className: "card-header-subtitle",
-                children: "Your subtitle text goes here. This can be one or two lines long."
+                className: "text-gray-600 text-base leading-relaxed max-w-md",
+                children: subtitle
             }, void 0, false, {
                 fileName: "[project]/components/tempcomponent/Header.tsx",
-                lineNumber: 27,
-                columnNumber: 7
+                lineNumber: 33,
+                columnNumber: 5
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/components/tempcomponent/Header.tsx",
-        lineNumber: 12,
+        lineNumber: 13,
         columnNumber: 5
     }, this);
 }

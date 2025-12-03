@@ -1,9 +1,19 @@
-"use client";
-
 import React from "react";
 import { SECTION_COMPONENTS } from "@/components/tempcomponent";
 
-const Template1 = ({ data }) => {
+interface SectionData {
+  section: string;
+  enabled?: boolean;
+  fields?: any; // or define proper type if you know it
+}
+
+interface Template1Props {
+  data?: {
+    sections?: SectionData[];
+  };
+}
+
+const Template1: React.FC<Template1Props> = ({ data }) => {
   return (
     <div className="min-h-screen bg-white">
       {data?.sections?.map((item, index) => {
@@ -11,17 +21,18 @@ const Template1 = ({ data }) => {
 
         if (!Component) {
           return (
-            <div key={index} className="p-4 text-red-600">
-              ⚠️ Component "{item.section}" not found.
-            </div>
+            <p key={index} className="text-red-500 p-4">
+              Component "{item.section}" not found.
+            </p>
           );
         }
 
         return (
-          item.enabled && (
-            <Component key={item.section} data={item.fields} />
-
-          )
+          <Component
+            key={index}
+            data={item.fields}
+            enabled={item.enabled}
+          />
         );
       })}
     </div>

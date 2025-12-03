@@ -1,6 +1,11 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/landing-pages/[slug]/page": "app/landing-pages/[slug]/page.js",
   "/landing-pages/new/page": "app/landing-pages/new/page.js",
   "/landing-pages/page": "app/landing-pages/page.js",
-  "/products/new/page": "app/products/new/page.js"
+  "/page": "app/page.js",
+  "/products/new/page": "app/products/new/page.js",
+  "/products/page": "app/products/page.js",
+  "/signup/page": "app/signup/page.js"
 }

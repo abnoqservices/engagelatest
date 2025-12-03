@@ -26,7 +26,7 @@ const SECTION_COMPONENTS = {
                 "[project]/components/tempcomponent/Header.tsx [app-client] (ecmascript, next/dynamic entry)"
             ]
         },
-        ssr: false
+        ssr: true
     }),
     slider: (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_context__.A("[project]/components/tempcomponent/slider.tsx [app-client] (ecmascript, next/dynamic entry, async loader)"), {
         loadableGenerated: {
@@ -34,7 +34,7 @@ const SECTION_COMPONENTS = {
                 "[project]/components/tempcomponent/slider.tsx [app-client] (ecmascript, next/dynamic entry)"
             ]
         },
-        ssr: false
+        ssr: true
     }),
     sliderTwo: (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_context__.A("[project]/components/tempcomponent/sliderTwo.tsx [app-client] (ecmascript, next/dynamic entry, async loader)"), {
         loadableGenerated: {
@@ -42,7 +42,7 @@ const SECTION_COMPONENTS = {
                 "[project]/components/tempcomponent/sliderTwo.tsx [app-client] (ecmascript, next/dynamic entry)"
             ]
         },
-        ssr: false
+        ssr: true
     }),
     sliderThree: (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_context__.A("[project]/components/tempcomponent/sliderThree.tsx [app-client] (ecmascript, next/dynamic entry, async loader)"), {
         loadableGenerated: {
@@ -50,7 +50,7 @@ const SECTION_COMPONENTS = {
                 "[project]/components/tempcomponent/sliderThree.tsx [app-client] (ecmascript, next/dynamic entry)"
             ]
         },
-        ssr: false
+        ssr: true
     }),
     Description: (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_context__.A("[project]/components/tempcomponent/Description.tsx [app-client] (ecmascript, next/dynamic entry, async loader)"), {
         loadableGenerated: {
@@ -58,7 +58,7 @@ const SECTION_COMPONENTS = {
                 "[project]/components/tempcomponent/Description.tsx [app-client] (ecmascript, next/dynamic entry)"
             ]
         },
-        ssr: false
+        ssr: true
     }),
     Specification: (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_context__.A("[project]/components/tempcomponent/Specification.tsx [app-client] (ecmascript, next/dynamic entry, async loader)"), {
         loadableGenerated: {
@@ -66,7 +66,7 @@ const SECTION_COMPONENTS = {
                 "[project]/components/tempcomponent/Specification.tsx [app-client] (ecmascript, next/dynamic entry)"
             ]
         },
-        ssr: false
+        ssr: true
     }),
     YouTube: (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_context__.A("[project]/components/tempcomponent/YouTube.tsx [app-client] (ecmascript, next/dynamic entry, async loader)"), {
         loadableGenerated: {
@@ -74,7 +74,7 @@ const SECTION_COMPONENTS = {
                 "[project]/components/tempcomponent/YouTube.tsx [app-client] (ecmascript, next/dynamic entry)"
             ]
         },
-        ssr: false
+        ssr: true
     }),
     CTA: (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_context__.A("[project]/components/tempcomponent/CTA.tsx [app-client] (ecmascript, next/dynamic entry, async loader)"), {
         loadableGenerated: {
@@ -82,7 +82,7 @@ const SECTION_COMPONENTS = {
                 "[project]/components/tempcomponent/CTA.tsx [app-client] (ecmascript, next/dynamic entry)"
             ]
         },
-        ssr: false
+        ssr: true
     }),
     Social: (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_context__.A("[project]/components/tempcomponent/Social.tsx [app-client] (ecmascript, next/dynamic entry, async loader)"), {
         loadableGenerated: {
@@ -90,7 +90,7 @@ const SECTION_COMPONENTS = {
                 "[project]/components/tempcomponent/Social.tsx [app-client] (ecmascript, next/dynamic entry)"
             ]
         },
-        ssr: false
+        ssr: true
     }),
     Contact: (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_context__.A("[project]/components/tempcomponent/Contact.tsx [app-client] (ecmascript, next/dynamic entry, async loader)"), {
         loadableGenerated: {
@@ -98,7 +98,7 @@ const SECTION_COMPONENTS = {
                 "[project]/components/tempcomponent/Contact.tsx [app-client] (ecmascript, next/dynamic entry)"
             ]
         },
-        ssr: false
+        ssr: true
     })
 };
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
@@ -114,7 +114,6 @@ __turbopack_context__.s([
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$tempcomponent$2f$index$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/tempcomponent/index.ts [app-client] (ecmascript)");
-"use client";
 ;
 ;
 const Template1 = ({ data })=>{
@@ -123,30 +122,31 @@ const Template1 = ({ data })=>{
         children: data?.sections?.map((item, index)=>{
             const Component = __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$tempcomponent$2f$index$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SECTION_COMPONENTS"][item.section];
             if (!Component) {
-                return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "p-4 text-red-600",
+                return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                    className: "text-red-500 p-4",
                     children: [
-                        '⚠️ Component "',
+                        'Component "',
                         item.section,
                         '" not found.'
                     ]
                 }, index, true, {
                     fileName: "[project]/components/Template1.tsx",
-                    lineNumber: 14,
+                    lineNumber: 24,
                     columnNumber: 13
                 }, ("TURBOPACK compile-time value", void 0));
             }
-            return item.enabled && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Component, {
-                data: item.fields
-            }, item.section, false, {
+            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Component, {
+                data: item.fields,
+                enabled: item.enabled
+            }, index, false, {
                 fileName: "[project]/components/Template1.tsx",
-                lineNumber: 22,
-                columnNumber: 13
+                lineNumber: 31,
+                columnNumber: 11
             }, ("TURBOPACK compile-time value", void 0));
         })
     }, void 0, false, {
         fileName: "[project]/components/Template1.tsx",
-        lineNumber: 8,
+        lineNumber: 18,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };

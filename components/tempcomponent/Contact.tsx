@@ -1,56 +1,82 @@
 import React from 'react';
 
-export default function Contact() {
+export default function Contact({ data }) {
+
+  const getValue = (name: string) =>
+    data?.find((f: any) => f.name === name)?.value || "";
+
+  const phone = getValue("phone");
+  const email = getValue("email");
+  const address = getValue("address");
+  const directionText = getValue("directionButtonText") || "Get Directions";
+  const directionUrl = getValue("directionUrl") || "#";
+
   return (
-   
-      <div className="card-header items-left-">
-        <h2 className="text-3xl font-bold text-center mb-10">Contact Us</h2>
-        
-      
-          <div className="space-y-8 text-left">
-            <div className="flex items-center gap-4">
-              <div className="text-2xl">📞</div>
-              <div>
-                <p className="font-semibold">Phone</p>
-                <p className="text-gray-600">+1 (555) 123-4567</p>
-              </div>
-            </div>
+    <div className="card-header">
 
-            <div className="flex items-center gap-4">
-              <div className="text-2xl">✉️</div>
-              <div>
-                <p className="font-semibold">Email</p>
-                <a href="mailto:hello@company.com" className="text-blue-600 hover:underline">
-                  hello@company.com
-                </a>
-              </div>
-            </div>
+      {/* Centered Heading */}
+      <div className="text-center">
+        <h2 className="core-header-title">Contact Us</h2>
+        <div className="w-12 h-1 bg-gray-100 mx-auto mb-6 rounded-full"></div>
+      </div>
 
-            <div className="flex items-start gap-4">
-              <div className="text-2xl">📍</div>
-              <div>
-                <p className="font-semibold">Address</p>
-                <p className="text-gray-600">
-                  123 Business Street<br />
-                  New York, NY 10001<br />
-                  United States
-                </p>
-              </div>
-            </div>
+      {/* Left Aligned Content */}
+      <div className="space-y-8 text-left">
 
-            <div className="pt-4">
-              <a
-                href="https://maps.google.com/?q=123+Business+Street,+New+York"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition"
-              >
-                Get Directions →
+        {/* Phone */}
+        {phone && (
+          <div className="flex items-center gap-4">
+            <div className="text-2xl">📞</div>
+            <div>
+              <p className="font-semibold">Phone</p>
+              <a href={`tel:${phone}`} className="text-gray-600 hover:underline">
+                {phone}
               </a>
             </div>
           </div>
+        )}
+
+        {/* Email */}
+        {email && (
+          <div className="flex items-center gap-4">
+            <div className="text-2xl">✉️</div>
+            <div>
+              <p className="font-semibold">Email</p>
+              <a href={`mailto:${email}`} className="text-blue-600 hover:underline">
+                {email}
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* Address */}
+        {address && (
+          <div className="flex items-start gap-4">
+            <div className="text-2xl">📍</div>
+            <div>
+              <p className="font-semibold">Address</p>
+              <p className="text-gray-600 whitespace-pre-line">{address}</p>
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* Centered Button */}
+      {directionUrl && directionText && (
+        <div className="pt-6 flex justify-center">
+          <a
+            href={directionUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg 
+                       font-medium hover:bg-blue-700 transition"
+          >
+            {directionText} →
+          </a>
         </div>
-    
-   
+      )}
+
+    </div>
   );
 }

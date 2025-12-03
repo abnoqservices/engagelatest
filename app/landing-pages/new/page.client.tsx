@@ -44,24 +44,30 @@ const Perview = dynamic(() => import("@/app/preview/page"), {
    ALL AVAILABLE SECTIONS
 ---------------------------------------------------- */
 const AVAILABLE_SECTIONS = [
-  { section: "Header", label: "Header (Logo + Title)", fields: [
+  { 
+    section: "Header", 
+    label: "Header (Logo + Title)", 
+    enabled: true,
+  
+  fields: [
     { name: "logo", label: "Upload Logo", type: "image", required: true },
     { name: "title", label: "Site Title / Brand Name", type: "text", required: true }
   ]},
 
-  { section: "slider", label: "Main Slider", fields: [
+  { section: "slider", label: "Main Slider",   enabled: true,
+  fields: [
     { name: "image", label: "Slider Image", type: "image", required: true }
   ]},
 
-  { section: "sliderTwo", label: "Secondary Slider", fields: [
+  { section: "sliderTwo", label: "Secondary Slider",  enabled: true, fields: [
     { name: "image", label: "Image", type: "image", required: true }
   ]},
 
-  { section: "sliderThree", label: "Tertiary Slider", fields: [
+  { section: "sliderThree", label: "Tertiary Slider",   enabled: true,fields: [
     { name: "image", label: "Image", type: "image", required: true }
   ]},
 
-  { section: "Description", label: "Description Block", fields: [
+  { section: "Description", label: "Description Block",   enabled: true,fields: [
     { name: "heading", label: "Heading", type: "text", required: true },
     { name: "description", label: "Description Text", type: "textarea", required: true },
   ]},
@@ -69,6 +75,7 @@ const AVAILABLE_SECTIONS = [
   {
     section: "Specification",
     label: "Product Specifications",
+    enabled: true,
     fields: [
       {
         name: "specifications",
@@ -82,11 +89,11 @@ const AVAILABLE_SECTIONS = [
     ],
   },
 
-  { section: "YouTube", label: "YouTube Video", fields: [
+  { section: "YouTube", label: "YouTube Video",  enabled: true, fields: [
     { name: "videoUrl", label: "YouTube Embed URL", type: "url" }
   ]},
 
-  { section: "CTA", label: "Call to Action Button", fields: [
+  { section: "CTA", label: "Call to Action Button",  enabled: true, fields: [
     { name: "ctaText", label: "Button Text", type: "text", required: true },
     { name: "ctaUrl", label: "Button URL", type: "url", required: true },
   ]},
@@ -94,6 +101,7 @@ const AVAILABLE_SECTIONS = [
   {
     section: "Social",
     label: "Social Links",
+    enabled: true,
     fields: [
       { name: "facebook", label: "Facebook", type: "url" },
       { name: "instagram", label: "Instagram", type: "url" },
@@ -105,6 +113,7 @@ const AVAILABLE_SECTIONS = [
   {
     section: "Contact",
     label: "Contact Info",
+    enabled: true,
     fields: [
       { name: "phone", label: "Phone", type: "text", required: true },
       { name: "email", label: "Email", type: "email", required: true },
@@ -160,12 +169,19 @@ function SortableItem({ item, onToggle, onRemove }) {
 export default function NewLandingPagePage() {
   const params = useParams();
   const isEditMode = Boolean(params?.id);
+  const [selectValue, setSelectValue] = React.useState("");
+  const defaultKeys = ["Header", "Description", "sliderThree","Specification","CTA","Social","Contact"];
 
-  const [activeSections, setActiveSections] = React.useState([
-    { section: "Header", enabled: true, fields: AVAILABLE_SECTIONS.find(s => s.section === "Header").fields },
-    { section: "Description", enabled: true, fields: AVAILABLE_SECTIONS.find(s => s.section === "Description").fields },
-    { section: "CTA", enabled: true, fields: AVAILABLE_SECTIONS.find(s => s.section === "CTA").fields },
-  ]);
+  const [activeSections, setActiveSections] = React.useState(
+    AVAILABLE_SECTIONS
+      .filter(sec => defaultKeys.includes(sec.section))
+      .map(sec => ({
+        section: sec.section,
+        enabled: true,
+        fields: sec.fields
+      }))
+  );
+  
 
   const [styles, setStyles] = React.useState({
     primaryColor: "#ecedf4ff",
@@ -228,26 +244,33 @@ export default function NewLandingPagePage() {
           <div className="space-y-6">
             {/* Add Sections */}
             <Card>
-              <CardHeader>
-                <CardTitle>Add Sections</CardTitle>
-                <CardDescription>Select a section to add</CardDescription>
-              </CardHeader>
+  <CardHeader>
+    <CardTitle>Add Sections</CardTitle>
+    <CardDescription>Select a section to add</CardDescription>
+  </CardHeader>
 
-              <CardContent>
-                <Select onValueChange={handleAddSection}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select section..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableToAdd.map((s) => (
-                      <SelectItem key={s.section} value={s.section}>
-                        {s.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
+  <CardContent>
+    <Select
+      value={selectValue} // controlled
+      onValueChange={(val) => {
+        handleAddSection(val);
+        setSelectValue(""); // RESET select back to placeholder
+      }}
+    >
+      <SelectTrigger>
+        <SelectValue placeholder="Select Component of section..." />
+      </SelectTrigger>
+
+      <SelectContent>
+        {availableToAdd.map((s) => (
+          <SelectItem key={s.section} value={s.section}>
+            {s.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </CardContent>
+</Card>
 
             {/* Drag & Drop */}
             <Card>
@@ -278,7 +301,7 @@ export default function NewLandingPagePage() {
             </Card>
 
             {/* Styling */}
-            <Card>
+            {/* <Card>
               <CardHeader><CardTitle>Global Styling</CardTitle></CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid sm:grid-cols-2 gap-6">
@@ -330,7 +353,7 @@ export default function NewLandingPagePage() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
 
           {/* RIGHT: PREVIEW */}

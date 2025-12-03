@@ -4,38 +4,31 @@ import { EffectCoverflow, Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/effect-coverflow";
 import "swiper/css/pagination";
-export interface SlideItem {
-  id: string | number;
-  image: string;
-  title?: string;
-  subtitle?: string;
+
+interface Field {
+  name: string;
+  url?: string;
 }
 
-interface SliderProps {
-  slides: SlideItem[];
-}
+export default function SliderTwo({ data }: { data: any }) {
+  const defaultImage = "https://lh3.googleusercontent.com/hzTpTV1Qwyi4crcaB_lEaRTg603ttzm_6Uw8SwBC-iQ9-PeWdFdNpejyPzFdVqWLBjf8o58sDjs8M9wV01MCyjJ3XX6GBIiUrLRiQi9ui8m0tp0";
 
-const SliderTwo: React.FC<SliderProps> = () => {
-  const slides = [
-  {
-    id: 1,
-    image: "/F1.jpg",
-    title: "Modern Design",
-    subtitle: "Beautiful layouts for your landing page",
-  },
-  {
-    id: 2,
-    image: "/F2.jpg",
-    title: "High Performance",
-    subtitle: "Fast and optimized loading speed",
-  },
-  {
-    id: 3,
-    image: "/F3.jpg",
-    title: "Mobile Friendly",
-    subtitle: "Fully responsive on all devices",
-  },
-];
+  // Find image fields
+  const imageFields = data.filter((f: Field) => f.name === "image");
+
+  // Prepare slides with fallback
+  const slides =
+    imageFields.length > 0
+      ? imageFields.map((img: Field, index: number) => ({
+          id: index + 1,
+          image: img?.url && img.url !== "" ? img.url : defaultImage,
+        }))
+      : [
+          {
+            id: 1,
+            image: defaultImage,
+          },
+        ];
 
   return (
     <Swiper
@@ -57,17 +50,17 @@ const SliderTwo: React.FC<SliderProps> = () => {
       className="w-full max-w-[900px]"
     >
       {slides.map((item) => (
-        <SwiperSlide
-          key={item.id}
-          style={{ width: "300px", height: "350px" }}
-        >
-          <img
-            src={item.image}
-            className="w-full h-full object-cover rounded-xl"
-          />
+        <SwiperSlide key={item.id}>
+          {/* PERFECT SQUARE BOX */}
+          <div className="w-[300px] h-[300px] mx-auto relative">
+            <img
+              src={item.image}
+              className="w-full h-full object-cover rounded-xl"
+              alt="slide image"
+            />
+          </div>
         </SwiperSlide>
       ))}
     </Swiper>
   );
 }
-export default SliderTwo;
