@@ -166,7 +166,7 @@ function SortableItem({ item, onToggle, onRemove }) {
 /* ----------------------------------------------------
    MAIN BUILDER (CLIENT ONLY)
 ---------------------------------------------------- */
-export default function NewLandingPagePage() {
+export default function NewLandingPagePage({templateId, userId}) {
   const params = useParams();
   const isEditMode = Boolean(params?.id);
   const [selectValue, setSelectValue] = React.useState("");

@@ -2185,7 +2185,7 @@ _s(SortableItem, "/z3KIFzqyVdhMkyhG3dCWYApX1g=", false, function() {
     ];
 });
 _c1 = SortableItem;
-function NewLandingPagePage() {
+function NewLandingPagePage({ templateId, userId }) {
     _s1();
     const params = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useParams"])();
     const isEditMode = Boolean(params?.id);
