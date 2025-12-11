@@ -1,6 +1,7 @@
 "use client";
+export const dynamic = "force-dynamic"; // ✅ Prevent prerender errors
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -18,11 +19,14 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Lock, QrCode } from "lucide-react";
 
-export default function ResetPasswordPage() {
+// --------------------
+// Wrapped Component
+// --------------------
+function ResetForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const token = searchParams.get("token"); // ✅ token from email link
+  const token = searchParams.get("token");
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -37,7 +41,6 @@ export default function ResetPasswordPage() {
     }
   }, [token]);
 
-  // ✅ RESET PASSWORD API
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
@@ -102,31 +105,14 @@ export default function ResetPasswordPage() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="grid gap-2">
-            <Button variant="outline" className="w-full" disabled>
-              Reset via Secure Link
-            </Button>
-          </div>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                Create new password
-              </span>
-            </div>
-          </div>
-
-          {/* ✅ ERROR MESSAGE */}
+          {/* Error */}
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
               {error}
             </div>
           )}
 
-          {/* ✅ SUCCESS MESSAGE */}
+          {/* Success */}
           {success && (
             <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
               {success}
@@ -187,5 +173,16 @@ export default function ResetPasswordPage() {
         </CardFooter>
       </Card>
     </div>
+  );
+}
+
+// ---------------------------
+// MAIN EXPORT — WITH SUSPENSE
+// ---------------------------
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ResetForm />
+    </Suspense>
   );
 }

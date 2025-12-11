@@ -1,6 +1,6 @@
 {
   "app": {
-    "[project]/app/dashboard/page": [
+    "[project]/app/forgot-password/page": [
       "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
       "static/media/797e433ab948586e-s.p.dbea232f.woff2",
       "static/media/68d403cf9f2c68c5-s.p.f9f15f61.woff2"
@@ -10,32 +10,7 @@
       "static/media/797e433ab948586e-s.p.dbea232f.woff2",
       "static/media/68d403cf9f2c68c5-s.p.f9f15f61.woff2"
     ],
-    "[project]/app/products/new/page": [
-      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
-      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
-      "static/media/68d403cf9f2c68c5-s.p.f9f15f61.woff2"
-    ],
-    "[project]/app/products/page": [
-      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
-      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
-      "static/media/68d403cf9f2c68c5-s.p.f9f15f61.woff2"
-    ],
-    "[project]/app/products/settings/custom-fields/page": [
-      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
-      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
-      "static/media/68d403cf9f2c68c5-s.p.f9f15f61.woff2"
-    ],
-    "[project]/app/products/settings/product-category/page": [
-      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
-      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
-      "static/media/68d403cf9f2c68c5-s.p.f9f15f61.woff2"
-    ],
-    "[project]/app/products/settings/qr-codes/page": [
-      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
-      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
-      "static/media/68d403cf9f2c68c5-s.p.f9f15f61.woff2"
-    ],
-    "[project]/app/settings/page": [
+    "[project]/app/reset-password/page": [
       "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
       "static/media/797e433ab948586e-s.p.dbea232f.woff2",
       "static/media/68d403cf9f2c68c5-s.p.f9f15f61.woff2"

@@ -1,0 +1,3 @@
+module.exports=[18552,a=>{"use strict";var b=a.i(87924);function c({data:a}){let c=a?.find(a=>"heading"===a.name),d=a?.find(a=>"description"===a.name),e=c?.value||"Your Brand Name",f=d?.value||"<p>Your description goes here.</p>";return(0,b.jsxs)("div",{className:"card-header",children:[(0,b.jsx)("h2",{className:"core-header-title",children:e}),(0,b.jsx)("div",{className:"w-12 h-1 bg-gray-100 mx-auto mb-4 rounded-full"}),(0,b.jsx)("div",{className:"prose prose-sm md:prose-lg text-gray-700 leading-relaxed max-w-2xl mx-auto",dangerouslySetInnerHTML:{__html:f}})]})}a.s(["default",()=>c])},17174,a=>{a.n(a.i(18552))}];
+
+//# sourceMappingURL=components_tempcomponent_Description_tsx_e4cb8581._.js.map
