@@ -25,6 +25,7 @@ const navigation = [
       {
         name: "Settings",
         children: [
+          { name: "Product Category", href: "/products/settings/product-category" },
           { name: "Custom Fields", href: "/products/settings/custom-fields" },
           { name: "QR Code Templates", href: "/products/settings/qr-codes" },
         ],

@@ -17,67 +17,98 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { QrCode } from "lucide-react";
+import axiosClient from "@/lib/axiosClient";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function SignUpPage() {
   const router = useRouter();
-
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
 
-  const [formData, setFormData] = React.useState({
+   const [formData, setFormData] = React.useState({
     name: "",
     email: "",
     password: "",
+    confirmPassword: "",
     company: "",
     agreeToTerms: false,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setError("");
     setLoading(true);
-
-    if (!formData.agreeToTerms) {
+  
+    const { name, email, password, confirmPassword, company, agreeToTerms } = formData;
+  
+    // 1. Empty Field Validation
+    if (!name || !email || !password || !confirmPassword || !company) {
+      setError("All fields are required.");
+      setLoading(false);
+      return;
+    }
+  
+    //  2. Email Format Validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address.");
+      setLoading(false);
+      return;
+    }
+  
+    // 3. Password Length Validation
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      setLoading(false);
+      return;
+    }
+  
+    // 4. Password Match Validation (MOST IMPORTANT)
+    if (password !== confirmPassword) {
+      setError("Password and Confirm Password do not match.");
+      setLoading(false);
+      return;
+    }
+  
+    // 5. Terms & Conditions Validation
+    if (!agreeToTerms) {
       setError("Please agree to the terms and conditions.");
       setLoading(false);
       return;
     }
-
+  
     try {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          companyname: formData.company,
-        }),
+      const res = await axiosClient.post("/auth/register", {
+        name,
+        email,
+        password,
+        password_confirmation: password, // Laravel requirement
+        organization_id: company,
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Signup failed.");
-        setLoading(false);
-        return;
-      }
-
-      // Signup success
+  
       alert("Signup successful! Please log in.");
-
       router.push("/signin");
-    } catch (err) {
+  
+    } catch (err: any) {
       console.error("Signup error:", err);
-      setError("Something went wrong. Try again.");
+  
+      if (err.response?.status === 422 || err.response?.status === 422) {
+        const errors = err.response.data.errors as Record<string, string[]>;
+        const firstKey = Object.keys(errors)[0];
+        const firstError = errors[firstKey][0];
+        setError(firstError);
+      } else {
+        setError("Something went wrong. Try again.");
+      }
+  
     } finally {
       setLoading(false);
     }
   };
-
+  
+  
   const handleSocialSignup = (provider: string) => {
     console.log(`[v0] Sign up with ${provider}`);
     router.push("/dashboard");
@@ -176,22 +207,65 @@ export default function SignUpPage() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                required
-              />
-              <p className="text-xs text-muted-foreground">
-                Must be at least 8 characters long
-              </p>
-            </div>
+                    <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+              required
+              className="pr-10"
+            />
+
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            Must be at least 8 characters long
+          </p>
+        </div>
+
+        <div className="space-y-2">
+  <Label htmlFor="confirmPassword">Confirm Password</Label>
+
+  <div className="relative">
+    <Input
+      id="confirmPassword"
+      type={showConfirmPassword ? "text" : "password"}
+      placeholder="••••••••"
+      value={formData.confirmPassword}
+      onChange={(e) =>
+        setFormData({ ...formData, confirmPassword: e.target.value })
+      }
+      required
+      className="pr-10"
+    />
+
+    <button
+      type="button"
+      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+    >
+      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+    </button>
+  </div>
+
+  <p className="text-xs text-muted-foreground">
+    Must be at least 8 characters long
+  </p>
+</div>
 
             <div className="flex items-center space-x-2">
               <Checkbox

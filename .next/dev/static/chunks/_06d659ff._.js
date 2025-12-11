@@ -404,7 +404,7 @@ function SignUpPage() {
             return;
         }
         try {
-            const res = await fetch("/api/auth/signup", {
+            const res = await fetch("/auth/register", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"

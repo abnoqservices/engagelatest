@@ -1,27 +1,37 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL, // Global Root URL
-  timeout: 10000,
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   headers: {
-    "Content-Type": "application/json",
+    Accept: "application/json",
   },
 });
 
-// Optional: Add token automatically
-axiosClient.interceptors.request.use(
-  (config) => {
-    const token = typeof window !== "undefined"
-      ? localStorage.getItem("token")
-      : null;
+//  Attach token to every request
+axiosClient.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token"); //  MUST be "token"
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+  }
 
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+  return config;
+});
+
+//  Auto logout on 401 (important)
+// axiosClient.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     if (error.response?.status === 401) {
+//       localStorage.removeItem("token");
+//       localStorage.removeItem("user");
+//       window.location.href = "/signin";
+//     }
+
+//     return Promise.reject(error);
+//   }
+// );
 
 export default axiosClient;

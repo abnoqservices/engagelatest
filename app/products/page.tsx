@@ -38,7 +38,6 @@ import {
   Edit,
   Copy,
   QrCode,
-  BarChart3,
   Trash2,
   ChevronLeft,
   ChevronRight,
@@ -50,51 +49,142 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
 } from "@/components/ui/sheet";
 import axiosClient from "@/lib/axiosClient";
-import axios from "axios";
+import { useToast } from "@/components/ui/use-toast";
 
+type Category = {
+  id: number;
+  name: string;
+  children?: Category[];
+};
+
+type Product = {
+  id: number;
+  image: string;
+  name: string;
+  sku: string;
+  category: string;
+  categoryId: number;
+  price: string;
+  scans: number;
+  views: number;
+  leads: number;
+  status: boolean;
+};
 
 export default function ProductsPage() {
-  type Product = {
-    id: string;
-    image: string;
-    name: string;
-    sku: string;
-    category: string;
-    price: string;
-    scans: number;
-    views: number;
-    leads: number;
-    status: boolean;
-  };
-  
   const [products, setProducts] = React.useState<Product[]>([]);
+  const [categories, setCategories] = React.useState<Category[]>([]);
   const [selectedProducts, setSelectedProducts] = React.useState<string[]>([]);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [categoryFilter, setCategoryFilter] = React.useState("all");
   const [statusFilter, setStatusFilter] = React.useState("all");
+  const [page, setPage] = React.useState(1);
+  const [perPage, setPerPage] = React.useState(10);
+  const [totalItems, setTotalItems] = React.useState(0);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const [editDrawerOpen, setEditDrawerOpen] = React.useState(false);
   const [editingProduct, setEditingProduct] = React.useState<Product | null>(null);
 
+  const { toast } = useToast();
 
-  const allSelected = selectedProducts.length === products.length;
+  const allSelected = selectedProducts.length === products.length && products.length > 0;
   const someSelected = selectedProducts.length > 0 && !allSelected;
 
-  // ---------------------------------------------
-  // ✅ Select handlers
-  // ---------------------------------------------
-  const toggleAll = () => {
-    setSelectedProducts(allSelected ? [] : products.map((p:any) => p.id));
+  // Load Categories (unchanged)
+  const loadCategories = async () => {
+    try {
+      const res = await axiosClient.get("/product-categories");
+      if (res.data.success) {
+        setCategories(res.data.data || []);
+      }
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.response?.data?.message || "Failed to load categories",
+        variant: "destructive",
+      });
+    }
   };
 
-  const toggleProduct = (id: string) => {
-    setSelectedProducts((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+  // SERVER-SIDE FETCH WITH FILTERS & PAGINATION
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    try {
+      const params: any = {
+        page,
+        per_page: perPage,
+      };
+
+      if (searchQuery.trim()) params.search = searchQuery.trim();
+      if (categoryFilter !== "all") params.category_id = categoryFilter;
+      if (statusFilter !== "all") params.is_active = statusFilter === "active" ? 1 : 0;
+
+      const res = await axiosClient.get("/products", { params });
+
+      if (res.data.success && res.data.data) {
+        const apiData = res.data.data.data || [];
+        const pagination = res.data.data;
+
+        const productData: Product[] = apiData.map((item: any) => ({
+          id: item.id,
+          image: item.images?.length > 0 ? item.images[0] : "https://www.thekeepingroomnc.com/wp-content/uploads/2020/04/image-placeholder.jpg",
+          name: item.name,
+          sku: item.sku || "N/A",
+          category: item.category?.name || "Uncategorized",
+          categoryId: item.category?.id || 0,
+          price: item.price ? `$${parseFloat(item.price).toFixed(2)}` : "$0.00",
+          scans: item.scans || 0,
+          views: item.views || 0,
+          leads: item.leads || 0,
+          status: item.is_active ?? true,
+        }));
+
+        setProducts(productData);
+        setTotalItems(pagination.total || pagination.meta?.total || productData.length);
+      }
+    } catch (e: any) {
+      console.error("Failed to fetch products", e);
+      toast({
+        title: "Error",
+        description: e.response?.data?.message || "Failed to load products",
+        variant: "destructive",
+      });
+      setProducts([]);
+      setTotalItems(0);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Re-fetch whenever any filter or pagination changes
+  React.useEffect(() => {
+    fetchProducts();
+  }, [page, perPage, searchQuery, categoryFilter, statusFilter]);
+
+  React.useEffect(() => {
+    loadCategories();
+  }, []);
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setPage(1);
+  }, [searchQuery, categoryFilter, statusFilter, perPage]);
+
+  // Selection Handlers
+  const toggleAll = () => {
+    setSelectedProducts(allSelected ? [] : products.map(p => p.id.toString()));
+  };
+
+  const toggleProduct = (id: number) => {
+    const idStr = id.toString();
+    setSelectedProducts(prev =>
+      prev.includes(idStr) ? prev.filter(p => p !== idStr) : [...prev, idStr]
     );
   };
 
@@ -103,30 +193,33 @@ export default function ProductsPage() {
     setEditDrawerOpen(true);
   };
 
-  // ---------------------------------------------
-  // ✅ Fetch from API (optional)
-  // ---------------------------------------------
-  const fetchProducts = async () => {
-    try {
-      const res = await axiosClient.get("/manageapi/productListing");
-  
-      // API full response
-      console.log("Response:", res.data);
-  
-      // Correct way to access the product data
-      const productData = res.data.products; 
-  
-      setProducts(productData); // or setProducts([productData]) depending on UI
-  
-    } catch (e) {
-      console.log("API not connected, using mock data", e);
-    }
-  };
-  
+  // Recursive Category Renderer
+  const renderCategoryOptions = (
+    items: Category[],
+    level = 0,
+    parentPath = ""
+  ): React.ReactNode[] => {
+    return items.flatMap((cat, index) => {
+      const indent = "— ".repeat(level);
+      const uniqueKey = `${parentPath}${cat.id}-${level}-${index}`;
 
-  React.useEffect(() => {
-     fetchProducts(); // uncomment when API ready
-  }, []);
+      const option = (
+        <SelectItem key={uniqueKey} value={cat.id.toString()}>
+          {indent}{cat.name}
+        </SelectItem>
+      );
+
+      const children = cat.children?.length
+        ? renderCategoryOptions(cat.children, level + 1, `${uniqueKey}-`)
+        : [];
+
+      return [option, ...children];
+    });
+  };
+
+  const totalPages = totalItems > 0 ? Math.ceil(totalItems / perPage) : 1;
+  const startItem = totalItems === 0 ? 0 : (page - 1) * perPage + 1;
+  const endItem = Math.min(page * perPage, totalItems);
 
   return (
     <DashboardLayout>
@@ -153,7 +246,7 @@ export default function ProductsPage() {
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search products..."
+                placeholder="Search by name or SKU..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -162,20 +255,18 @@ export default function ProductsPage() {
 
             <div className="flex flex-wrap gap-2">
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Category" />
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="electronics">Electronics</SelectItem>
-                  <SelectItem value="audio">Audio</SelectItem>
-                  <SelectItem value="wearables">Wearables</SelectItem>
+                  {renderCategoryOptions(categories)}
                 </SelectContent>
               </Select>
 
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="Status" />
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="All Status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
@@ -184,7 +275,7 @@ export default function ProductsPage() {
                 </SelectContent>
               </Select>
 
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="icon" disabled>
                 <Filter className="h-4 w-4" />
               </Button>
 
@@ -198,13 +289,11 @@ export default function ProductsPage() {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem>Export as CSV</DropdownMenuItem>
                   <DropdownMenuItem>Export as XLSX</DropdownMenuItem>
-                  <DropdownMenuItem>Export as PDF</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
 
-          {/* Bulk actions */}
           {selectedProducts.length > 0 && (
             <div className="flex items-center gap-3 rounded-lg bg-primary/10 px-4 py-2 text-sm">
               <span className="font-medium text-primary">
@@ -213,8 +302,8 @@ export default function ProductsPage() {
               <div className="flex gap-2">
                 <Button variant="outline" size="sm">Bulk Edit</Button>
                 <Button variant="outline" size="sm">Generate QRs</Button>
-                <Button variant="outline" size="sm">Export Selected</Button>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm">Export</Button>
+                <Button variant="outline" size="sm" className="text-destructive">
                   <Trash2 className="h-3 w-3 mr-1" /> Delete
                 </Button>
               </div>
@@ -228,7 +317,10 @@ export default function ProductsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">
-                  <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
+                <Checkbox
+                      checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                      onCheckedChange={toggleAll}
+                    />
                 </TableHead>
                 <TableHead>Image</TableHead>
                 <TableHead>Name</TableHead>
@@ -242,81 +334,103 @@ export default function ProductsPage() {
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
-
             <TableBody>
-              {products.map((p:any) => (
-                <TableRow key={p.id}>
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedProducts.includes(p.id)}
-                      onCheckedChange={() => toggleProduct(p.id)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Image
-                      src={p.image}
-                      alt={p.name}
-                      width={40}
-                      height={40}
-                      className="rounded-md"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <button
-                      onClick={() => openEditDrawer(p)}
-                      className="text-blue-600 hover:underline"
-                    >
-                      {p.name}
-                    </button>
-                  </TableCell>
-                  <TableCell className="font-mono">{p.sku}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{p.category}</Badge>
-                  </TableCell>
-                  <TableCell className="font-semibold">{p.price}</TableCell>
-                  <TableCell className="text-center">{p.scans}</TableCell>
-                  <TableCell className="text-center">{p.views}</TableCell>
-                  <TableCell className="text-center">{p.leads}</TableCell>
-                  <TableCell className="text-center">
-                    <Switch checked={p.status} />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEditDrawer(p)}>
-                          <Edit className="mr-2 h-4 w-4" /> Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Copy className="mr-2 h-4 w-4" /> Clone
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <QrCode className="mr-2 h-4 w-4" /> Generate QR
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={11} className="text-center py-10">
+                    Loading products...
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : products.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={11} className="text-center py-10 text-muted-foreground">
+                    {searchQuery || categoryFilter !== "all" || statusFilter !== "all"
+                      ? "No products match your filters"
+                      : "No products found"}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                products.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedProducts.includes(p.id.toString())}
+                        onCheckedChange={() => toggleProduct(p.id)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Image
+                        src={p.image}
+                        alt={p.name}
+                        width={40}
+                        height={40}
+                        className="rounded-md object-cover"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <button
+                        onClick={() => openEditDrawer(p)}
+                        className="font-medium text-blue-600 hover:underline"
+                      >
+                        {p.name}
+                      </button>
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">{p.sku}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{p.category}</Badge>
+                    </TableCell>
+                    <TableCell className="font-semibold">{p.price}</TableCell>
+                    <TableCell className="text-center">{p.scans}</TableCell>
+                    <TableCell className="text-center">{p.views}</TableCell>
+                    <TableCell className="text-center">{p.leads}</TableCell>
+                    <TableCell className="text-center">
+                      <Switch checked={p.status} disabled />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openEditDrawer(p)}>
+                            <Edit className="mr-2 h-4 w-4" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Copy className="mr-2 h-4 w-4" /> Clone
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <QrCode className="mr-2 h-4 w-4" /> QR Code
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between border-t px-6 py-4">
+        <div className="flex items-center justify-between border-t bg-card px-6 py-4">
           <div className="text-sm text-muted-foreground">
-            Showing <span>1-5</span> of <span>50</span> products
+            {totalItems > 0 ? (
+              <>Showing <strong>{startItem}–{endItem}</strong> of <strong>{totalItems}</strong> products</>
+            ) : (
+              "No products to display"
+            )}
           </div>
-          <div className="flex items-center gap-2">
-            <Select defaultValue="10">
+          <div className="flex items-center gap-3">
+            <Select
+              value={perPage.toString()}
+              onValueChange={(v) => setPerPage(Number(v))}
+            >
               <SelectTrigger className="w-[100px]">
                 <SelectValue />
               </SelectTrigger>
@@ -324,68 +438,76 @@ export default function ProductsPage() {
                 <SelectItem value="10">10 / page</SelectItem>
                 <SelectItem value="20">20 / page</SelectItem>
                 <SelectItem value="50">50 / page</SelectItem>
+                <SelectItem value="100">100 / page</SelectItem>
               </SelectContent>
             </Select>
+
             <div className="flex gap-1">
-              <Button variant="outline" size="icon" disabled>
-                <ChevronLeft />
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={page <= 1 || isLoading}
+                onClick={() => setPage(p => p - 1)}
+              >
+                <ChevronLeft className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="icon">
-                <ChevronRight />
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={page >= totalPages || isLoading}
+                onClick={() => setPage(p => p + 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ----------------------------------------- */}
-      {/* Edit Drawer */}
-      {/* ----------------------------------------- */}
+      {/* Edit Drawer - unchanged */}
       <Sheet open={editDrawerOpen} onOpenChange={setEditDrawerOpen}>
-        <SheetContent className="w-full sm:max-w-2xl overflow-y-auto p-0">
-          <div className="sticky top-0 bg-white border-b px-6 py-4">
-            <SheetHeader>
+        <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+          <div className="sticky top-0 bg-background border-b z-10">
+            <SheetHeader className="px-6 py-4">
               <SheetTitle className="text-2xl font-bold">Edit Product</SheetTitle>
-              <SheetDescription>Update product details</SheetDescription>
+              <SheetDescription>Update product information</SheetDescription>
             </SheetHeader>
           </div>
 
           {editingProduct && (
-            <div className="px-6 py-6 space-y-6">
-              {/* Product Form */}
-              <div className="space-y-4">
-                <Label>Product Name</Label>
-                <Input defaultValue={editingProduct.name} />
-
-                <Label>SKU</Label>
-                <Input defaultValue={editingProduct.sku} />
-
-                <Label>Price</Label>
-                <Input defaultValue={editingProduct.price} />
-
-                <Label>Category</Label>
-                <Select defaultValue={editingProduct.category.toLowerCase()}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="electronics">Electronics</SelectItem>
-                    <SelectItem value="audio">Audio</SelectItem>
-                    <SelectItem value="wearables">Wearables</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Label>Description</Label>
-                <Textarea rows={4} defaultValue="Great product!" />
+            <div className="space-y-6 p-6">
+              <div className="grid gap-4">
+                <div>
+                  <Label>Product Name</Label>
+                  <Input defaultValue={editingProduct.name} />
+                </div>
+                <div>
+                  <Label>SKU</Label>
+                  <Input defaultValue={editingProduct.sku} />
+                </div>
+                <div>
+                  <Label>Price</Label>
+                  <Input defaultValue={editingProduct.price.replace("$", "")} />
+                </div>
+                <div>
+                  <Label>Category</Label>
+                  <Select defaultValue={editingProduct.categoryId.toString()}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {renderCategoryOptions(categories)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Description</Label>
+                  <Textarea rows={4} defaultValue="Premium quality product with advanced features." />
+                </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex gap-4 sticky bottom-0 bg-white border-t px-6 py-4">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setEditDrawerOpen(false)}
-                >
+              <div className="flex gap-3 pt-6 border-t sticky bottom-0 bg-background">
+                <Button variant="outline" className="flex-1" onClick={() => setEditDrawerOpen(false)}>
                   Cancel
                 </Button>
                 <Button className="flex-1" onClick={() => setEditDrawerOpen(false)}>

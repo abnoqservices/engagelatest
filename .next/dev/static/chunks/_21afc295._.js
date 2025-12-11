@@ -32,6 +32,231 @@ if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelper
 "[project]/app/preview/page.tsx [app-client] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
+// "use client";
+// import React from "react";
+// import dynamic from "next/dynamic";
+// // Dynamically load templates (avoids SSR issues)
+// const Template1 = dynamic(() => import("@/components/Template1"), { ssr: true });
+// const Template2 = dynamic(() => import("@/components/Template2"), { ssr: true });
+// interface PreviewData {
+//   templateName: string;
+//   sections?: any[];
+//   [key: string]: any;
+// }
+// interface PerviewProps {
+//   data: PreviewData;
+// }
+// const data={
+//   "userId": 1,
+//   "templateName": "modern",
+//   "product_id": 1764914266384,
+//   "productname": "iPhone 15 Pro Max",
+//   "category": "Electronics",
+//   "sku": "IPH15PRO",
+//   "price": "999",
+//   "tag": [],
+//   "images": [],
+//   "meta": "",
+//   "meta discription": "",
+//   "keywords": "",
+//   "sections": [
+//     {
+//       "section": "Header",
+//       "fields": [
+//         {
+//           "name": "logo",
+//           "url": "/superhouse_ltd_logo.jpg"
+//         },
+//         {
+//           "name": "title",
+//           "value": "SuperHouse Group"
+//         },
+//         {
+//           "name": "subtitle",
+//           "value": "Allen Cooper Sporty"
+//         }
+//       ]
+//     },
+//     {
+//       "section": "sliderThree",
+//       "fields": [
+//         {
+//           "name": "image",
+//           "url": "/F1.JPG"
+//         },
+//         {
+//           "name": "image",
+//           "url": "/F2.JPG"
+//         },
+//         {
+//           "name": "image",
+//           "url": "/F3.JPG"
+//         },
+//         {
+//           "name": "image",
+//           "url": "/F4.JPG"
+//         },
+//         {
+//           "name": "image",
+//           "url": "/F2.JPG"
+//         }
+//       ]
+//     },
+//     {
+//       "section": "Description",
+//       "fields": [
+//         {
+//           "name": "heading",
+//           "value": "Key Highlights:"
+//         },
+//         {
+//           "name": "description",
+//           "value": "Feldtmann, Wurth, Stabilus, Coverguard, Itturi, and MTS, we produce footwear meeting EN ISO 20345, ASTM, and CSA standards.\n\n"
+//         }
+//       ]
+//     },
+//     {
+//       "section": "Specification",
+//       "fields": [
+//         {
+//           "name": "specifications",
+//           "items": [
+//             {
+//               "label": "Protection",
+//               "value": "Fiberglass Toe Cap and Metal-Free, Anti Puncture & Penetration Protection"
+//             },
+//             {
+//               "label": "Upper",
+//               "value": "High-performance Ultra Light Textile Upper with TPU Welding"
+//             },
+//             {
+//               "label": "Lining",
+//               "value": "Breathable Functional Textile Lining"
+//             },
+//             {
+//               "label": "Footbed",
+//               "value": "PU Cushioned Custom Fit"
+//             },
+//             {
+//               "label": "Sole",
+//               "value": "E-TPU Energy-Return Midsole with Nitrile Rubber Outsole – Ultra-Lightweight, 300°C Heat Resistant, and Slip-Resistant (SRC)"
+//             },
+//             {
+//               "label": "Applications",
+//               "value": "Construction, Craft, Industry, Warehouse / Logistics"
+//             },
+//             {
+//               "label": "Plus",
+//               "value": "Injected protection in the Toe and Heel area"
+//             }
+//           ]
+//         }
+//       ]
+//     },
+//     {
+//       "section": "CTA",
+//       "fields": [
+//         {
+//           "name": "ctaText",
+//           "value": "Don’t Miss Out!"
+//         },
+//         {
+//           "name": "ctaUrl",
+//           "value": "https://google.com"
+//         }
+//       ]
+//     },
+//     {
+//       "section": "Social",
+//       "fields": [
+//         {
+//           "name": "facebook",
+//           "value": "https://facebook.com"
+//         },
+//         {
+//           "name": "instagram",
+//           "value": "https://instagram.copm"
+//         },
+//         {
+//           "name": "youtube",
+//           "value": "https://youtube.com"
+//         },
+//         {
+//           "name": "twitter",
+//           "value": "https://twitter.com"
+//         }
+//       ]
+//     },
+//     {
+//       "section": "Testimonial",
+//       "fields": [
+//         {
+//           "name": "Testimonial",
+//           "items": [
+//             {
+//               "image": "https://media.istockphoto.com/id/1682296067/photo/happy-studio-portrait-or-professional-man-real-estate-agent-or-asian-businessman-smile-for.jpg?s=612x612&w=0&k=20&c=9zbG2-9fl741fbTWw5fNgcEEe4ll-JegrGlQQ6m54rg=",
+//               "name": "Allen Cooper Sporty Shoe S3",
+//               "designation": "Marketing",
+//               "rating": "4",
+//               "description": "Fiberglass Toe Cap and Metal-Free, Anti Puncture & Penetration Protection."
+//             },
+//             {
+//               "image": "https://newprofilepic.photo-cdn.net//assets/images/article/profile.jpg?90af0c8",
+//               "name": "Allen Cooper Sporty S1",
+//               "designation": "Manufacturer",  
+//               "rating": "3",
+//               "description": "Fiberglass Toe Cap and Metal-Free, Anti Puncture & Penetration Protection"
+//             }
+//           ]
+//         }
+//       ]
+//     },
+//     {
+//       "section": "Contact",
+//       "fields": [
+//         {
+//           "name": "phone",
+//           "value": "+91 99351 42044"
+//         },
+//         {
+//           "name": "email",
+//           "value": "devendra@superhousegroup.com"
+//         },
+//         {
+//           "name": "address",
+//           "value": "Copyright © 2025 Superhouse Group All Rights Reserved."
+//         },
+//         {
+//           "name": "directionUrl",
+//           "value": "https://maps.com"
+//         }
+//       ]
+//     }
+//   ]
+// }
+// const Perview: React.FC<PerviewProps> = ({data}) => {
+//   const getTemplateComponent = (type: string) => {
+//     switch (type) {
+//       case "modern":
+//         return Template1;
+//       case "basic":
+//         return Template2;
+//       default:
+//         return null;
+//     }
+//   };
+//   const ContentComponent = getTemplateComponent(data.templateName);
+//   return (
+//     <div>
+//       {ContentComponent ? (
+//         <ContentComponent data={data} />
+//       ) : (
+//         <div>No template selected</div>
+//       )}
+//     </div>
+//   );
+// };
+// export default Perview;
 __turbopack_context__.s([
     "default",
     ()=>__TURBOPACK__default__export__
@@ -55,7 +280,8 @@ const Template1 = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modul
             "[project]/components/Template1.tsx [app-client] (ecmascript, next/dynamic entry)"
         ]
     },
-    ssr: true
+    ssr: true,
+    loading: ()=>null
 });
 _c1 = Template1;
 const Template2 = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])(_c2 = ()=>__turbopack_context__.A("[project]/components/Template2.tsx [app-client] (ecmascript, next/dynamic entry, async loader)"), {
@@ -64,7 +290,8 @@ const Template2 = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modul
             "[project]/components/Template2.tsx [app-client] (ecmascript, next/dynamic entry)"
         ]
     },
-    ssr: true
+    ssr: true,
+    loading: ()=>null
 });
 _c3 = Template2;
 const Perview = ({ data })=>{
@@ -116,17 +343,17 @@ const Perview = ({ data })=>{
                                 className: "h-16 w-16 object-contain"
                             }, void 0, false, {
                                 fileName: "[project]/app/preview/page.tsx",
-                                lineNumber: 62,
+                                lineNumber: 298,
                                 columnNumber: 17
                             }, ("TURBOPACK compile-time value", void 0))
                         }, void 0, false, {
                             fileName: "[project]/app/preview/page.tsx",
-                            lineNumber: 61,
+                            lineNumber: 297,
                             columnNumber: 15
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/app/preview/page.tsx",
-                        lineNumber: 60,
+                        lineNumber: 296,
                         columnNumber: 13
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -142,33 +369,33 @@ const Perview = ({ data })=>{
                                                 className: "h-8 w-[200px]"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/preview/page.tsx",
-                                                lineNumber: 75,
+                                                lineNumber: 311,
                                                 columnNumber: 19
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$skeleton$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Skeleton"], {
                                                 className: "h-4 w-[300px]"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/preview/page.tsx",
-                                                lineNumber: 76,
+                                                lineNumber: 312,
                                                 columnNumber: 19
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/preview/page.tsx",
-                                        lineNumber: 74,
+                                        lineNumber: 310,
                                         columnNumber: 17
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$skeleton$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Skeleton"], {
                                         className: "h-10 w-[140px]"
                                     }, void 0, false, {
                                         fileName: "[project]/app/preview/page.tsx",
-                                        lineNumber: 78,
+                                        lineNumber: 314,
                                         columnNumber: 17
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/preview/page.tsx",
-                                lineNumber: 73,
+                                lineNumber: 309,
                                 columnNumber: 15
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -180,7 +407,7 @@ const Perview = ({ data })=>{
                                             className: "h-10 w-full max-w-md"
                                         }, void 0, false, {
                                             fileName: "[project]/app/preview/page.tsx",
-                                            lineNumber: 84,
+                                            lineNumber: 320,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -190,45 +417,45 @@ const Perview = ({ data })=>{
                                                     className: "h-10 w-[140px]"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/preview/page.tsx",
-                                                    lineNumber: 86,
+                                                    lineNumber: 322,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$skeleton$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Skeleton"], {
                                                     className: "h-10 w-[120px]"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/preview/page.tsx",
-                                                    lineNumber: 87,
+                                                    lineNumber: 323,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$skeleton$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Skeleton"], {
                                                     className: "h-10 w-10"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/preview/page.tsx",
-                                                    lineNumber: 88,
+                                                    lineNumber: 324,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$skeleton$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Skeleton"], {
                                                     className: "h-10 w-[120px]"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/preview/page.tsx",
-                                                    lineNumber: 89,
+                                                    lineNumber: 325,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/preview/page.tsx",
-                                            lineNumber: 85,
+                                            lineNumber: 321,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/preview/page.tsx",
-                                    lineNumber: 83,
+                                    lineNumber: 319,
                                     columnNumber: 17
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/app/preview/page.tsx",
-                                lineNumber: 82,
+                                lineNumber: 318,
                                 columnNumber: 15
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -240,7 +467,7 @@ const Perview = ({ data })=>{
                                             className: "h-10 w-full max-w-md"
                                         }, void 0, false, {
                                             fileName: "[project]/app/preview/page.tsx",
-                                            lineNumber: 95,
+                                            lineNumber: 331,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -250,76 +477,76 @@ const Perview = ({ data })=>{
                                                     className: "h-10 w-[140px]"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/preview/page.tsx",
-                                                    lineNumber: 97,
+                                                    lineNumber: 333,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$skeleton$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Skeleton"], {
                                                     className: "h-10 w-[120px]"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/preview/page.tsx",
-                                                    lineNumber: 98,
+                                                    lineNumber: 334,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$skeleton$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Skeleton"], {
                                                     className: "h-10 w-10"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/preview/page.tsx",
-                                                    lineNumber: 99,
+                                                    lineNumber: 335,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$skeleton$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Skeleton"], {
                                                     className: "h-10 w-[120px]"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/preview/page.tsx",
-                                                    lineNumber: 100,
+                                                    lineNumber: 336,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/preview/page.tsx",
-                                            lineNumber: 96,
+                                            lineNumber: 332,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/preview/page.tsx",
-                                    lineNumber: 94,
+                                    lineNumber: 330,
                                     columnNumber: 17
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/app/preview/page.tsx",
-                                lineNumber: 93,
+                                lineNumber: 329,
                                 columnNumber: 15
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/preview/page.tsx",
-                        lineNumber: 71,
+                        lineNumber: 307,
                         columnNumber: 13
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/preview/page.tsx",
-                lineNumber: 58,
+                lineNumber: 294,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0)),
             ContentComponent ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(ContentComponent, {
                 data: data
             }, void 0, false, {
                 fileName: "[project]/app/preview/page.tsx",
-                lineNumber: 113,
+                lineNumber: 349,
                 columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 children: "No template selected"
             }, void 0, false, {
                 fileName: "[project]/app/preview/page.tsx",
-                lineNumber: 115,
+                lineNumber: 351,
                 columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/app/preview/page.tsx",
-        lineNumber: 55,
+        lineNumber: 291,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };

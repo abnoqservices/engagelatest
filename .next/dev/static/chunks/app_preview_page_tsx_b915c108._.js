@@ -32,6 +32,194 @@ const Template2 = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modul
     ssr: true
 });
 _c3 = Template2;
+// const data={
+//   "userId": 1,
+//   "templateName": "modern",
+//   "product_id": 1764914266384,
+//   "productname": "iPhone 15 Pro Max",
+//   "category": "Electronics",
+//   "sku": "IPH15PRO",
+//   "price": "999",
+//   "tag": [],
+//   "images": [],
+//   "meta": "",
+//   "meta discription": "",
+//   "keywords": "",
+//   "sections": [
+//     {
+//       "section": "Header",
+//       "fields": [
+//         {
+//           "name": "logo",
+//           "url": "/superhouse_ltd_logo.jpg"
+//         },
+//         {
+//           "name": "title",
+//           "value": "SuperHouse Group"
+//         },
+//         {
+//           "name": "subtitle",
+//           "value": "Allen Cooper Sporty"
+//         }
+//       ]
+//     },
+//     {
+//       "section": "sliderThree",
+//       "fields": [
+//         {
+//           "name": "image",
+//           "url": "/F1.JPG"
+//         },
+//         {
+//           "name": "image",
+//           "url": "/F2.JPG"
+//         },
+//         {
+//           "name": "image",
+//           "url": "/F3.JPG"
+//         },
+//         {
+//           "name": "image",
+//           "url": "/F4.JPG"
+//         },
+//         {
+//           "name": "image",
+//           "url": "/F2.JPG"
+//         }
+//       ]
+//     },
+//     {
+//       "section": "Description",
+//       "fields": [
+//         {
+//           "name": "heading",
+//           "value": "Key Highlights:"
+//         },
+//         {
+//           "name": "description",
+//           "value": "Feldtmann, Wurth, Stabilus, Coverguard, Itturi, and MTS, we produce footwear meeting EN ISO 20345, ASTM, and CSA standards.\n\n"
+//         }
+//       ]
+//     },
+//     {
+//       "section": "Specification",
+//       "fields": [
+//         {
+//           "name": "specifications",
+//           "items": [
+//             {
+//               "label": "Protection",
+//               "value": "Fiberglass Toe Cap and Metal-Free, Anti Puncture & Penetration Protection"
+//             },
+//             {
+//               "label": "Upper",
+//               "value": "High-performance Ultra Light Textile Upper with TPU Welding"
+//             },
+//             {
+//               "label": "Lining",
+//               "value": "Breathable Functional Textile Lining"
+//             },
+//             {
+//               "label": "Footbed",
+//               "value": "PU Cushioned Custom Fit"
+//             },
+//             {
+//               "label": "Sole",
+//               "value": "E-TPU Energy-Return Midsole with Nitrile Rubber Outsole – Ultra-Lightweight, 300°C Heat Resistant, and Slip-Resistant (SRC)"
+//             },
+//             {
+//               "label": "Applications",
+//               "value": "Construction, Craft, Industry, Warehouse / Logistics"
+//             },
+//             {
+//               "label": "Plus",
+//               "value": "Injected protection in the Toe and Heel area"
+//             }
+//           ]
+//         }
+//       ]
+//     },
+//     {
+//       "section": "CTA",
+//       "fields": [
+//         {
+//           "name": "ctaText",
+//           "value": "Don’t Miss Out!"
+//         },
+//         {
+//           "name": "ctaUrl",
+//           "value": "https://google.com"
+//         }
+//       ]
+//     },
+//     {
+//       "section": "Social",
+//       "fields": [
+//         {
+//           "name": "facebook",
+//           "value": "https://facebook.com"
+//         },
+//         {
+//           "name": "instagram",
+//           "value": "https://instagram.copm"
+//         },
+//         {
+//           "name": "youtube",
+//           "value": "https://youtube.com"
+//         },
+//         {
+//           "name": "twitter",
+//           "value": "https://twitter.com"
+//         }
+//       ]
+//     },
+//     {
+//       "section": "Testimonial",
+//       "fields": [
+//         {
+//           "name": "Testimonial",
+//           "items": [
+//             {
+//               "image": "https://media.istockphoto.com/id/1682296067/photo/happy-studio-portrait-or-professional-man-real-estate-agent-or-asian-businessman-smile-for.jpg?s=612x612&w=0&k=20&c=9zbG2-9fl741fbTWw5fNgcEEe4ll-JegrGlQQ6m54rg=",
+//               "name": "Allen Cooper Sporty Shoe S3",
+//               "designation": "Marketing",
+//               "rating": "4",
+//               "description": "Fiberglass Toe Cap and Metal-Free, Anti Puncture & Penetration Protection."
+//             },
+//             {
+//               "image": "https://newprofilepic.photo-cdn.net//assets/images/article/profile.jpg?90af0c8",
+//               "name": "Allen Cooper Sporty S1",
+//               "designation": "Manufacturer",  
+//               "rating": "3",
+//               "description": "Fiberglass Toe Cap and Metal-Free, Anti Puncture & Penetration Protection"
+//             }
+//           ]
+//         }
+//       ]
+//     },
+//     {
+//       "section": "Contact",
+//       "fields": [
+//         {
+//           "name": "phone",
+//           "value": "+91 99351 42044"
+//         },
+//         {
+//           "name": "email",
+//           "value": "devendra@superhousegroup.com"
+//         },
+//         {
+//           "name": "address",
+//           "value": "Copyright © 2025 Superhouse Group All Rights Reserved."
+//         },
+//         {
+//           "name": "directionUrl",
+//           "value": "https://maps.com"
+//         }
+//       ]
+//     }
+//   ]
+// }
 const Perview = ({ data })=>{
     const getTemplateComponent = (type)=>{
         switch(type){
@@ -49,18 +237,18 @@ const Perview = ({ data })=>{
             data: data
         }, void 0, false, {
             fileName: "[project]/app/preview/page.tsx",
-            lineNumber: 37,
+            lineNumber: 227,
             columnNumber: 9
         }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             children: "No template selected"
         }, void 0, false, {
             fileName: "[project]/app/preview/page.tsx",
-            lineNumber: 39,
+            lineNumber: 229,
             columnNumber: 9
         }, ("TURBOPACK compile-time value", void 0))
     }, void 0, false, {
         fileName: "[project]/app/preview/page.tsx",
-        lineNumber: 35,
+        lineNumber: 225,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };

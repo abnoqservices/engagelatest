@@ -8,6 +8,5 @@ const Builder = dynamic(() => import("./page.client"), {
 
 export default function Page() {
     const { templateId, userId }  = usePageStore();
-    console.log("Rendering Builder with templateId:", templateId, "and userId:", userId);
   return <Builder templateId={templateId} userId={userId} />;
 }

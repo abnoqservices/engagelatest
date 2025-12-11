@@ -17,4 +17,6 @@ export const SECTION_COMPONENTS: Record<string, any> = {
   CTA: dynamic(() => import("./CTA"), { ssr: true }),
   Social: dynamic(() => import("./Social"), { ssr: true }),
   Contact: dynamic(() => import("./Contact"), { ssr: true }),
+  Testimonial: dynamic(() => import("./Testimonial"), { ssr: true }),
+  ProductDetail: dynamic(() => import("./ProductDetail"), { ssr: true })
 };

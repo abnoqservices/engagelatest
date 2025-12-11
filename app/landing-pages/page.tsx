@@ -26,6 +26,11 @@ import axiosClient from "@/lib/axiosClient";
 import { DashboardLayout } from "@/components/dashboard/layout";
 import { usePageStore } from "@/lib/pageStore";
 
+import dynamic from "next/dynamic";
+const Builder = dynamic(() => import("@/app/landing-pages/new/page.client"), {
+  ssr: false,
+});
+
 // Mock UI Components (unchanged)
 const Button = ({ children, className = "", variant = "default", size = "default", onClick, disabled, ...props }: any) => {
   const baseStyles = "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50";
@@ -37,12 +42,13 @@ const Button = ({ children, className = "", variant = "default", size = "default
   };
   const sizes = {
     default: "h-10 px-4 py-2",
+    lg: "h-12 px-8 text-lg",
     sm: "h-9 px-3 text-sm",
     icon: "h-10 w-10",
   };
   return (
     <button
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`${baseStyles} ${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
       onClick={onClick}
       disabled={disabled}
       {...props}
@@ -100,6 +106,48 @@ const Toast = ({ message, type = "success", onClose }: { message: string; type?:
   );
 };
 
+// Reusable Customize Button (Responsive + Beautiful)
+const CustomizeButton = ({ 
+  onClick, 
+  size = "default",
+  loading = false 
+}: { 
+  onClick: () => void; 
+  size?: "default" | "sm"; 
+  loading?: boolean;
+}) => {
+  const isSmall = size === "sm";
+
+  return (
+    <Button
+      onClick={onClick}
+      disabled={loading}
+      variant="default"
+      size={isSmall ? "sm" : "default"}
+      className={`
+        bg-purple-600 hover:bg-purple-700 text-white font-semibold shadow-lg
+        ${isSmall ? "px-3" : "px-6"}
+        transition-all duration-200 group
+      `}
+    >
+      {loading ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <>
+          <svg className={`h-5 w-5 ${isSmall ? "" : "mr-2"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span className={`${isSmall ? "hidden sm:inline" : " Customize Landing Page"} font-medium`}>
+           </span>
+        </>
+      )}
+    </Button>
+  );
+};
+
 type LandingPage = {
   id: number;
   userId: number | null;
@@ -122,16 +170,18 @@ export default function LandingPagesPage() {
   const [selectedPage, setSelectedPage] = React.useState<LandingPage | null>(null);
   const [copied, setCopied] = React.useState(false);
   const [viewMode, setViewMode] = React.useState<"list" | "grid">("list");
+  const [isCustomizeModalOpen, setIsCustomizeModalOpen] = React.useState(false);
 
-  // Loading states for buttons
+  // Loading states
   const [activatingId, setActivatingId] = React.useState<number | null>(null);
   const [deactivating, setDeactivating] = React.useState(false);
+  const [editingPageName, setEditingPageName] = React.useState<string>("Landing Page");
+  const { templateId, userId, setTemplate } = usePageStore(); // renamed setPageData → setTemplate
+  const router = useRouter();
 
   // Toast state
   const [toast, setToast] = React.useState<{ message: string; type: "success" | "error" } | null>(null);
 
-  const router = useRouter();
-  const setPageData = usePageStore((state) => state.setTemplate);
   const currentUserId = 1;
 
   const showToast = (message: string, type: "success" | "error" = "success") => {
@@ -241,7 +291,6 @@ export default function LandingPagesPage() {
     setDeactivating(true);
 
     try {
-      // Replace with real endpoint when available
       await axiosClient.post(`/templates/deactivate`, {
         userId: currentUserId,
         templateId: activePage.id,
@@ -260,9 +309,11 @@ export default function LandingPagesPage() {
     }
   };
 
-  const handleEditPage = (page: LandingPage) => {
-    setPageData(page.id, page.userId);
-    router.push(`/landing-pages/new`);
+  // Open Customize Modal with correct templateId & userId
+  const openCustomizeModal = (page: LandingPage) => {
+    setTemplate(page.id, page.userId);
+    setEditingPageName(page.name); // Set the name
+    setIsCustomizeModalOpen(true);
   };
 
   if (loading) {
@@ -336,9 +387,11 @@ export default function LandingPagesPage() {
                     </div>
 
                     <div className="flex flex-wrap gap-4">
-                      <Button onClick={() => handleEditPage(activePage)}>
-                        <Edit className="h-4 w-4 mr-2" /> Edit Design
-                      </Button>
+                      {/* Main Customize Button */}
+                      <CustomizeButton 
+                        onClick={() => openCustomizeModal(activePage)}
+                      />
+
                       <Button variant="outline" onClick={() => handleGenerateLink(activePage)}>
                         <Link2 className="h-4 w-4 mr-2" /> Share Link
                       </Button>
@@ -424,9 +477,15 @@ export default function LandingPagesPage() {
                         <Button size="sm" variant="outline" className="h-9 w-9 p-0" onClick={(e) => { e.stopPropagation(); window.open(page.url, "_blank"); }}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="outline" className="h-9 w-9 p-0" onClick={(e) => { e.stopPropagation(); handleEditPage(page); }}>
-                          <Paintbrush className="h-4 w-4" />
-                        </Button>
+
+                        {/* Replace Paintbrush with Customize Button */}
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <CustomizeButton 
+                            size="sm"
+                            onClick={() => openCustomizeModal(page)}
+                          />
+                        </div>
+
                         <Button
                           size="sm"
                           className="h-9 px-3"
@@ -508,9 +567,10 @@ export default function LandingPagesPage() {
                             </>
                           )}
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleEditPage(page)}>
-                          <Paintbrush className="h-4 w-4" />
-                        </Button>
+                        <CustomizeButton 
+                          size="sm"
+                          onClick={() => openCustomizeModal(page)}
+                        />
                       </div>
                     </CardContent>
                   </Card>
@@ -542,7 +602,7 @@ export default function LandingPagesPage() {
                     <Input value={generatedLink} readOnly className="font-mono text-sm" />
                     <Button onClick={handleCopyLink}>{copied ? "Copied!" : "Copy"}</Button>
                   </div>
-                  <Button className="w-full" onClick={handleOpenInNewTab}>
+                  <Button className="w-full mt-4" onClick={handleOpenInNewTab}>
                     <ExternalLink className="h-4 w-4 mr-2" /> Open in New Tab
                   </Button>
                 </div>
@@ -550,8 +610,35 @@ export default function LandingPagesPage() {
             </div>
           )}
 
-          {/* Toast Notification */}
+          {/* Toast */}
           {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+          {/* Customize Modal */}
+          {isCustomizeModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] overflow-hidden flex flex-col animate-in fade-in duration-300">
+                <div className="flex items-center justify-between p-6 border-b bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+                <h2 className="text-2xl font-bold">
+  Customize: <span className="text-white/90">"{editingPageName}"</span>
+</h2>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-white/20 rounded-full"
+                    onClick={() => setIsCustomizeModalOpen(false)}
+                  >
+                    <X className="h-6 w-6" />
+                  </Button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-8 bg-gray-50">
+                  <Builder templateId={templateId} userId={userId} />
+                </div>
+
+             
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>

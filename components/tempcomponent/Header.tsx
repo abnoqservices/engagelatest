@@ -1,6 +1,7 @@
 import React from "react";
 
 export default function Header({ data }: { data: any[] }) {
+  
   // Find logo (has "url") and title (has "name" and "value")
   const logoField = data?.find((field: any) => field.url);
   const titleField = data?.find((field: any) => field.name === "title");

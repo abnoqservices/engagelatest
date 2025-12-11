@@ -25,11 +25,14 @@ export default function Contact({ data }) {
 
         {/* Phone */}
         {phone && (
-          <div className="flex items-center gap-4">
-            <div className="text-2xl">📞</div>
-            <div>
+          <div className="flex items-start gap-4">
+            <div className="text-2xl shrink-0">📞</div>
+            <div className="min-w-0">
               <p className="font-semibold">Phone</p>
-              <a href={`tel:${phone}`} className="text-gray-600 hover:underline">
+              <a
+                href={`tel:${phone}`}
+                className="text-gray-600 break-all hover:underline"
+              >
                 {phone}
               </a>
             </div>
@@ -38,11 +41,14 @@ export default function Contact({ data }) {
 
         {/* Email */}
         {email && (
-          <div className="flex items-center gap-4">
-            <div className="text-2xl">✉️</div>
-            <div>
+          <div className="flex items-start gap-4">
+            <div className="text-2xl shrink-0">✉️</div>
+            <div className="min-w-0">
               <p className="font-semibold">Email</p>
-              <a href={`mailto:${email}`} className="text-blue-600 hover:underline">
+              <a
+                href={`mailto:${email}`}
+                className="text-blue-600 break-all hover:underline"
+              >
                 {email}
               </a>
             </div>
@@ -52,10 +58,12 @@ export default function Contact({ data }) {
         {/* Address */}
         {address && (
           <div className="flex items-start gap-4">
-            <div className="text-2xl">📍</div>
-            <div>
+            <div className="text-2xl shrink-0">📍</div>
+            <div className="min-w-0">
               <p className="font-semibold">Address</p>
-              <p className="text-gray-600 whitespace-pre-line">{address}</p>
+              <p className="text-gray-600 whitespace-pre-line break-words">
+                {address}
+              </p>
             </div>
           </div>
         )}

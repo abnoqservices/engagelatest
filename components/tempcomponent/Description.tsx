@@ -6,7 +6,7 @@ export default function Description({ data }: { data: any[] }) {
   const descriptionField = data?.find((field) => field.name === "description");
 
   const heading = headingField?.value || "Your Brand Name";
-  const description = descriptionField?.value || "Your description goes here.";
+  const description = descriptionField?.value || "<p>Your description goes here.</p>";
 
   return (
     <div className="card-header">
@@ -15,11 +15,14 @@ export default function Description({ data }: { data: any[] }) {
       <h2 className="core-header-title">
         {heading}
       </h2>
+
       <div className="w-12 h-1 bg-gray-100 mx-auto mb-4 rounded-full"></div>
-      {/* Description (clean + left aligned + centered container) */}
-      <p className="text-base md:text-lg text-gray-700 leading-relaxed max-w-2xl mx-auto text-left">
-        {description}
-      </p>
+
+      {/* Description → Supports bold, italic, button, list, colors, etc. */}
+      <div
+        className="prose prose-sm md:prose-lg text-gray-700 leading-relaxed max-w-2xl mx-auto"
+        dangerouslySetInnerHTML={{ __html: description }}
+      ></div>
 
     </div>
   );
