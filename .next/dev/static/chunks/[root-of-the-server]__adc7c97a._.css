@@ -1282,10 +1282,6 @@
     height: calc(var(--spacing) * 56);
   }
 
-  .h-96 {
-    height: calc(var(--spacing) * 96);
-  }
-
   .h-\[1\.15rem\] {
     height: 1.15rem;
   }
@@ -2553,10 +2549,6 @@
     background-color: var(--color-gray-500);
   }
 
-  .bg-gray-900 {
-    background-color: var(--color-gray-900);
-  }
-
   .bg-green-50 {
     background-color: var(--color-green-50);
   }
@@ -3372,10 +3364,6 @@
 
   .text-gray-900 {
     color: var(--color-gray-900);
-  }
-
-  .text-green-400 {
-    color: var(--color-green-400);
   }
 
   .text-green-600 {
@@ -4597,13 +4585,6 @@
   @media (hover: hover) {
     .hover\:opacity-100:hover {
       opacity: 1;
-    }
-  }
-
-  @media (hover: hover) {
-    .hover\:shadow:hover {
-      --tw-shadow: var(--shadow-md);
-      box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
     }
   }
 

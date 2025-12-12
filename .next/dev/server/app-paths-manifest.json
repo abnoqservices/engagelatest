@@ -1,7 +1,3 @@
 {
-  "/dashboard/page": "app/dashboard/page.js",
-  "/landing-pages/page": "app/landing-pages/page.js",
-  "/products/new/page": "app/products/new/page.js",
-  "/products/page": "app/products/page.js",
-  "/products/settings/qr-codes/page": "app/products/settings/qr-codes/page.js"
+  "/products/new/page": "app/products/new/page.js"
 }
