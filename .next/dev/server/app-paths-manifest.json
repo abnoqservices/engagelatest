@@ -1,7 +1,10 @@
 {
-  "/forgot-password/page": "app/forgot-password/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/events/new/page": "app/events/new/page.js",
+  "/events/page": "app/events/page.js",
   "/page": "app/page.js",
-  "/reset-password/page": "app/reset-password/page.js",
+  "/products/new/page": "app/products/new/page.js",
+  "/products/page": "app/products/page.js",
   "/signin/page": "app/signin/page.js",
   "/signup/page": "app/signup/page.js"
 }
