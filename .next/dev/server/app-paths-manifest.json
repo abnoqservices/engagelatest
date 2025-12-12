@@ -1,10 +1,7 @@
 {
   "/dashboard/page": "app/dashboard/page.js",
-  "/events/new/page": "app/events/new/page.js",
-  "/events/page": "app/events/page.js",
-  "/page": "app/page.js",
+  "/landing-pages/page": "app/landing-pages/page.js",
   "/products/new/page": "app/products/new/page.js",
   "/products/page": "app/products/page.js",
-  "/signin/page": "app/signin/page.js",
-  "/signup/page": "app/signup/page.js"
+  "/products/settings/qr-codes/page": "app/products/settings/qr-codes/page.js"
 }

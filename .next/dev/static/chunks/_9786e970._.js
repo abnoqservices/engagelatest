@@ -49,13 +49,12 @@ _c = Builder;
 function Page() {
     _s();
     const { templateId, userId } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$pageStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePageStore"])();
-    console.log("Rendering Builder with templateId:", templateId, "and userId:", userId);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Builder, {
         templateId: templateId,
         userId: userId
     }, void 0, false, {
         fileName: "[project]/app/landing-pages/new/page.tsx",
-        lineNumber: 12,
+        lineNumber: 11,
         columnNumber: 10
     }, this);
 }
