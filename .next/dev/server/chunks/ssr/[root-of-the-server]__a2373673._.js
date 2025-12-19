@@ -231,6 +231,18 @@ axiosClient.interceptors.request.use((config)=>{
     return config;
 });
 const __TURBOPACK__default__export__ = axiosClient;
+ //  Auto logout on 401 (important)
+ // axiosClient.interceptors.response.use(
+ //   (response) => response,
+ //   (error) => {
+ //     if (error.response?.status === 401) {
+ //       localStorage.removeItem("token");
+ //       localStorage.removeItem("user");
+ //       window.location.href = "/signin";
+ //     }
+ //     return Promise.reject(error);
+ //   }
+ // );
 }),
 "[project]/components/ui/card.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
 "use strict";

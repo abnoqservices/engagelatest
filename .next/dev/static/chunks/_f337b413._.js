@@ -1269,7 +1269,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$axios$2f$lib$2f$axios$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/axios/lib/axios.js [app-client] (ecmascript)");
 ;
 const axiosClient = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$axios$2f$lib$2f$axios$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].create({
-    baseURL: ("TURBOPACK compile-time value", "https://suryodayfoundation.org/new"),
+    baseURL: ("TURBOPACK compile-time value", "http://127.0.0.1:8000/api"),
     headers: {
         Accept: "application/json"
     }
@@ -2815,7 +2815,7 @@ if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelper
 
 __turbopack_context__.s([
     "default",
-    ()=>NewLandingPagePage
+    ()=>LandingPageBuilder
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
@@ -2851,7 +2851,7 @@ var _s = __turbopack_context__.k.signature(), _s1 = __turbopack_context__.k.sign
 ;
 ;
 ;
-// Preview client-only
+// Client-only preview component
 const Perview = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_context__.A("[project]/app/preview/page.tsx [app-client] (ecmascript, next/dynamic entry, async loader)"), {
     loadableGenerated: {
         modules: [
@@ -2885,20 +2885,20 @@ _c = Perview;
                 className: "h-5 w-5"
             }, void 0, false, {
                 fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                lineNumber: 58,
-                columnNumber: 29
+                lineNumber: 65,
+                columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__["X"], {
                 className: "h-5 w-5"
             }, void 0, false, {
                 fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                lineNumber: 58,
-                columnNumber: 68
+                lineNumber: 67,
+                columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0)),
             message
         ]
     }, void 0, true, {
         fileName: "[project]/app/landing-pages/new/page.client.tsx",
-        lineNumber: 52,
+        lineNumber: 58,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -2919,6 +2919,7 @@ _c1 = Toast;
         transform: mounted && transform ? __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$dnd$2d$kit$2f$utilities$2f$dist$2f$utilities$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CSS"].Transform.toString(transform) : undefined,
         transition: mounted ? transition : undefined
     };
+    const label = availableSections.find((s)=>s.section === item.section)?.label || item.section;
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         ref: setNodeRef,
         style: style,
@@ -2928,26 +2929,26 @@ _c1 = Toast;
                 className: "flex items-center gap-3",
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$grip$2d$vertical$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__GripVertical$3e$__["GripVertical"], {
-                        className: "h-5 w-5 cursor-grab",
+                        className: "h-5 w-5 cursor-grab text-gray-400",
                         ...attributes,
                         ...listeners
                     }, void 0, false, {
                         fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                        lineNumber: 86,
+                        lineNumber: 100,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                         className: "font-medium",
-                        children: availableSections.find((s)=>s.section === item.section)?.label || item.section
+                        children: label
                     }, void 0, false, {
                         fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                        lineNumber: 87,
+                        lineNumber: 105,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                lineNumber: 85,
+                lineNumber: 99,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2958,30 +2959,29 @@ _c1 = Toast;
                         onCheckedChange: ()=>onToggle(item.section)
                     }, void 0, false, {
                         fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                        lineNumber: 93,
+                        lineNumber: 109,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
                         size: "sm",
                         variant: "ghost",
                         onClick: ()=>onRemove(item.section),
-                        className: "cursor-pointer",
                         children: "Remove"
                     }, void 0, false, {
                         fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                        lineNumber: 94,
+                        lineNumber: 113,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                lineNumber: 92,
+                lineNumber: 108,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/landing-pages/new/page.client.tsx",
-        lineNumber: 80,
+        lineNumber: 94,
         columnNumber: 5
     }, this);
 }
@@ -2991,18 +2991,20 @@ _s1(SortableItem, "/z3KIFzqyVdhMkyhG3dCWYApX1g=", false, function() {
     ];
 });
 _c2 = SortableItem;
-function NewLandingPagePage({ templateId, userId }) {
+function LandingPageBuilder() {
     _s2();
     const params = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useParams"])();
-    const isEditMode = Boolean(params?.id);
+    const productId = params?.productId ? Number(params.productId) : null;
     const [selectValue, setSelectValue] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"]("");
     const [isSaving, setIsSaving] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"](false);
     const [isLoading, setIsLoading] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"](true);
     const [toast, setToast] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"](null);
-    // Dynamic sections from database
+    // All available global sections
     const [availableSections, setAvailableSections] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"]([]);
+    // Currently active/configured sections (with order & enabled state)
     const [activeSections, setActiveSections] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"]([]);
-    const [styles, setStyles] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"]({
+    // Styles (can be expanded later)
+    const [styles] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"]({
         primaryColor: "#ecedf4ff",
         backgroundColor: "#000000",
         textColor: "#a97d38",
@@ -3020,86 +3022,83 @@ function NewLandingPagePage({ templateId, userId }) {
             distance: 6
         }
     }));
-    // Fetch sections from database
-    __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"]({
-        "NewLandingPagePage.useEffect": ()=>{
-            const fetchSections = {
-                "NewLandingPagePage.useEffect.fetchSections": async ()=>{
-                    // if (!templateId || !userId) {
-                    //   showToast("Missing template ID or user ID", "error");
-                    //   setIsLoading(false);
-                    //   return;
-                    // }
-                    const templateId = 26;
-                    const userId = 1;
+    /* ----------------------------------------------------
+     FETCH DATA – PRODUCT OR GLOBAL
+  ---------------------------------------------------- */ __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"]({
+        "LandingPageBuilder.useEffect": ()=>{
+            const fetchData = {
+                "LandingPageBuilder.useEffect.fetchData": async ()=>{
                     try {
                         setIsLoading(true);
-                        // Fetch available sections and template data
-                        const response = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$axiosClient$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].post(`/templates/sections`, {
-                            templateId,
-                            userId
-                        });
-                        if (response.data.status === "success") {
-                            const { availableSections, activeSections, styles } = response.data.data;
-                            // Set available sections from database
-                            setAvailableSections(availableSections || []);
-                            // Set active sections (either from saved template or defaults)
-                            if (activeSections && activeSections.length > 0) {
-                                setActiveSections(activeSections);
-                                const defaultKeys = [
-                                    "Header",
-                                    "Description",
-                                    "sliderThree",
-                                    "Specification",
-                                    "CTA",
-                                    "Social",
-                                    "Contact"
-                                ];
-                            } else {
-                                // Set default sections if no saved data
-                                const defaultKeys = [
-                                    "Header",
-                                    "Description",
-                                    "sliderThree",
-                                    "Specification",
-                                    "CTA",
-                                    "Social",
-                                    "Contact"
-                                ];
-                                const defaultSections = sections.filter({
-                                    "NewLandingPagePage.useEffect.fetchSections.defaultSections": (sec)=>defaultKeys.includes(sec.section)
-                                }["NewLandingPagePage.useEffect.fetchSections.defaultSections"]).map({
-                                    "NewLandingPagePage.useEffect.fetchSections.defaultSections": (sec)=>({
-                                            section: sec.section,
-                                            enabled: true,
-                                            fields: sec.fields
+                        let active = [];
+                        let globalSections = [];
+                        if (productId) {
+                            // === PRODUCT-SPECIFIC ===
+                            const res = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$axiosClient$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].get(`/products/${productId}/landing-page`);
+                            if (res.data.success && res.data.data?.sections?.length > 0) {
+                                const sections = res.data.data.sections;
+                                sections.sort({
+                                    "LandingPageBuilder.useEffect.fetchData": (a, b)=>a.sort_order - b.sort_order
+                                }["LandingPageBuilder.useEffect.fetchData"]);
+                                active = sections.map({
+                                    "LandingPageBuilder.useEffect.fetchData": (sec)=>({
+                                            section: sec.global_section.key,
+                                            enabled: sec.is_published,
+                                            content: sec.content || {}
                                         })
-                                }["NewLandingPagePage.useEffect.fetchSections.defaultSections"]);
-                                setActiveSections(defaultSections);
+                                }["LandingPageBuilder.useEffect.fetchData"]);
+                                globalSections = sections.map({
+                                    "LandingPageBuilder.useEffect.fetchData": (sec)=>({
+                                            section: sec.global_section.key,
+                                            label: sec.global_section.name,
+                                            schema: sec.global_section.schema
+                                        })
+                                }["LandingPageBuilder.useEffect.fetchData"]);
                             }
-                        // Set styles if available
-                        // if (templateStyles) {
-                        //   setStyles(templateStyles);
-                        // }
+                        // If product has no sections yet, active remains empty
                         } else {
-                            showToast(response.data.message || "Failed to load sections", "error");
+                            // === GLOBAL / DEFAULT ===
+                            const res = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$axiosClient$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].get("/landing-page/sections");
+                            if (res.data.success && res.data.data?.length > 0) {
+                                const sections = res.data.data;
+                                sections.sort({
+                                    "LandingPageBuilder.useEffect.fetchData": (a, b)=>a.sort_order - b.sort_order
+                                }["LandingPageBuilder.useEffect.fetchData"]);
+                                active = sections.map({
+                                    "LandingPageBuilder.useEffect.fetchData": (sec)=>({
+                                            section: sec.key,
+                                            enabled: sec.is_published ?? true,
+                                            content: sec.content || {}
+                                        })
+                                }["LandingPageBuilder.useEffect.fetchData"]);
+                                globalSections = sections.map({
+                                    "LandingPageBuilder.useEffect.fetchData": (sec)=>({
+                                            section: sec.key,
+                                            label: sec.name,
+                                            schema: sec.schema
+                                        })
+                                }["LandingPageBuilder.useEffect.fetchData"]);
+                            }
                         }
+                        setActiveSections(active);
+                        setAvailableSections(globalSections);
                     } catch (error) {
-                        console.error("Fetch sections error:", error);
-                        showToast(error.response?.data?.message || "Failed to load sections", "error");
+                        console.error("Fetch error:", error);
+                        showToast(error.response?.data?.message || "Failed to load landing page data", "error");
                     } finally{
                         setIsLoading(false);
                     }
                 }
-            }["NewLandingPagePage.useEffect.fetchSections"];
-            fetchSections();
+            }["LandingPageBuilder.useEffect.fetchData"];
+            fetchData();
         }
-    }["NewLandingPagePage.useEffect"], [
-        templateId,
-        userId
+    }["LandingPageBuilder.useEffect"], [
+        productId
     ]);
-    const handleAddSection = (sectionKey)=>{
-        if (activeSections.some((s)=>s.section === sectionKey)) return;
+    /* ----------------------------------------------------
+     SECTION MANAGEMENT
+  ---------------------------------------------------- */ const handleAddSection = (sectionKey)=>{
+        if (!sectionKey || activeSections.some((s)=>s.section === sectionKey)) return;
         const template = availableSections.find((s)=>s.section === sectionKey);
         if (template) {
             setActiveSections((prev)=>[
@@ -3107,9 +3106,10 @@ function NewLandingPagePage({ templateId, userId }) {
                     {
                         section: template.section,
                         enabled: true,
-                        fields: template.fields
+                        content: {}
                     }
                 ]);
+            setSelectValue("");
         }
     };
     const toggleEnabled = (key)=>setActiveSections((prev)=>prev.map((s)=>s.section === key ? {
@@ -3125,40 +3125,54 @@ function NewLandingPagePage({ templateId, userId }) {
             return (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$dnd$2d$kit$2f$sortable$2f$dist$2f$sortable$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["arrayMove"])(prev, oldIndex, newIndex);
         });
     };
-    const handleSave = async ()=>{
-        if (!templateId || !userId) {
-            showToast("Missing template ID or user ID", "error");
-            return;
-        }
+    /* ----------------------------------------------------
+     SAVE CHANGES
+  ---------------------------------------------------- */ const handleSave = async ()=>{
         setIsSaving(true);
         try {
-            const payload = {
-                templateId,
-                userId,
-                sections: activeSections,
-                styles
-            };
-            const response = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$axiosClient$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].post('/templates/templateupdate/', payload);
-            if (response.data.status === "success") {
-                showToast("Template saved successfully!", "success");
+            const sectionsPayload = activeSections.map((sec, index)=>({
+                    global_landing_page_section_key: sec.section,
+                    content: sec.content || {},
+                    is_published: sec.enabled,
+                    sort_order: index + 1
+                }));
+            let response;
+            if (productId) {
+                response = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$axiosClient$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].put(`/products/${productId}/landing-page`, {
+                    sections: sectionsPayload
+                });
             } else {
-                showToast(response.data.message || "Failed to save template", "error");
+                response = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$axiosClient$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].put("/landing-page/sections", {
+                    sections: sectionsPayload
+                });
+            }
+            if (response.data.success) {
+                showToast("Landing page updated successfully!", "success");
+            } else {
+                showToast(response.data.message || "Failed to save", "error");
             }
         } catch (error) {
             console.error("Save error:", error);
-            showToast(error.response?.data?.message || "Failed to save template", "error");
+            showToast(error.response?.data?.message || "Failed to save landing page", "error");
         } finally{
             setIsSaving(false);
         }
     };
-    const previewPayload = {
+    /* ----------------------------------------------------
+     PREVIEW PAYLOAD
+  ---------------------------------------------------- */ const previewPayload = {
         templateName: "modern",
-        sections: activeSections,
+        sections: activeSections.filter((s)=>s.enabled).map((s)=>({
+                section: s.section,
+                content: s.content
+            })),
         styles
     };
     const availableToAdd = availableSections.filter((s)=>!activeSections.some((a)=>a.section === s.section));
-    // Loading state
-    if (isLoading) {
+    const pageTitle = productId ? `Product #${productId} Landing Page Builder` : "Global Landing Page Builder";
+    /* ----------------------------------------------------
+     LOADING STATE
+  ---------------------------------------------------- */ if (isLoading) {
         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$dashboard$2f$layout$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DashboardLayout"], {
             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "flex items-center justify-center h-screen",
@@ -3169,330 +3183,335 @@ function NewLandingPagePage({ templateId, userId }) {
                             className: "h-12 w-12 animate-spin mx-auto text-primary"
                         }, void 0, false, {
                             fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                            lineNumber: 271,
+                            lineNumber: 335,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                             className: "text-lg text-muted-foreground",
-                            children: "Loading sections..."
+                            children: "Loading landing page..."
                         }, void 0, false, {
                             fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                            lineNumber: 272,
+                            lineNumber: 336,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                    lineNumber: 270,
+                    lineNumber: 334,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                lineNumber: 269,
+                lineNumber: 333,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/app/landing-pages/new/page.client.tsx",
-            lineNumber: 268,
+            lineNumber: 332,
             columnNumber: 7
         }, this);
     }
-    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
-        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-            className: "max-w-7xl mx-auto space-y-8 p-6",
-            children: [
-                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "flex items-center justify-between",
-                    children: [
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
-                            className: "text-3xl font-bold"
-                        }, void 0, false, {
-                            fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                            lineNumber: 283,
-                            columnNumber: 11
-                        }, this),
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
-                            onClick: handleSave,
-                            disabled: isSaving,
-                            size: "lg",
-                            className: "cursor-pointer",
-                            children: isSaving ? "Saving..." : "Save & Publish"
-                        }, void 0, false, {
-                            fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                            lineNumber: 287,
-                            columnNumber: 11
-                        }, this)
-                    ]
-                }, void 0, true, {
-                    fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                    lineNumber: 282,
-                    columnNumber: 9
-                }, this),
-                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "grid grid-cols-1 lg:grid-cols-2 gap-8",
-                    children: [
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "space-y-6",
-                            children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardHeader"], {
-                                            children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardTitle"], {
-                                                    children: "Add Sections"
-                                                }, void 0, false, {
-                                                    fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                                    lineNumber: 303,
-                                                    columnNumber: 17
-                                                }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardDescription"], {
-                                                    children: "Select a section to add"
-                                                }, void 0, false, {
-                                                    fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                                    lineNumber: 304,
-                                                    columnNumber: 17
-                                                }, this)
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                            lineNumber: 302,
-                                            columnNumber: 15
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
-                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
-                                                value: selectValue,
-                                                onValueChange: (val)=>{
-                                                    handleAddSection(val);
-                                                    setSelectValue("");
-                                                },
+    /* ----------------------------------------------------
+     MAIN RENDER
+  ---------------------------------------------------- */ return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
+        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$dashboard$2f$layout$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DashboardLayout"], {
+            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "max-w-7xl mx-auto space-y-8 p-6",
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "flex items-center justify-between",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
+                                className: "text-3xl font-bold",
+                                children: pageTitle
+                            }, void 0, false, {
+                                fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                lineNumber: 353,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
+                                onClick: handleSave,
+                                disabled: isSaving,
+                                size: "lg",
+                                children: isSaving ? "Saving..." : "Save Changes"
+                            }, void 0, false, {
+                                fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                lineNumber: 355,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                        lineNumber: 352,
+                        columnNumber: 11
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "grid grid-cols-1 lg:grid-cols-2 gap-8",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "space-y-6",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardHeader"], {
                                                 children: [
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectTrigger"], {
-                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {
-                                                            placeholder: "Select Component of section..."
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                                            lineNumber: 316,
-                                                            columnNumber: 21
-                                                        }, this)
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardTitle"], {
+                                                        children: "Add Sections"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                                        lineNumber: 315,
+                                                        lineNumber: 366,
                                                         columnNumber: 19
                                                     }, this),
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
-                                                        children: availableToAdd.length > 0 ? availableToAdd.map((s)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
-                                                                value: s.section,
-                                                                children: s.label
-                                                            }, s.section, false, {
-                                                                fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                                                lineNumber: 322,
-                                                                columnNumber: 25
-                                                            }, this)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "p-4 text-center text-sm text-muted-foreground",
-                                                            children: "All sections added"
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                                            lineNumber: 327,
-                                                            columnNumber: 23
-                                                        }, this)
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardDescription"], {
+                                                        children: "Choose a section to add to your page"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                                        lineNumber: 319,
+                                                        lineNumber: 367,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                                lineNumber: 308,
-                                                columnNumber: 17
-                                            }, this)
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                            lineNumber: 307,
-                                            columnNumber: 15
-                                        }, this)
-                                    ]
-                                }, void 0, true, {
-                                    fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                    lineNumber: 301,
-                                    columnNumber: 13
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardHeader"], {
-                                            children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardTitle"], {
-                                                    children: "Page Sections"
-                                                }, void 0, false, {
-                                                    fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                                    lineNumber: 339,
-                                                    columnNumber: 17
-                                                }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardDescription"], {
-                                                    children: "Reorder sections"
-                                                }, void 0, false, {
-                                                    fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                                    lineNumber: 340,
-                                                    columnNumber: 17
-                                                }, this)
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                            lineNumber: 338,
-                                            columnNumber: 15
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
-                                            children: activeSections.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$dnd$2d$kit$2f$core$2f$dist$2f$core$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DndContext"], {
-                                                sensors: sensors,
-                                                collisionDetection: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$dnd$2d$kit$2f$core$2f$dist$2f$core$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["closestCenter"],
-                                                onDragEnd: onDragEnd,
-                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$dnd$2d$kit$2f$sortable$2f$dist$2f$sortable$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SortableContext"], {
-                                                    items: activeSections.map((s)=>s.section),
-                                                    strategy: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$dnd$2d$kit$2f$sortable$2f$dist$2f$sortable$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["verticalListSortingStrategy"],
-                                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "space-y-3",
-                                                        children: activeSections.map((item)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(SortableItem, {
-                                                                item: item,
-                                                                availableSections: availableSections,
-                                                                onToggle: toggleEnabled,
-                                                                onRemove: removeSection
-                                                            }, item.section, false, {
-                                                                fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                                                lineNumber: 352,
-                                                                columnNumber: 27
-                                                            }, this))
-                                                    }, void 0, false, {
-                                                        fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                                        lineNumber: 350,
-                                                        columnNumber: 23
-                                                    }, this)
-                                                }, void 0, false, {
-                                                    fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                                    lineNumber: 346,
-                                                    columnNumber: 21
-                                                }, this)
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                                lineNumber: 345,
-                                                columnNumber: 19
-                                            }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "text-center py-8 text-muted-foreground",
-                                                children: "No sections added. Select a section from the dropdown above."
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                                lineNumber: 364,
-                                                columnNumber: 19
-                                            }, this)
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                            lineNumber: 343,
-                                            columnNumber: 15
-                                        }, this)
-                                    ]
-                                }, void 0, true, {
-                                    fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                    lineNumber: 337,
-                                    columnNumber: 13
-                                }, this)
-                            ]
-                        }, void 0, true, {
-                            fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                            lineNumber: 299,
-                            columnNumber: 11
-                        }, this),
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
-                            children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardHeader"], {
-                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardTitle"], {
-                                        children: "Mobile Preview"
-                                    }, void 0, false, {
-                                        fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                        lineNumber: 375,
-                                        columnNumber: 15
-                                    }, this)
-                                }, void 0, false, {
-                                    fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                    lineNumber: 374,
-                                    columnNumber: 13
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
-                                    className: "flex justify-center py-8",
-                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "w-[360px] h-[720px] rounded-[45px] border-[14px] border-black bg-black overflow-hidden relative shadow-xl",
-                                        children: [
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "absolute top-0 left-1/2 -translate-x-1/2 w-40 h-6 bg-black rounded-b-3xl z-20"
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                                lineNumber: 381,
+                                                lineNumber: 365,
                                                 columnNumber: 17
                                             }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "bg-white w-full h-full overflow-y-auto",
-                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Perview, {
-                                                    data: previewPayload
-                                                }, void 0, false, {
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
+                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
+                                                    value: selectValue,
+                                                    onValueChange: handleAddSection,
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectTrigger"], {
+                                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {
+                                                                placeholder: "Select a section..."
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                                                lineNumber: 374,
+                                                                columnNumber: 23
+                                                            }, this)
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                                            lineNumber: 373,
+                                                            columnNumber: 21
+                                                        }, this),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
+                                                            children: availableToAdd.length > 0 ? availableToAdd.map((s)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
+                                                                    value: s.section,
+                                                                    children: s.label
+                                                                }, s.section, false, {
+                                                                    fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                                                    lineNumber: 379,
+                                                                    columnNumber: 27
+                                                                }, this)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                className: "p-4 text-center text-sm text-muted-foreground",
+                                                                children: "All available sections have been added"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                                                lineNumber: 384,
+                                                                columnNumber: 25
+                                                            }, this)
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                                            lineNumber: 376,
+                                                            columnNumber: 21
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
                                                     fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                                    lineNumber: 384,
+                                                    lineNumber: 372,
                                                     columnNumber: 19
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                                lineNumber: 383,
+                                                lineNumber: 371,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                        lineNumber: 379,
+                                        lineNumber: 364,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardHeader"], {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardTitle"], {
+                                                        children: "Page Sections"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                                        lineNumber: 396,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardDescription"], {
+                                                        children: "Drag to reorder, toggle visibility, or remove"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                                        lineNumber: 397,
+                                                        columnNumber: 19
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                                lineNumber: 395,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
+                                                children: activeSections.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$dnd$2d$kit$2f$core$2f$dist$2f$core$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DndContext"], {
+                                                    sensors: sensors,
+                                                    collisionDetection: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$dnd$2d$kit$2f$core$2f$dist$2f$core$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["closestCenter"],
+                                                    onDragEnd: onDragEnd,
+                                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$dnd$2d$kit$2f$sortable$2f$dist$2f$sortable$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SortableContext"], {
+                                                        items: activeSections.map((s)=>s.section),
+                                                        strategy: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$dnd$2d$kit$2f$sortable$2f$dist$2f$sortable$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["verticalListSortingStrategy"],
+                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                            className: "space-y-3",
+                                                            children: activeSections.map((item)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(SortableItem, {
+                                                                    item: item,
+                                                                    availableSections: availableSections,
+                                                                    onToggle: toggleEnabled,
+                                                                    onRemove: removeSection
+                                                                }, item.section, false, {
+                                                                    fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                                                    lineNumber: 414,
+                                                                    columnNumber: 29
+                                                                }, this))
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                                            lineNumber: 412,
+                                                            columnNumber: 25
+                                                        }, this)
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                                        lineNumber: 408,
+                                                        columnNumber: 23
+                                                    }, this)
+                                                }, void 0, false, {
+                                                    fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                                    lineNumber: 403,
+                                                    columnNumber: 21
+                                                }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "text-center py-8 text-muted-foreground",
+                                                    children: "No sections added yet. Add sections from the dropdown above."
+                                                }, void 0, false, {
+                                                    fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                                    lineNumber: 426,
+                                                    columnNumber: 21
+                                                }, this)
+                                            }, void 0, false, {
+                                                fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                                lineNumber: 401,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                        lineNumber: 394,
                                         columnNumber: 15
                                     }, this)
-                                }, void 0, false, {
-                                    fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                                    lineNumber: 378,
-                                    columnNumber: 13
-                                }, this)
-                            ]
-                        }, void 0, true, {
-                            fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                            lineNumber: 373,
-                            columnNumber: 11
-                        }, this)
-                    ]
-                }, void 0, true, {
-                    fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                    lineNumber: 297,
-                    columnNumber: 9
-                }, this),
-                toast && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Toast, {
-                    message: toast.message,
-                    type: toast.type,
-                    onClose: ()=>setToast(null)
-                }, void 0, false, {
-                    fileName: "[project]/app/landing-pages/new/page.client.tsx",
-                    lineNumber: 393,
-                    columnNumber: 11
-                }, this)
-            ]
-        }, void 0, true, {
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                lineNumber: 362,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardHeader"], {
+                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardTitle"], {
+                                            children: "Mobile Preview"
+                                        }, void 0, false, {
+                                            fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                            lineNumber: 437,
+                                            columnNumber: 17
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                        lineNumber: 436,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
+                                        className: "flex justify-center py-8",
+                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            className: "w-[360px] h-[720px] rounded-[45px] border-[14px] border-black bg-black overflow-hidden relative shadow-xl",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "absolute top-0 left-1/2 -translate-x-1/2 w-40 h-6 bg-black rounded-b-3xl z-20"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                                    lineNumber: 441,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "bg-white w-full h-full overflow-y-auto",
+                                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Perview, {
+                                                        data: previewPayload
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                                        lineNumber: 443,
+                                                        columnNumber: 21
+                                                    }, this)
+                                                }, void 0, false, {
+                                                    fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                                    lineNumber: 442,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                            lineNumber: 440,
+                                            columnNumber: 17
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                        lineNumber: 439,
+                                        columnNumber: 15
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                                lineNumber: 435,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                        lineNumber: 360,
+                        columnNumber: 11
+                    }, this),
+                    toast && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Toast, {
+                        message: toast.message,
+                        type: toast.type,
+                        onClose: ()=>setToast(null)
+                    }, void 0, false, {
+                        fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                        lineNumber: 452,
+                        columnNumber: 13
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/app/landing-pages/new/page.client.tsx",
+                lineNumber: 351,
+                columnNumber: 9
+            }, this)
+        }, void 0, false, {
             fileName: "[project]/app/landing-pages/new/page.client.tsx",
-            lineNumber: 281,
+            lineNumber: 350,
             columnNumber: 7
         }, this)
     }, void 0, false);
 }
-_s2(NewLandingPagePage, "W2dk2fl/qAzMxN7777hlXwz01CM=", false, function() {
+_s2(LandingPageBuilder, "MAieHwk9KPS3q4Ss1PcRO6r8qvQ=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useParams"],
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$dnd$2d$kit$2f$core$2f$dist$2f$core$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSensors"]
     ];
 });
-_c3 = NewLandingPagePage;
+_c3 = LandingPageBuilder;
 var _c, _c1, _c2, _c3;
 __turbopack_context__.k.register(_c, "Perview");
 __turbopack_context__.k.register(_c1, "Toast");
 __turbopack_context__.k.register(_c2, "SortableItem");
-__turbopack_context__.k.register(_c3, "NewLandingPagePage");
+__turbopack_context__.k.register(_c3, "LandingPageBuilder");
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
 }

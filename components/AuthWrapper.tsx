@@ -15,7 +15,7 @@ export default function AuthWrapper({
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    const publicRoutes = ["/signin", "/signup", "/forgot-password"];
+    const publicRoutes = ["/signin", "/signup", "/forgot-password",];
 
     // Not logged in → block protected routes
     if (!token && !publicRoutes.includes(pathname)) {

@@ -19,7 +19,7 @@ axiosClient.interceptors.request.use((config) => {
 
   return config;
 });
-
+export default axiosClient;
 //  Auto logout on 401 (important)
 // axiosClient.interceptors.response.use(
 //   (response) => response,
@@ -34,4 +34,4 @@ axiosClient.interceptors.request.use((config) => {
 //   }
 // );
 
-export default axiosClient;
+

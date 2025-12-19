@@ -47,7 +47,6 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$skeleton
 ;
 var _s = __turbopack_context__.k.signature();
 "use client";
-"use client";
 const dynamic = "force-dynamic"; // OK now
 ;
 ;
@@ -72,16 +71,16 @@ const Template2 = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modul
     loading: ()=>null
 });
 _c3 = Template2;
-const Preview = ({ data })=>{
+const Preview = ({ data, productId })=>{
     _s();
     const [localLoading, setLocalLoading] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].useState(false);
-    // If data is undefined, stop rendering immediately
+    // If data is undefined, s top rendering immediately
     if (!data) {
         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             children: "No preview data found"
         }, void 0, false, {
             fileName: "[project]/app/preview/page.tsx",
-            lineNumber: 36,
+            lineNumber: 34,
             columnNumber: 12
         }, ("TURBOPACK compile-time value", void 0));
     }
@@ -129,17 +128,17 @@ const Preview = ({ data })=>{
                                 className: "h-16 w-16 object-contain"
                             }, void 0, false, {
                                 fileName: "[project]/app/preview/page.tsx",
-                                lineNumber: 68,
+                                lineNumber: 64,
                                 columnNumber: 15
                             }, ("TURBOPACK compile-time value", void 0))
                         }, void 0, false, {
                             fileName: "[project]/app/preview/page.tsx",
-                            lineNumber: 67,
+                            lineNumber: 63,
                             columnNumber: 13
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/app/preview/page.tsx",
-                        lineNumber: 66,
+                        lineNumber: 62,
                         columnNumber: 11
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -154,63 +153,64 @@ const Preview = ({ data })=>{
                                             className: "h-8 w-[200px]"
                                         }, void 0, false, {
                                             fileName: "[project]/app/preview/page.tsx",
-                                            lineNumber: 80,
+                                            lineNumber: 76,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$skeleton$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Skeleton"], {
                                             className: "h-4 w-[300px]"
                                         }, void 0, false, {
                                             fileName: "[project]/app/preview/page.tsx",
-                                            lineNumber: 81,
+                                            lineNumber: 77,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/preview/page.tsx",
-                                    lineNumber: 79,
+                                    lineNumber: 75,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$skeleton$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Skeleton"], {
                                     className: "h-10 w-[140px]"
                                 }, void 0, false, {
                                     fileName: "[project]/app/preview/page.tsx",
-                                    lineNumber: 83,
+                                    lineNumber: 79,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/preview/page.tsx",
-                            lineNumber: 78,
+                            lineNumber: 74,
                             columnNumber: 13
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/app/preview/page.tsx",
-                        lineNumber: 77,
+                        lineNumber: 73,
                         columnNumber: 11
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/preview/page.tsx",
-                lineNumber: 65,
+                lineNumber: 61,
                 columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0)),
             ContentComponent ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(ContentComponent, {
-                data: data
+                data: data,
+                productId: productId
             }, void 0, false, {
                 fileName: "[project]/app/preview/page.tsx",
-                lineNumber: 91,
+                lineNumber: 87,
                 columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 children: "No template selected"
             }, void 0, false, {
                 fileName: "[project]/app/preview/page.tsx",
-                lineNumber: 93,
+                lineNumber: 89,
                 columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/app/preview/page.tsx",
-        lineNumber: 62,
+        lineNumber: 58,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };

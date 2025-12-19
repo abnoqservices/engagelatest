@@ -8,17 +8,13 @@ __turbopack_context__.s([
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
 ;
-function Description({ data }) {
-    const headingField = data?.find((field)=>field.name === "heading");
-    const descriptionField = data?.find((field)=>field.name === "description");
-    const heading = headingField?.value || "Your Brand Name";
-    const description = descriptionField?.value || "<p>Your description goes here.</p>";
+function Description({ heading, description }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "card-header",
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
                 className: "core-header-title",
-                children: heading
+                children: heading ? heading : "Why Choose a Single-Focus Landing Page?"
             }, void 0, false, {
                 fileName: "[project]/components/tempcomponent/Description.tsx",
                 lineNumber: 15,
@@ -34,7 +30,7 @@ function Description({ data }) {
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "prose prose-sm md:prose-lg text-gray-700 leading-relaxed max-w-2xl mx-auto",
                 dangerouslySetInnerHTML: {
-                    __html: description
+                    __html: description ? description : "Single Focus: Dedicated to one objective, such as getting a form submission or a purchase. "
                 }
             }, void 0, false, {
                 fileName: "[project]/components/tempcomponent/Description.tsx",

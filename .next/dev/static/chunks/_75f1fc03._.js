@@ -381,6 +381,18 @@ const __TURBOPACK__default__export__ = axiosClient;
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
 }
+ //  Auto logout on 401 (important)
+ // axiosClient.interceptors.response.use(
+ //   (response) => response,
+ //   (error) => {
+ //     if (error.response?.status === 401) {
+ //       localStorage.removeItem("token");
+ //       localStorage.removeItem("user");
+ //       window.location.href = "/signin";
+ //     }
+ //     return Promise.reject(error);
+ //   }
+ // );
 }),
 "[project]/app/signup/page.tsx [app-client] (ecmascript)", ((__turbopack_context__) => {
 "use strict";

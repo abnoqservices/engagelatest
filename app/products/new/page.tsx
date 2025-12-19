@@ -5,982 +5,844 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import Perview from "@/app/preview/page";
-
+import { Switch } from "@/components/ui/switch";
 import {
   Upload,
   X,
   Plus,
+  Eye,
+  FileText,
+  CheckCircle,
+  ExternalLink,
+  ChevronDown,
+  ChevronRight,
+  FolderOpen,
   Save,
-  GripVertical,
-  Trash2,
 } from "lucide-react";
+import Image from "next/image";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DashboardLayout } from "@/components/dashboard/layout";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Spinner } from "@/components/ui/spinner";
 import axiosClient from "@/lib/axiosClient";
 import { showToast } from "@/lib/showToast"
-import { usePageStore } from "@/lib/pageStore";
-import dynamic from "next/dynamic";
-const Builder = dynamic(() => import("@/app/landing-pages/new/page.client"), {
-  ssr: false,
-});
-// ==================== TEMPLATE SECTIONS ====================
-const templateSections = {
-  userId: 1,
-  templateName: "modern",
-  sections: [
-    { 
-      
-      section: "ProductDetail", 
-      label: "Product Detail (name + price)", 
-      enabled: true,
-    
-    fields: [
-      { name: "produtname", label: "Product Name", type: "text", required: true },
-      { name: "pcategory", label: "Category", type: "text", required: true },
-      { name: "psku", label: "SKU", type: "text", required: true },
-      { name: "pprice", label: "Price", type: "text", required: true },
-      { name: "productTag", label: "tags", type: "text", required: false }
-    ]
-  },
-    { 
-      
-      section: "Header", 
-      label: "Header (Logo + Title)", 
-      enabled: true,
-    
-    fields: [
-      { name: "logo", label: "Upload Logo", type: "image", required: true },
-      { name: "title", label: "Site Title / Brand Name", type: "text", required: true },
-      { name: "subtitle", label: "Sub title", type: "text", required: true }
-    ]
-  },
-  
-  
-    { section: "sliderThree", label: "Tertiary Slider",   enabled: true,fields: [
-      { name: "image", label: "Image", type: "image", multiple:'multiple',required: true },
-      { name: "title", label: "Site Title / Brand Name", type: "text", required: true },
-      { name: "subtitle", label: "Sub title", type: "text", required: true }
-    ]},
-  
-    { section: "Description", label: "Description Block",   enabled: true,fields: [
-      { name: "heading", label: "Heading", type: "text", required: true },
-      { name: "description", label: "Description Text", type: "textarea", required: true },
-    ]},
-  
-    {
-      section: "Specification",
-      label: "Product Specifications",
-      enabled: true,
-      fields: [
-        {
-          name: "specifications",
-          label: "Specification List",
-          type: "repeater",
-          subFields: [
-            { name: "label", label: "Title", type: "text", required: true },
-            { name: "value", label: "Value", type: "text", required: true },
-          ],
-        },
-      ],
-    },
-    {
-      section: "Testimonial",
-      label: "Customer Testimonials",
-      enabled: true,
-      fields: [
-        {
-          name: "Testimonial",
-          label: "Testimonial List",
-          type: "repeater",
-          subFields: [
-            { name: "image", label: "Image URL", type: "image", required: false },
-            { name: "name", label: "Name", type: "text", required: true },
-            { name: "designation", label: "Designation", type: "text", required: true },
-            { name: "rating", label: "Rating (1–5)", type: "number", required: true },
-            { name: "description", label: "Description", type: "textarea", required: true }
-          ]
-        }
-      ]
-    },
-    
-    { section: "YouTube", label: "YouTube Video",  enabled: true, fields: [
-      { name: "videoUrl", label: "YouTube Embed URL", type: "url" }
-    ]},
-  
-    { section: "CTA", label: "Call to Action Button",  enabled: true, fields: [
-      { name: "ctaText", label: "Button Text", type: "text", required: true },
-      { name: "ctaUrl", label: "Button URL", type: "url", required: true },
-    ]},
-  
-    {
-      section: "Social",
-      label: "Social Links",
-      enabled: true,
-      fields: [
-        { name: "facebook", label: "Facebook", type: "url" },
-        { name: "instagram", label: "Instagram", type: "url" },
-        { name: "youtube", label: "YouTube", type: "url" },
-        { name: "twitter", label: "Twitter", type: "url" },
-      ],
-    },
-  
-    {
-      section: "Contact",
-      label: "Contact Info",
-      enabled: true,
-      fields: [
-        { name: "phone", label: "Phone", type: "text", required: true },
-        { name: "email", label: "Email", type: "email", required: true },
-        { name: "address", label: "Address", type: "textarea" },
-        { name: "directionButtonText", label: "Direction Button Text", type: "text" },
-        { name: "directionUrl", label: "Direction URL", type: "url" },
-      ],
-    },
-  ],
-};
 
+interface Category {
+  id: number;
+  name: string;
+  slug?: string;
+  description?: string;
+  parent_id?: number | null;
+  children: Category[];
+}
 
 interface ImageFile {
   id: string;
   url: string;
   file?: File;
+  base64?: string; 
 }
 
-// ==================== MOBILE PREVIEW ====================
+interface PdfFile {
+  id: string;
+  name: string;
+  file?: File;
+  base64?: string; 
+}
 
+interface FormDataType {
+  name: string;
+  sku: string;
+  category: string;
+  price: string;
+  description: string;
+  videoUrl: string;
+  metaTitle: string;
+  metaDescription: string;
+  keywords: string;
+  urlSlug: string;
+  isActive: boolean;
+}
 
-// ==================== MAIN PAGE ====================
-export default function NewProductPage() {
-  const { templateId, userId }  = usePageStore();
-  const [productName, setProductName] = React.useState("iPhone 15 Pro Max");
-  const [category, setCategory] = React.useState([]);
-  const [sku, setSku] = React.useState("IPH15PRO");
-  const [price, setPrice] = React.useState("999");
+interface AlertType {
+  type: "success" | "error" | "";
+  message: string;
+}
 
-  const [images, setImages] = React.useState<ImageFile[]>([]);
+interface DraftData {
+  formData: FormDataType;
+  selectedImages: ImageFile[];
+  pdfFiles: PdfFile[];
+  tags: string[];
+  timestamp: number;
+}
+
+const DRAFT_KEY = "product_draft_v1";
+
+export default function NewProductPage(): React.ReactElement {
+  const [formData, setFormData] = React.useState<FormDataType>({
+    name: "",
+    sku: "",
+    category: "",
+    price: "",
+    description: "",
+    videoUrl: "",
+    metaTitle: "",
+    metaDescription: "",
+    keywords: "",
+    urlSlug: "",
+    isActive: true,
+  });
+
+  const [flatCategories, setFlatCategories] = React.useState<Category[]>([]);
+  const [treeCategories, setTreeCategories] = React.useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = React.useState(false);
+
+  const [selectedImages, setSelectedImages] = React.useState<ImageFile[]>([]);
+  const [pdfFiles, setPdfFiles] = React.useState<PdfFile[]>([]);
   const [tags, setTags] = React.useState<string[]>([]);
-  const [newTag, setNewTag] = React.useState("");
+  const [newTag, setNewTag] = React.useState<string>("");
 
-  const [metaTitle, setMetaTitle] = React.useState("");
-  const [metaDescription, setMetaDescription] = React.useState("");
-  const [keywords, setKeywords] = React.useState("");
+  const [productId, setProductId] = React.useState<number | null>(null);
+  const [activeTab, setActiveTab] = React.useState<string>("basic");
 
-  const [sectionsData, setSectionsData] = React.useState<Record<string, any>>({});
-  const [activeTab, setActiveTab] = React.useState("details");
-  const [lastUpdate, setLastUpdate] = React.useState(Date.now());
-  const [isPublishing, setIsPublishing] = React.useState(false);
-  const [publishStatus, setPublishStatus] = React.useState<"idle" | "success" | "error" | null>(null);
-  const [isPreviewLoading, setIsPreviewLoading] = React.useState(false);
-// Add this state near your other useState hooks
-const [isMobilePreviewVisible, setIsMobilePreviewVisible] = React.useState(true);
-const [selectedCategory, setSelectedCategory] = React.useState("");
-const [isCustomizeModalOpen, setIsCustomizeModalOpen] = React.useState(false);
-  const updateField = (section: string, field: string, value: any) => {
-    setSectionsData(prev => ({
-      ...prev,
-      [section]: { ...prev[section], [field]: value },
-    }));
+  const [isSavingBasic, setIsSavingBasic] = React.useState(false);
+  const [isSavingMedia, setIsSavingMedia] = React.useState(false);
+  const [isSavingSEO, setIsSavingSEO] = React.useState(false);
+
+  const [alertMessage, setAlertMessage] = React.useState<AlertType>({ type: "", message: "" });
+  const [showPreview, setShowPreview] = React.useState(false);
+  const [previewLoading, setPreviewLoading] = React.useState(false);
+
+
+  const showAlert = (type: "success" | "error", message: string, duration = 5000) => {
+    showToast(message, type);
+    setTimeout(() => setAlertMessage({ type: "", message: "" }), duration);
+  };
+  const handleInputChange = <K extends keyof FormDataType>(field: K, value: FormDataType[K]) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const generateSafeSku = (name: string) => {
+    if (!name) return "PROD" + Date.now().toString().slice(-6);
+    return name.toUpperCase().replace(/\s+/g, "").slice(0, 10) + "001";
+  };
 
-  const renderCategoryOptions = (
-    items: any[],
-    level = 0
-  ): React.ReactNode[] => {
-    return items.flatMap((cat, index) => {
-      const uniqueKey = `${cat.id}-${level}-${index}`;
-  
-      const current = (
-        <option key={uniqueKey} value={cat.id}>
-          {"—".repeat(level)} {cat.name}
-        </option>
-      );
-  
-      const children = cat.children?.length
-        ? renderCategoryOptions(cat.children, level + 1)
-        : [];
-  
-      return [current, ...children];
+  const slugify = (text: string) => {
+    return (text || "")
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/[^\w\-]+/g, "")
+      .replace(/\-\-+/g, "-");
+  };
+
+  // === Category Tree ===
+  const buildTree = (flat: Category[]): Category[] => {
+    const map = new Map<number, Category>();
+    const roots: Category[] = [];
+
+    flat.forEach((cat) => {
+      map.set(cat.id, { ...cat, children: [] });
     });
+
+    flat.forEach((cat) => {
+      if (cat.parent_id && map.has(cat.parent_id)) {
+        map.get(cat.parent_id)!.children.push(map.get(cat.id)!);
+      } else {
+        roots.push(map.get(cat.id)!);
+      }
+    });
+
+    return roots;
   };
-  
+
   const loadCategories = async () => {
+   
     try {
-  
-  
+      setLoadingCategories(true);
       const res = await axiosClient.get("/product-categories");
-     if (res.data.success) {
-          setCategory(res.data.data || []);
-        }
-      
-  
+      if (res.data.success && Array.isArray(res.data.data)) {
+        const flat = res.data.data as Category[];
+        setFlatCategories(flat);
+        setTreeCategories(buildTree(flat));
+      }
     } catch (err: any) {
-    
-      showToast(
-        err.response?.data?.message || "Failed to load categories",
-        "error"
-      );
+      showToast(err.response?.data?.message || "Failed to load categories","error");
+    } finally {
+      setLoadingCategories(false);
     }
   };
+
+  React.useEffect(() => {
   
-  
-  const addTag = () => {
-    const t = newTag.trim();
-    if (t && !tags.includes(t)) {
-      setTags([...tags, t]);
+    loadCategories();
+  }, []);
+
+  const renderCategoryTree = (items: Category[], level = 0): React.ReactNode => {
+    return items.map((cat) => (
+      <React.Fragment key={cat.id}>
+        <SelectItem value={cat.id.toString()}>
+          <span style={{ paddingLeft: `${level * 20}px` }}>
+            {level > 0 && "└─ "}
+            {cat.name}
+          </span>
+        </SelectItem>
+        {cat.children && cat.children.length > 0 && renderCategoryTree(cat.children, level + 1)}
+      </React.Fragment>
+    ));
+  };
+
+
+  const saveDraft = () => {
+    const draft: DraftData = {
+      formData,
+      selectedImages: selectedImages.map(img => ({
+        ...img,
+        base64: img.url.startsWith("data:") ? img.url : undefined,
+      })),
+      pdfFiles: pdfFiles.map(pdf => ({
+        ...pdf,
+        base64: pdf.file ? URL.createObjectURL(pdf.file).startsWith("data:") ? undefined : undefined : undefined,
+      })),
+      tags,
+      timestamp: Date.now(),
+    };
+
+   
+    const promises = selectedImages.map(async (img) => {
+      if (img.file) {
+        const base64 = await fileToBase64(img.file);
+        return { ...img, base64 };
+      }
+      return img;
+    });
+
+    const pdfPromises = pdfFiles.map(async (pdf) => {
+      if (pdf.file) {
+        const base64 = await fileToBase64(pdf.file);
+        return { ...pdf, base64 };
+      }
+      return pdf;
+    });
+
+    Promise.all([...promises, ...pdfPromises]).then((resolved) => {
+      const [imagesResolved, pdfsResolved] = [resolved.slice(0, selectedImages.length), resolved.slice(selectedImages.length)];
+      const fullDraft = {
+        formData,
+        selectedImages: imagesResolved,
+        pdfFiles: pdfsResolved,
+        tags,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(fullDraft));
+      showToast( "Draft saved locally!","success");
+    });
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const loadDraft = () => {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+
+    try {
+      const draft: DraftData = JSON.parse(raw);
+
+      setFormData(draft.formData);
+      setTags(draft.tags || []);
+
+      // Restore images
+      setSelectedImages(draft.selectedImages.map(img => ({
+        ...img,
+        url: img.base64 || img.url,
+        file: undefined,
+      })));
+
+      // Restore PDFs
+      setPdfFiles(draft.pdfFiles.map(pdf => ({
+        ...pdf,
+        file: undefined,
+      })));
+
+      showToast("Draft loaded from local storage!","success");
+    } catch (err) {
+      showToast("Failed to load draft","error");
+    }
+  };
+
+  const clearDraft = () => {
+    localStorage.removeItem(DRAFT_KEY);
+  };
+
+ 
+  React.useEffect(() => {
+    if (!productId) {
+      loadDraft();
+    }
+  }, []);
+
+  // === File Uploads ===
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const newImages: ImageFile[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const url = URL.createObjectURL(file);
+      newImages.push({
+        id: `img-${Date.now()}-${i}`,
+        url,
+        file,
+      });
+    }
+    setSelectedImages((prev) => [...prev, ...newImages]);
+    e.currentTarget.value = "";
+  };
+
+  const removeImage = (id: string) => {
+    setSelectedImages((prev) => {
+      const removed = prev.find((i) => i.id === id);
+      if (removed?.url && removed.file) URL.revokeObjectURL(removed.url);
+      return prev.filter((i) => i.id !== id);
+    });
+  };
+
+  const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const newPdfs: PdfFile[] = Array.from(files).map((file, idx) => ({
+      id: `pdf-${Date.now()}-${idx}`,
+      name: file.name,
+      file,
+    }));
+    setPdfFiles((prev) => [...prev, ...newPdfs]);
+    e.currentTarget.value = "";
+  };
+
+  const removePdf = (id: string) => {
+    setPdfFiles((prev) => prev.filter((p) => p.id !== id));
+  };
+
+
+  const handleSaveBasic = async () => {
+    if (!formData.name.trim()) return showToast("Product name is required","error");
+    if (!formData.category) return showToast("Category is required","error");
+    if (!formData.price || isNaN(Number(formData.price))) return showToast("Valid price is required","error");
+
+    setIsSavingBasic(true);
+    try {
+      const selectedCatId = parseInt(formData.category);
+
+      const payload = {
+        name: formData.name.trim(),
+        sku: formData.sku || generateSafeSku(formData.name),
+        category_id: selectedCatId,
+        price: parseFloat(formData.price),
+        description: formData.description || null,
+        is_active: formData.isActive,
+        status: "draft",
+        tags: tags,
+      };
+
+      const response = await axiosClient.post("/products", payload);
+      const newProductId = response.data?.data?.id || response.data?.id;
+
+      if (!newProductId) throw new Error("No product ID returned");
+
+      setProductId(newProductId);
+      clearDraft(); 
+      setActiveTab("media");
+      showToast(`Product created successfully! ID: ${newProductId}. Now upload media.`,"success");
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || error.message || "Failed to create product";
+      showToast(`Failed to save basic info: ${msg}`,"error");
+    } finally {
+      setIsSavingBasic(false);
+    }
+  };
+
+ 
+  const toAbsoluteUrl = (path: string) => {
+    if (path.startsWith("http")) return path;
+    const encodedPath = path.split("/").map(encodeURIComponent).join("/");
+    return `${window.location.origin}${encodedPath}`;
+  };
+
+  const uploadFile = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("/api/upload-images", {
+      method: "POST",
+      body: formData,
+    });
+
+    const json = await res.json();
+
+    if (!res.ok || !json?.success) {
+      throw new Error(json?.message || "Upload API failed");
+    }
+
+    return json.data;
+  };
+
+  const handleSaveMedia = async () => {
+    setIsSavingMedia(true);
+
+    try {
+      for (const [index, img] of selectedImages.entries()) {
+        if (!img.file) continue;
+
+        const uploaded = await uploadFile(img.file);
+
+        await axiosClient.post("/product-images", {
+          product_id: productId,
+          url: toAbsoluteUrl(uploaded.url),
+          s3_key: uploaded.s3_key,
+          folder: "product-images",
+          type: "gallery",
+          name: uploaded.name || img.file.name,
+          size: img.file.size,
+          mime_type: img.file.type,
+          position: index + 1,
+        });
+      }
+
+      for (const pdf of pdfFiles) {
+        if (!pdf.file) continue;
+
+        const uploaded = await uploadFile(pdf.file);
+
+        await axiosClient.post("/product-documents", {
+          product_id: productId,
+          url: toAbsoluteUrl(uploaded.url),
+          s3_key: uploaded.s3_key,
+          folder: "product-documents",
+          name: uploaded.name || pdf.file.name,
+          size: pdf.file.size,
+          mime_type: pdf.file.type,
+        });
+      }
+
+      setActiveTab("seo");
+      showToast("All media uploaded and linked successfully!","success");
+    } catch (error: any) {
+      console.error("Media upload failed:", error);
+      showToast(error?.message || "Something went wrong while uploading media","error");
+    } finally {
+      setIsSavingMedia(false);
+    }
+  };
+
+ 
+  const handlePublish = async () => {
+    if (!productId) return showToast("Product not created","error");
+
+    setIsSavingSEO(true);
+    try {
+      const payload = {
+        video_url: formData.videoUrl || null,
+        meta_title: formData.metaTitle || formData.name,
+        meta_description: formData.metaDescription || formData.description?.slice(0, 160),
+        keywords: formData.keywords || null,
+        url_slug: formData.urlSlug || slugify(formData.name),
+        status: "published",
+      };
+
+      await axiosClient.put(`/products/${productId}`, payload);
+
+      clearDraft(); 
+      showToast("Product published successfully!","success");
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || error.message || "Publish failed";
+      showToast(`Publish failed: ${msg}`,"error");
+    } finally {
+      setIsSavingSEO(false);
+    }
+  };
+
+  const handlePreview = () => {
+    setPreviewLoading(true);
+    setTimeout(() => {
+      setPreviewLoading(false);
+      setShowPreview(true);
+    }, 600);
+  };
+
+  const handleAddTag = () => {
+    const tag = newTag.trim();
+    if (tag && !tags.includes(tag)) {
+      setTags((prev) => [...prev, tag]);
       setNewTag("");
     }
   };
 
-  // FINAL JSON – EXACT FORMAT YOU WANTED
-  const buildFinalJson = () => {
-    const sections = templateSections.sections
-      .filter(sec => sec.enabled)
-      .map(sec => {
-        const data = sectionsData[sec.section] || {};
-        const fields: any[] = [];
-  
-        sec.fields.forEach(field => {
-          const value = data[field.name];
-  
-          // Skip empty
-          if (!value || value === "" || (Array.isArray(value) && value.length === 0)) return;
-  
-          // IMAGE fields (logo, background, etc.)
-          if (field.type === "image") {
-            if (field.multiple && Array.isArray(value)) {
-              value.forEach((img: ImageFile) => {
-                if (img.url) fields.push({ name: field.name, url: img.url });
-              });
-            } else if (value?.url) {
-              fields.push({ name: field.name, url: value.url });
-            }
-          }
-          // REPEATER fields (specifications)
-          else if (field.type === "repeater") {
-            if (Array.isArray(value) && value.length > 0) {
-              fields.push({ name: field.name, items: value });
-            }
-          }
-          // TEXT, TEXTAREA, URL, EMAIL
-          else {
-            fields.push({ name: field.name, value: String(value) });
-          }
-        });
-  
-        return fields.length > 0 ? { section: sec.section, fields } : null;
-      })
-      .filter(Boolean);
-  
-    return {
-      user_id: 1,
-      templateName: "modern",
-      product_id: Date.now(),
-      name: productName || "New Product",
-      category_id: selectedCategory || "Uncategorized",
-      sku: sku || "N/A",
-      price: price || "0",
-      tag: tags,
-      meta_title: metaTitle || "",
-      meta_description : metaDescription || "",
-      keywords: keywords || "",
-      sections,
-    };
+  const removeTag = (idx: number) => {
+    setTags((prev) => prev.filter((_, i) => i !== idx));
   };
 
- // REPLACE your current liveData with THIS ONE
-const liveData = React.useMemo(() => {
-  return buildFinalJson(); // Now preview = JSON 100% identical!
-}, [
- 
-  productName,
-  selectedCategory,
-  sku,
-  price,
-  tags,
-  images,
-  metaTitle,
-  metaDescription,
-  keywords,
-  sectionsData
-]);
-
-const prevData = React.useRef(liveData);
-
-React.useEffect(() => {
-  loadCategories();
-  prevData.current = liveData;
-}, [sectionsData]);
-const handlePublish = async () => {
-  const payload = buildFinalJson();
-
-  setIsPublishing(true);
-  setPublishStatus(null);
-
-  try {
-    const response = await axiosClient.post("/products", payload);
-
-    // Success
-    showToast("Product published successfully!", "success");
-    setPublishStatus("success");
-
-    // Optional: show product ID if returned
-    if (response.data?.id) {
-      showToast(`Product ID: ${response.data.id}`, "info");
-    }
-  } catch (error: any) {
-    setPublishStatus("error");
-
-    const status = error.response?.status;
-    const data = error.response?.data;
-    const message = data?.message || "Something went wrong";
-
-    // Handle common error cases with user-friendly messages
-    if (status === 401) {
-      showToast("Please log in again. Session expired.", "error");
-    } 
-    else if (status === 403) {
-      showToast("Please verify your email before publishing.", "error");
-    } 
-    else if (status === 404) {
-      showToast("API endpoint not found. Contact support.", "error");
-    } 
-    else if (status === 422) {
-      // Validation Errors - Show field-specific messages
-      const errors = data?.errors || {};
-      const fieldNames = Object.keys(errors);
-
-      if (fieldNames.length > 0) {
-        fieldNames.forEach((field) => {
-          const msgs = errors[field];
-          msgs.forEach((msg: string) => {
-            const friendlyField = field
-              .replace(/_/g, " ")
-              .replace(/\b\w/g, (l: string) => l.toUpperCase());
-            showToast(`${friendlyField}: ${msg}`, "error");
-          });
-        });
-        showToast("Please fix the errors above", "error");
-      } else {
-        showToast("Validation failed. Check required fields.", "error");
+  const getSelectedCategoryName = () => {
+    const findName = (cats: Category[]): string | undefined => {
+      for (const cat of cats) {
+        if (cat.id.toString() === formData.category) return cat.name;
+        if (cat.children.length > 0) {
+          const found = findName(cat.children);
+          if (found) return found;
+        }
       }
-    } 
-    else if (status >= 500) {
-      showToast("Server error. Please try again later or contact support.", "error");
-    } 
-    else {
-      showToast(message || "Failed to publish product", "error");
-    }
-
-    console.error("Publish error:", error);
-  } finally {
-    setIsPublishing(false);
-
-    // Auto reset status after 5 seconds
-    setTimeout(() => setPublishStatus(null), 5000);
-  }
-};
+    };
+    return findName(treeCategories) || "Select category";
+  };
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-white border-b">
-  <div className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
-    <div>
-      <h1 className="text-3xl font-bold text-gray-900">Create Product Landing Page</h1>
-      <p className="text-gray-600 mt-1">Fill details to see instant mobile preview</p>
-    </div>
+      <div className="min-h-screen bg-slate-50 p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+         
 
-    <div className="flex gap-4 items-center">
-      {/* Add this inside the header buttons group, next to Publish button */}
-<Button
-  variant="default"
-  size="lg"
-  className="bg-purple-600 hover:bg-purple-700 text-white font-semibold shadow-lg"
-  onClick={() => setIsCustomizeModalOpen(true)}
->
-  <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-  </svg>
-  Customize Landing Page
-</Button>
-      {/* Optional: Keep Download JSON */}
-      {/* <Button
-        variant="outline"
-        size="lg"
-        onClick={() => {
-          const data = buildFinalJson();
-          const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `${productName.replace(/\s+/g, "-").toLowerCase()}-landing.json`;
-          a.click();
-          URL.revokeObjectURL(url);
-        }}
-      >
-        <Save className="h-5 w-5 mr-2" />
-        Download JSON
-      </Button> */}
-     {/* Add this inside the header buttons group */}
-     <Button
-  variant="outline"
-  size="lg"
-  className="hidden sm:flex"
-  onClick={() => setIsMobilePreviewVisible(!isMobilePreviewVisible)}
->
-  {isMobilePreviewVisible ? (
-    <>
-      <X className="h-5 w-5 mr-2" />
-      Hide Preview
-    </>
-  ) : (
-    <>
-      <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-          d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-      </svg>
-      Mobile Preview
-    </>
-  )}
-</Button>
-      {/* NEW: Publish Button using axiosClient */}
-      <Button
-                size="lg"
-                disabled={isPublishing}
-                className={`
-                  relative font-bold text-white shadow-xl transition-all
-                  ${isPublishing ? "bg-gray-500 cursor-not-allowed" :
-                    publishStatus === "success" ? "bg-green-600 hover:bg-green-700" :
-                    "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"}
-                `}
-                onClick={handlePublish}
-              >
-                {isPublishing ? (
-                  <>
-                    <div className="mr-3 h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    Publishing...
-                  </>
-                ) : publishStatus === "success" ? (
-                  "Published Successfully"
-                ) : publishStatus === "error" ? (
-                  "Retry"
-                ) : (
-                  <>
-                    <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5 5 5-5m-5 6V4" />
-                    </svg>
-                    Publish Live
-                  </>
-                )}
-              </Button>
-    </div>
-  </div>
-</div>
-
-        <div className="w-full mx-auto">
-        <div className={`grid grid-cols-1  gap-10 ${isMobilePreviewVisible ? "lg:grid-cols-2" : "grid-cols-1 "}`}>
-
-            {/* LEFT: Editor */}
-            <div className="space-y-8">
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid grid-cols-3 w-full">
-                  <TabsTrigger value="details">Product Details</TabsTrigger>
-                  <TabsTrigger value="sections">Sections</TabsTrigger>
-                  <TabsTrigger value="seo">SEO</TabsTrigger>
-                </TabsList>
-
-                {/* Product Details Tab */}
-                <TabsContent value="details" className="space-y-8">
-                          <Card>
-                            <CardHeader>
-                              <CardTitle className="text-2xl font-semibold">Product Information & Media</CardTitle>
-                            </CardHeader>
-
-                            <CardContent className="space-y-10">
-
-                              {/* ==== Basic Product Info ==== */}
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-7">
-                                {/* Product Name */}
-                                <div className="space-y-2">
-                                  <Label htmlFor="product-name">
-                                    Product Name <span className="text-red-600">*</span>
-                                  </Label>
-                                  <Input
-                                    id="product-name"
-                                    placeholder="Enter product name"
-                                    value={productName}
-                                    onChange={(e) => setProductName(e.target.value)}
-                                  />
-                                </div>
-
-                                {/* Category */}
-                                  <div className="space-y-2">
-                                    <Label htmlFor="category">Category</Label>
-
-                                    <select
-                                      id="category"
-                                      className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                      value={selectedCategory}
-                                      onChange={(e) => setSelectedCategory(e.target.value)}
-                                    >
-                                      <option value="">Select Category ...</option>
-                                      {renderCategoryOptions(category)}
-                                    </select>
-                                  </div>
-
-
-                                {/* SKU */}
-                                <div className="space-y-2">
-                                  <Label htmlFor="sku">SKU</Label>
-                                  <Input
-                                    id="sku"
-                                    placeholder="e.g. PROD-001"
-                                    value={sku}
-                                    onChange={(e) => setSku(e.target.value)}
-                                  />
-                                </div>
-
-                                {/* Price */}
-                                <div className="space-y-2">
-                                  <Label htmlFor="price">Price ($)</Label>
-                                  <Input
-                                    id="price"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    placeholder="29.99"
-                                    value={price}
-                                    onChange={(e) => setPrice(e.target.value)}
-                                  />
-                                </div>
-                              </div>
-
-                              {/* ==== Main Product Images (FIXED!) ==== */}
-                            
-                              {/* ==== Tags ==== */}
-                              <div className="space-y-4">
-                                <Label>Tags</Label>
-
-                                <div className="flex flex-wrap gap-2">
-                                  {tags.length === 0 ? (
-                                    <span className="text-sm text-muted-foreground">No tags added yet</span>
-                                  ) : (
-                                    tags.map((t) => (
-                                      <Badge
-                                        key={t}
-                                        variant="secondary"
-                                        className="pl-3 pr-2 py-1.5 text-sm font-medium"
-                                      >
-                                        {t}
-                                        <button
-                          type="button"
-                          onClick={() => setTags(tags.filter((x) => x !== t))}
-                          className="ml-2 p-1 rounded hover:bg-gray-200 transition"
-                        >
-                          <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                        </button>
-
-                                      </Badge>
-                                    ))
-                                  )}
-                                </div>
-
-                                <div className="flex gap-3 max-w-md">
-                                  <Input
-                                    placeholder="Type a tag and press Enter"
-                                    value={newTag}
-                                    onChange={(e) => setNewTag(e.target.value)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === "Enter" && newTag.trim()) {
-                                        e.preventDefault();
-                                        addTag();
-                                      }
-                                    }}
-                                  />
-                                  <Button onClick={addTag} disabled={!newTag.trim()}>
-                                    Add Tag
-                                  </Button>
-                                </div>
-                              </div>
-
-                            </CardContent>
-                          </Card>
-                        </TabsContent>
-
-                {/* Page Sections Tab */}
-                <TabsContent value="sections" className="mt-6">
-                      <Accordion type="single" collapsible className="space-y-4">
-                        {templateSections.sections
-                          .filter(sec => sec.enabled)
-                          .map((sec, index, array) => (
-                            <AccordionItem
-                              key={sec.section}
-                              value={sec.section}
-                              className={`
-                                border rounded-xl overflow-hidden
-                                ${index === array.length - 1 ? "mb-0" : "mb-4"}
-                                bg-white shadow-sm
-                              `}
-                            >
-                              <AccordionTrigger className="px-6 py-5 text-lg font-semibold hover:no-underline bg-gray-50/50 hover:bg-gray-100 transition-colors">
-                                <div className="flex items-center gap-3">
-                                  <GripVertical className="h-5 w-5 text-gray-400" />
-                                  {sec.label}
-                                </div>
-                              </AccordionTrigger>
-
-                              <AccordionContent className="px-6 pt-6 pb-8 bg-white border-t overflow-scroll">
-                                <div className="space-y-8">
-                                  {sec.fields.map(field => {
-                                    const value = sectionsData[sec.section]?.[field.name];
-
-                                    // IMAGE FIELD
-                                    if (field.type === "image") {
-                                      const imgs: ImageFile[] = field.multiple ? (value || []) : value ? [value] : [];
-
-                                      return (
-                                        <div key={field.name} className="space-y-3">
-                                          <Label className="text-base font-medium">
-                                            {field.label} {field.required && <span className="text-red-500">*</span>}
-                                          </Label>
-                                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                            {imgs.map(img => (
-                                              <div key={img.id} className="relative group aspect-square rounded-lg overflow-hidden border-2 border-gray-200">
-                                                <img
-                                                  src={img.url}
-                                                  alt="Uploaded"
-                                                  className="w-full h-full object-cover"
-                                                />
-                                                <button
-                                                  onClick={() => {
-                                                    const updated = imgs.filter(i => i.id !== img.id);
-                                                    updateField(sec.section, field.name, field.multiple ? updated : null);
-                                                  }}
-                                                  className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full opacity-0 group-hover-opacity-100 transition-all hover:scale-110 shadow-lg"
-                                                >
-                                                  <X className="h-4 w-4" />
-                                                </button>
-                                              </div>
-                                            ))}
-                                            <label className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all group">
-                                              <Upload className="h-10 w-10 text-gray-400 group-hover:text-blue-600" />
-                                              <span className="text-xs text-gray-500 mt-2">Upload</span>
-                                              <input
-                                                type="file"
-                                                accept="image/*"
-                                                multiple={field.multiple}
-                                                className="hidden"
-
-                                                onChange={e => {
-                                                  if (!e.target.files) return;
-                                                  const files = Array.from(e.target.files).map(file => ({
-                                                    id: `sec-${Date.now()}-${Math.random().toString(36)}`,
-                                                    url: URL.createObjectURL(file),
-                                                    file,
-                                                  }));
-                                                  const current = field.multiple ? (value || []) : null;
-                                                  const updated = field.multiple ? [...(current || []), ...files] : files[0] || null;
-                                                  updateField(sec.section, field.name, updated);
-                                                }}
-                                              />
-                                            </label>
-                                          </div>
-                                        </div>
-                                      );
-                                    }
-
-                                    // REPEATER FIELD
-                                    if (field.type === "repeater") {
-                                      const items: any[] = value || [];
-                                      return (
-                                        <div key={field.name} className="space-y-4">
-                                          <Label className="text-base font-medium">{field.label}</Label>
-                                          {items.map((item, i) => (
-                      <div key={i} className="flex gap-2 items-start">
-                        {field.subFields?.map(sub => (
-                          <div key={sub.name} className="flex-1 min-w-[200px]">
-                            <Input
-                              placeholder={sub.label}
-                              value={item[sub.name] || ""}
-                              onChange={e => {
-                                const updated = items.map((obj, idx) =>
-                                  idx === i ? { ...obj, [sub.name]: e.target.value } : obj
-                                );
-                                updateField(sec.section, field.name, updated);
-                              }}
-                              className="w-full"
-                            />
-                          </div>
-                        ))}
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            const updated = items.filter((_, idx) => idx !== i);
-                            updateField(sec.section, field.name, updated);
-                          }}
-                          className="text-red-600 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </Button>
-                      </div>
-                    ))}
-
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => {
-                                              const empty = field.subFields!.reduce((o, f) => ({ ...o, [f.name]: "" }), {});
-                                              updateField(sec.section, field.name, [...items, empty]);
-                                            }}
-                                            className="mt-2"
-                                          >
-                                            <Plus className="h-4 w-4 mr-2" />
-                                            Add Item
-                                          </Button>
-                                        </div>
-                                      );
-                                    }
-
-                                    // TEXT / TEXTAREA / URL / EMAIL
-                                    return (
-                                      <div key={field.name} className="space-y-2">
-                                        <Label className="text-base font-medium">
-                                          {field.label} {field.required && <span className="text-red-500">*</span>}
-                                        </Label>
-                                        {field.type === "textarea" ? (
-                                          <Textarea
-                                            rows={4}
-                                            value={value || ""}
-                                            onChange={e => updateField(sec.section, field.name, e.target.value)}
-                                            className="resize-none"
-                                            placeholder={`Enter ${field.label.toLowerCase()}...`}
-                                          />
-                                        ) : (
-                                          <Input
-                                            type={field.type === "url" ? "url" : field.type === "email" ? "email" : "text"}
-                                            value={value || ""}
-                                            onChange={e => updateField(sec.section, field.name, e.target.value)}
-                                            placeholder={`Enter ${field.label.toLowerCase()}...`}
-                                          />
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </AccordionContent>
-                            </AccordionItem>
-                          ))}
-                      </Accordion>
-                    </TabsContent>
-
-                {/* SEO Tab */}
-                <TabsContent value="seo" className="mt-8">
-                    <Card className="border-0 shadow-xl rounded-2xl overflow-hidden">
-                      <CardHeader className="">
-                        <CardTitle className="text-2xl font-bold">SEO Settings</CardTitle>
-                        <p className="text-sm mt-1">Optimize for Google – stay in the green zone!</p>
-                      </CardHeader>
-
-                      <CardContent className="p-8 space-y-10 bg-gray-50/30">
-
-                        {/* Meta Title – Limit 70 chars (Google shows ~60) */}
-                        <div className="space-y-3">
-                          <Label className="text-lg font-semibold text-gray-800">
-                            Meta Title <span className="text-gray-500 font-normal text-sm">(50–60 recommended)</span>
-                          </Label>
-                          <div className="relative">
-                            <Input
-                              value={metaTitle}
-                              onChange={(e) => setMetaTitle(e.target.value.slice(0, 70))}
-                              placeholder="iPhone 15 Pro Max – Best Price 2025 | Official Store"
-                              className="h-14 text-lg pr-24 border-2 rounded-xl focus:border-indigo-500 transition-all"
-                              maxLength={70}
-                            />
-                            <div className={`absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold ${
-                              metaTitle.length > 60 ? "text-red-600" :
-                              metaTitle.length >= 50 ? "text-green-600" :
-                              metaTitle.length > 0 ? "text-amber-600" : "text-gray-400"
-                            }`}>
-                              {metaTitle.length} / 70
-                            </div>
-                          </div>
-                          {metaTitle.length > 60 && (
-                            <p className="text-red-600 text-sm">Warning: Title may be truncated in Google results</p>
-                          )}
-                        </div>
-
-                        {/* Meta Description – Limit 160 chars */}
-                        <div className="space-y-3">
-                          <Label className="text-lg font-semibold text-gray-800">
-                            Meta Description <span className="text-gray-500 font-normal text-sm">(150–160 ideal)</span>
-                          </Label>
-                          <div className="relative">
-                            <Textarea
-                              value={metaDescription}
-                              onChange={(e) => setMetaDescription(e.target.value.slice(0, 160))}
-                              rows={5}
-                              placeholder="Premium iPhone 15 Pro Max with A17 Pro chip, titanium design, 48MP camera, and all-day battery. Buy now with free shipping & 0% EMI."
-                              className="resize-none pr-20 pt-4 text-base border-2 rounded-xl focus:border-purple-500 transition-all"
-                              maxLength={160}
-                            />
-                            <div className={`absolute right-4 bottom-4 text-sm font-bold ${
-                              metaDescription.length > 160 ? "text-red-600" :
-                              metaDescription.length >= 140 ? "text-green-600" :
-                              metaDescription.length > 0 ? "text-amber-600" : "text-gray-400"
-                            }`}>
-                              {metaDescription.length} / 160
-                            </div>
-                          </div>
-                          {metaDescription.length > 155 && (
-                            <p className="text-red-600 text-sm">Warning: Description may be cut off in search results</p>
-                          )}
-                        </div>
-
-                        {/* Keywords – No hard limit, but helpful UI */}
-                        <div className="space-y-3">
-                          <Label className="text-lg font-semibold text-gray-800">
-                            Keywords <span className="text-gray-500 font-normal text-sm">(comma separated)</span>
-                          </Label>
-                          <Input
-                            value={keywords}
-                            onChange={(e) => setKeywords(e.target.value)}
-                            placeholder="iphone 15 pro max, apple iphone, best smartphone 2025"
-                            className="h-14 border-2 rounded-xl focus:border-pink-500 transition-all"
-                          />
-                          {keywords && (
-                            <div className="flex flex-wrap gap-2 mt-3">
-                              {keywords.split(",").map((kw, i) => {
-                                const trimmed = kw.trim();
-                                if (!trimmed) return null;
-                                return (
-                                  <span
-                                    key={i}
-                                    className="inline-flex items-center gap-2 bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-medium hover:bg-purple-200 transition"
-                                  >
-                                    {trimmed}
-                                    <button
-                                      onClick={() => {
-                                        const updated = keywords.split(",").filter((_, idx) => idx !== i).join(",");
-                                        setKeywords(updated);
-                                      }}
-                                      className="hover:bg-purple-300 rounded-full p-1"
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </button>
-                                  </span>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Success Indicator */}
-                        <div className={`p-6 rounded-2xl border-2 ${
-                          metaTitle.length >= 50 && metaTitle.length <= 60 &&
-                          metaDescription.length >= 140 && metaDescription.length <= 160
-                            ? "bg-green-50 border-green-300" 
-                            : "bg-amber-50 border-amber-300"
-                        }`}>
-                          <p className={`font-bold text-center ${
-                            metaTitle.length >= 50 && metaTitle.length <= 60 &&
-                            metaDescription.length >= 140 && metaDescription.length <= 160
-                              ? "text-green-700" : "text-amber-700"
-                          }`}>
-                            {metaTitle.length >= 50 && metaTitle.length <= 60 &&
-                            metaDescription.length >= 140 && metaDescription.length <= 160
-                              ? "Perfect SEO! Ready to rank #1" 
-                              : "Keep going – get in the green zone!"}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-              </Tabs>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900">Add New Product</h1>
+              <p className="text-sm text-slate-600 mt-1">Step-by-step product creation</p>
+              {productId && <p className="text-xs text-blue-600 mt-1">Product ID: {productId}</p>}
             </div>
 
-                    <div className={`${isMobilePreviewVisible ? "block" : "hidden"}`}>
-                      <div className="flex items-center justify-center sticky top-0 py-8">
-                        <div className="w-[360px] h-[720px] rounded-[45px] border-[14px] border-black bg-black overflow-hidden relative shadow-2xl">
-                          {/* Notch */}
-                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-8 bg-black rounded-b-3xl z-10"></div>
-                          
-                          {/* Screen */}
-                          <div className="w-full h-full bg-white overflow-y-auto">
-                            <Perview data={liveData} />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={saveDraft} disabled={!!productId}>
+                <Save className="h-4 w-4 mr-2" />
+                Save Draft
+              </Button>
+              <Button variant="outline" onClick={handlePreview} disabled={previewLoading}>
+                {previewLoading ? <Spinner className="size-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                Preview
+              </Button>
+              {activeTab === "seo" && (
+                <Button onClick={handlePublish} disabled={isSavingSEO} className="bg-green-600 hover:bg-green-700">
+                  {isSavingSEO ? <Spinner className="size-4 mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+                  Publish Product
+                </Button>
+              )}
+            </div>
           </div>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="basic" disabled={false}>Basic Info</TabsTrigger>
+              <TabsTrigger value="media" disabled={!productId}>Demo Media</TabsTrigger>
+              <TabsTrigger value="seo" disabled={!productId || (selectedImages.length === 0 && pdfFiles.length === 0 && !formData.videoUrl)}>
+                SEO & Publish
+              </TabsTrigger>
+            </TabsList>
+
+            {/* === BASIC INFO === */}
+            <TabsContent value="basic" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Product Details</CardTitle>
+                  <CardDescription>Fill in basic product information</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Product Name *</Label>
+                      <Input id="name" value={formData.name} onChange={(e) => handleInputChange("name", e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="sku">SKU (optional)</Label>
+                      <Input id="sku" value={formData.sku} onChange={(e) => handleInputChange("sku", e.target.value)} />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="category">Category *</Label>
+                      <Select 
+                        value={formData.category} 
+                        onValueChange={(v) => handleInputChange("category", v)}
+                        disabled={loadingCategories}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={loadingCategories ? "Loading categories..." : "Select category"}>
+                            {loadingCategories ? "Loading..." : getSelectedCategoryName()}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent className="max-h-96">
+                          {treeCategories.length > 0 ? (
+                            renderCategoryTree(treeCategories)
+                          ) : (
+                            <div className="p-4 text-center text-muted-foreground">No categories found</div>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="price">Price *</Label>
+                      <Input id="price" type="number" value={formData.price} onChange={(e) => handleInputChange("price", e.target.value)} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea id="description" rows={5} value={formData.description} onChange={(e) => handleInputChange("description", e.target.value)} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Tags</Label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {tags.map((tag, i) => (
+                        <Badge key={i} variant="secondary" className="gap-1">
+                          {tag}
+                          <button onClick={() => removeTag(i)}><X className="h-3 w-3" /></button>
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <Input placeholder="Add tag..." value={newTag} onChange={(e) => setNewTag(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddTag())} />
+                      <Button onClick={handleAddTag} size="sm"><Plus className="h-4 w-4 mr-1" />Add</Button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div>
+                      <p className="font-medium">Product Active</p>
+                      <p className="text-sm text-slate-500">Visible to customers after publish</p>
+                    </div>
+                    <Switch checked={formData.isActive} onCheckedChange={(c) => handleInputChange("isActive", c)} />
+                  </div>
+
+                  <div className="flex justify-end gap-3">
+                    <Button variant="outline" onClick={saveDraft} disabled={!!productId}>
+                      <Save className="h-4 w-4 mr-2" /> Save as Draft
+                    </Button>
+                    <Button onClick={handleSaveBasic} disabled={isSavingBasic} size="lg">
+                      {isSavingBasic ? <Spinner className="mr-2" /> : null}
+                      Save & Continue to Media
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* === MEDIA === */}
+            <TabsContent value="media" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Demo Media</CardTitle>
+                  <CardDescription>Upload images, PDFs, and video</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="video">Video URL (optional)</Label>
+                    <Input id="video" placeholder="https://youtube.com/..." value={formData.videoUrl} onChange={(e) => handleInputChange("videoUrl", e.target.value)} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Product Images</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      {selectedImages.map((img, i) => (
+                        <div key={img.id} className="relative group aspect-square">
+                          <img src={img.url} alt="" className="w-full h-full rounded-lg object-cover" />
+                          <button onClick={() => removeImage(img.id)} className="absolute top-2 right-2 bg-red-500 rounded-full p-1 opacity-0 group-hover:opacity-100">
+                            <X className="h-3 w-3 text-white" />
+                          </button>
+                          {i === 0 && <Badge className="absolute bottom-2 left-2">Primary</Badge>}
+                        </div>
+                      ))}
+                      <label className="flex aspect-square items-center justify-center rounded-lg border-2 border-dashed cursor-pointer">
+                        <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
+                        <Upload className="h-8 w-8 text-slate-400" />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>PDF Documents</Label>
+                    {pdfFiles.map((pdf) => (
+                      <div key={pdf.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-red-500" />
+                          <span>{pdf.name}</span>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={() => removePdf(pdf.id)}><X className="h-4 w-4" /></Button>
+                      </div>
+                    ))}
+                    <label className="flex w-full items-center justify-center rounded-lg border-2 border-dashed p-8 cursor-pointer">
+                      <input type="file" accept=".pdf" multiple onChange={handlePdfUpload} className="hidden" />
+                      <div className="text-center">
+                        <FileText className="mx-auto h-12 w-12 text-slate-400" />
+                        <p className="mt-2 font-medium">Upload PDF</p>
+                      </div>
+                    </label>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Button onClick={handleSaveMedia} disabled={isSavingMedia || (selectedImages.length === 0 && pdfFiles.length === 0 && !formData.videoUrl)} size="lg">
+                      {isSavingMedia ? <Spinner className="mr-2" /> : null}
+                      Save Media & Continue to SEO
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* === SEO === */}
+            <TabsContent value="seo" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>SEO & Final Settings</CardTitle>
+                  <CardDescription>Optimize for search engines and publish</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="meta-title">Meta Title</Label>
+                    <Input id="meta-title" value={formData.metaTitle} onChange={(e) => handleInputChange("metaTitle", e.target.value)} />
+                    <p className="text-xs text-slate-500">{formData.metaTitle.length}/60 characters</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="meta-description">Meta Description</Label>
+                    <Textarea id="meta-description" rows={3} value={formData.metaDescription} onChange={(e) => handleInputChange("metaDescription", e.target.value)} />
+                    <p className="text-xs text-slate-500">{formData.metaDescription.length}/160 characters</p>
+                  </div>
+
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="keywords">Keywords</Label>
+                      <Input id="keywords" value={formData.keywords} onChange={(e) => handleInputChange("keywords", e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="url-slug">URL Slug</Label>
+                      <Input id="url-slug" value={formData.urlSlug} onChange={(e) => handleInputChange("urlSlug", e.target.value)} />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-6 border-t">
+                    <Button variant="outline" onClick={() => setActiveTab("media")}>Back</Button>
+                    <Button onClick={handlePublish} disabled={isSavingSEO} size="lg" className="bg-green-600">
+                      {isSavingSEO ? <Spinner className="mr-2" /> : <CheckCircle className="h-5 w-5 mr-2" />}
+                      Publish Product
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+
+          {/* Enhanced Preview Dialog */}
+          <Dialog open={showPreview} onOpenChange={setShowPreview}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Product Preview</DialogTitle>
+                <DialogDescription>Preview of your product as it will appear</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-8 py-6">
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-bold">{formData.name || "Untitled Product"}</h3>
+                  <p className="text-3xl font-semibold text-green-600">${formData.price || "0.00"}</p>
+                  <p className="text-sm text-slate-600">Category: {getSelectedCategoryName()}</p>
+                  {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {tags.map((tag, i) => (
+                        <Badge key={i} variant="secondary">{tag}</Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {formData.description && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Description</h4>
+                    <p className="text-slate-700 whitespace-pre-wrap">{formData.description}</p>
+                  </div>
+                )}
+
+                {formData.videoUrl && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Video</h4>
+                    <div className="bg-slate-200 border-2 border-dashed rounded-xl w-full h-64 flex items-center justify-center">
+                      <p className="text-slate-500">Video: {formData.videoUrl}</p>
+                    </div>
+                  </div>
+                )}
+
+                {selectedImages.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-4">Images ({selectedImages.length})</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {selectedImages.map((img, i) => (
+                        <div key={img.id} className="relative aspect-square rounded-lg overflow-hidden border">
+                          <img src={img.url} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />
+                          {i === 0 && <Badge className="absolute top-2 left-2">Primary</Badge>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {pdfFiles.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-2">PDF Documents ({pdfFiles.length})</h4>
+                    <div className="space-y-2">
+                      {pdfFiles.map((pdf) => (
+                        <div key={pdf.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                          <FileText className="h-6 w-6 text-red-600" />
+                          <span className="font-medium">{pdf.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(formData.metaTitle || formData.metaDescription) && (
+                  <div className="border-t pt-6">
+                    <h4 className="font-semibold mb-4">SEO Preview</h4>
+                    <div className="space-y-2 text-sm">
+                      <p><strong>Title:</strong> {formData.metaTitle || formData.name}</p>
+                      <p><strong>Description:</strong> {formData.metaDescription || "No description"}</p>
+                      <p><strong>Keywords:</strong> {formData.keywords || "None"}</p>
+                      <p><strong>Slug:</strong> /{formData.urlSlug || slugify(formData.name)}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-end">
+                <Button variant="outline" onClick={() => setShowPreview(false)}>Close</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
-      {/* LARGE CUSTOMIZE MODAL */}
-{isCustomizeModalOpen && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] overflow-hidden flex flex-col animate-in fade-in duration-300">
-      {/* Modal Header */}
-      <div className="flex items-center justify-between p-6 border-b bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-        <h2 className="text-2xl font-bold">Customize Landing Page</h2>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-white hover:bg-white/20 rounded-full"
-          onClick={() => setIsCustomizeModalOpen(false)}
-        >
-          <X className="h-mr-1 h-6 w-6" />
-        </Button>
-      </div>
-
-      {/* Modal Body - Your Full Editor Inside */}
-      <div className="flex-1 overflow-y-auto p-8 bg-gray-50">
-        {/* Paste your entire editor here (Tabs, Product Details, Sections, SEO) */}
-        <Builder templateId={templateId} userId={userId} />
-      </div>
-
-      {/* Modal Footer */}
-      <div className="p-6 border-t bg-white flex justify-end gap-4">
-        <Button
-          variant="outline"
-          size="lg"
-          onClick={() => setIsCustomizeModalOpen(false)}
-        >
-          Cancel
-        </Button>
-        <Button
-          size="lg"
-          className="bg-green-600 hover:bg-green-700 text-white"
-          onClick={() => {
-            showToast("Changes saved automatically!", "success");
-            setIsCustomizeModalOpen(false);
-          }}
-        >
-          Save & Close
-        </Button>
-      </div>
-    </div>
-  </div>
-)}
     </DashboardLayout>
   );
 }

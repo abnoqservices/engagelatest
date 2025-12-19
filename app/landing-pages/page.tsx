@@ -25,13 +25,11 @@ import { useRouter } from "next/navigation";
 import axiosClient from "@/lib/axiosClient";
 import { DashboardLayout } from "@/components/dashboard/layout";
 import { usePageStore } from "@/lib/pageStore";
-
+import LandingPageBuilder from "@/app/landing-pages/new/page";
 import dynamic from "next/dynamic";
-const Builder = dynamic(() => import("@/app/landing-pages/new/page.client"), {
-  ssr: false,
-});
 
-// Mock UI Components (unchanged)
+
+
 const Button = ({ children, className = "", variant = "default", size = "default", onClick, disabled, ...props }: any) => {
   const baseStyles = "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50";
   const variants = {
@@ -91,7 +89,7 @@ const Badge = ({ children, className = "", variant = "default" }: any) => {
   );
 };
 
-// Toast Component
+
 const Toast = ({ message, type = "success", onClose }: { message: string; type?: "success" | "error"; onClose: () => void }) => {
   React.useEffect(() => {
     const timer = setTimeout(onClose, 4000);
@@ -106,7 +104,6 @@ const Toast = ({ message, type = "success", onClose }: { message: string; type?:
   );
 };
 
-// Reusable Customize Button (Responsive + Beautiful)
 const CustomizeButton = ({ 
   onClick, 
   size = "default",
@@ -176,7 +173,7 @@ export default function LandingPagesPage() {
   const [activatingId, setActivatingId] = React.useState<number | null>(null);
   const [deactivating, setDeactivating] = React.useState(false);
   const [editingPageName, setEditingPageName] = React.useState<string>("Landing Page");
-  const { templateId, userId, setTemplate } = usePageStore(); // renamed setPageData → setTemplate
+  const { templateId, userId, setTemplate } = usePageStore(); 
   const router = useRouter();
 
   // Toast state
@@ -478,7 +475,7 @@ export default function LandingPagesPage() {
                           <Eye className="h-4 w-4" />
                         </Button>
 
-                        {/* Replace Paintbrush with Customize Button */}
+                    
                         <div onClick={(e) => e.stopPropagation()}>
                           <CustomizeButton 
                             size="sm"
@@ -579,7 +576,7 @@ export default function LandingPagesPage() {
             )}
           </div>
 
-          {/* Share Link Modal */}
+      
           {showLinkModal && selectedPage && (
             <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
               <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden">
@@ -610,10 +607,10 @@ export default function LandingPagesPage() {
             </div>
           )}
 
-          {/* Toast */}
+       
           {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-          {/* Customize Modal */}
+    
           {isCustomizeModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
               <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] overflow-hidden flex flex-col animate-in fade-in duration-300">
@@ -632,8 +629,13 @@ export default function LandingPagesPage() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-8 bg-gray-50">
-                  <Builder templateId={templateId} userId={userId} />
-                </div>
+                  
+                  <LandingPageBuilder 
+                    templateId={templateId} 
+                    userId={userId} 
+                    onClose={() => setIsCustomizeModalOpen(false)} 
+                  />
+                    </div>
 
              
               </div>

@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 18, "column": 0}, "map": {"version":3,"sources":["file:///Volumes/D/next/engage33/app/products/%5Bslug%5D/page.tsx"],"sourcesContent":["import React from 'react'\n\nexport const route = () => {\n  return (\n    <div>route</div>\n  )\n}\n"],"names":[],"mappings":";;;;;;AAEO,MAAM,QAAQ;IACnB,qBACE,8OAAC;kBAAI;;;;;;AAET"}}]
+}

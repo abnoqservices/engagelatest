@@ -4,6 +4,7 @@ import * as React from "react";
 import { DashboardLayout } from "@/components/dashboard/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -41,6 +42,7 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  Globe,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -74,6 +76,7 @@ type Product = {
   views: number;
   leads: number;
   status: boolean;
+  description?: string;
 };
 
 export default function ProductsPage() {
@@ -88,15 +91,28 @@ export default function ProductsPage() {
   const [totalItems, setTotalItems] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(false);
 
+  // Edit Drawer State
   const [editDrawerOpen, setEditDrawerOpen] = React.useState(false);
   const [editingProduct, setEditingProduct] = React.useState<Product | null>(null);
+  const [isSaving, setIsSaving] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const router = useRouter();
+  // Form states for edit drawer
+  const [formData, setFormData] = React.useState({
+    name: "",
+    sku: "",
+    price: "",
+    categoryId: "none", // "none" represents no category
+    description: "",
+    is_active: true,
+  });
 
   const { toast } = useToast();
 
   const allSelected = selectedProducts.length === products.length && products.length > 0;
   const someSelected = selectedProducts.length > 0 && !allSelected;
 
-  // Load Categories (unchanged)
+  // Load Categories
   const loadCategories = async () => {
     try {
       const res = await axiosClient.get("/product-categories");
@@ -112,7 +128,7 @@ export default function ProductsPage() {
     }
   };
 
-  // SERVER-SIDE FETCH WITH FILTERS & PAGINATION
+  // Fetch Products List
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
@@ -133,7 +149,7 @@ export default function ProductsPage() {
 
         const productData: Product[] = apiData.map((item: any) => ({
           id: item.id,
-          image: item.images?.length > 0 ? item.images[0] : "https://www.thekeepingroomnc.com/wp-content/uploads/2020/04/image-placeholder.jpg",
+          image: item.images?.[0]?.url || "https://www.thekeepingroomnc.com/wp-content/uploads/2020/04/image-placeholder.jpg",
           name: item.name,
           sku: item.sku || "N/A",
           category: item.category?.name || "Uncategorized",
@@ -143,6 +159,7 @@ export default function ProductsPage() {
           views: item.views || 0,
           leads: item.leads || 0,
           status: item.is_active ?? true,
+          description: item.description,
         }));
 
         setProducts(productData);
@@ -162,7 +179,94 @@ export default function ProductsPage() {
     }
   };
 
-  // Re-fetch whenever any filter or pagination changes
+  // Load full product for editing
+  const loadProductForEdit = async (productId: number) => {
+    try {
+      const res = await axiosClient.get(`/products/${productId}`);
+      if (res.data.success) {
+        const item = res.data.data;
+        setFormData({
+          name: item.name || "",
+          sku: item.sku || "",
+          price: item.price?.toString() || "",
+          // If there is no category_id or category.id → "none", otherwise convert to string
+          categoryId: item.category_id || item.category?.id ? String(item.category_id ?? item.category?.id) : "none",
+          description: item.description || "",
+          is_active: item.is_active ?? true,
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.response?.data?.message || "Failed to load product details",
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
+  // Save edited product
+  const saveProduct = async () => {
+    if (!editingProduct) return;
+    setIsSaving(true);
+    try {
+      const priceValue = formData.price.trim();
+      const categoryId = formData.categoryId === "none" ? null : formData.categoryId ? parseInt(formData.categoryId) : null;
+
+      const payload: any = {
+        name: formData.name,
+        sku: formData.sku,
+        price: priceValue ? parseFloat(priceValue) : null,
+        category_id: categoryId,
+        description: formData.description,
+        is_active: formData.is_active,
+      };
+
+      const res = await axiosClient.put(`/products/${editingProduct.id}`, payload);
+
+      if (res.data.success) {
+        toast({
+          title: "Success",
+          description: "Product updated successfully",
+        });
+        setEditDrawerOpen(false);
+        fetchProducts(); // Refresh list
+      }
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.response?.data?.message || "Failed to update product",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Delete single product
+  const deleteProduct = async (productId: number) => {
+    if (!confirm("Are you sure you want to delete this product? This action cannot be undone.")) return;
+
+    setIsDeleting(true);
+    try {
+      await axiosClient.delete(`/products/${productId}`);
+      toast({
+        title: "Deleted",
+        description: "Product deleted successfully",
+      });
+      fetchProducts();
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.response?.data?.message || "Failed to delete product",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Effects
   React.useEffect(() => {
     fetchProducts();
   }, [page, perPage, searchQuery, categoryFilter, statusFilter]);
@@ -171,7 +275,6 @@ export default function ProductsPage() {
     loadCategories();
   }, []);
 
-  // Reset to page 1 when filters change
   React.useEffect(() => {
     setPage(1);
   }, [searchQuery, categoryFilter, statusFilter, perPage]);
@@ -188,35 +291,48 @@ export default function ProductsPage() {
     );
   };
 
-  const openEditDrawer = (product: Product) => {
+  const openEditDrawer = async (product: Product) => {
     setEditingProduct(product);
-    setEditDrawerOpen(true);
+    try {
+      await loadProductForEdit(product.id);
+      setEditDrawerOpen(true);
+    } catch (error) {
+      console.error("Failed to open edit drawer:", error);
+      // Toast already shown in loadProductForEdit
+    }
   };
 
-  // Recursive Category Renderer
-  const renderCategoryOptions = (
-    items: Category[],
-    level = 0,
-    parentPath = ""
-  ): React.ReactNode[] => {
-    return items.flatMap((cat, index) => {
-      const indent = "— ".repeat(level);
-      const uniqueKey = `${parentPath}${cat.id}-${level}-${index}`;
+  const openfullupdate = async (product: Product) => {
+     router.push(`/products/update?id=${product.id}`);
+  };
 
-      const option = (
-        <SelectItem key={uniqueKey} value={cat.id.toString()}>
-          {indent}{cat.name}
+  // Recursive Category Options
+  // Recursive Category Options - FIXED for clean hierarchy
+  const renderCategoryTree = (items: Category[], level = 0): React.ReactNode => {
+    return items.map((cat) => (
+      <React.Fragment key={cat.id}>
+        <SelectItem value={cat.id.toString()}>
+          <span style={{ paddingLeft: `${level * 20}px` }}>
+            {level > 0 && "└─ "}
+            {cat.name}
+          </span>
         </SelectItem>
-      );
-
-      const children = cat.children?.length
-        ? renderCategoryOptions(cat.children, level + 1, `${uniqueKey}-`)
-        : [];
-
-      return [option, ...children];
-    });
+        {cat.children && cat.children.length > 0 && renderCategoryTree(cat.children, level + 1)}
+      </React.Fragment>
+    ));
   };
-
+  const getSelectedCategoryName = () => {
+    const findName = (cats: Category[]): string | undefined => {
+      for (const cat of cats) {
+        if (cat.id.toString() === formData.category) return cat.name;
+        if (cat.children.length > 0) {
+          const found = findName(cat.children);
+          if (found) return found;
+        }
+      }
+    };
+    return findName(categories) || "Select category";
+  };
   const totalPages = totalItems > 0 ? Math.ceil(totalItems / perPage) : 1;
   const startItem = totalItems === 0 ? 0 : (page - 1) * perPage + 1;
   const endItem = Math.min(page * perPage, totalItems);
@@ -260,7 +376,7 @@ export default function ProductsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
-                  {renderCategoryOptions(categories)}
+                  {renderCategoryTree(categories)}
                 </SelectContent>
               </Select>
 
@@ -317,10 +433,10 @@ export default function ProductsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">
-                <Checkbox
-                      checked={allSelected ? true : someSelected ? "indeterminate" : false}
-                      onCheckedChange={toggleAll}
-                    />
+                  <Checkbox
+                    checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                    onCheckedChange={toggleAll}
+                  />
                 </TableHead>
                 <TableHead>Image</TableHead>
                 <TableHead>Name</TableHead>
@@ -342,7 +458,7 @@ export default function ProductsPage() {
                   </TableCell>
                 </TableRow>
               ) : products.length === 0 ? (
-                <TableRow>
+                <TableRow>
                   <TableCell colSpan={11} className="text-center py-10 text-muted-foreground">
                     {searchQuery || categoryFilter !== "all" || statusFilter !== "all"
                       ? "No products match your filters"
@@ -394,7 +510,7 @@ export default function ProductsPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openEditDrawer(p)}>
+                          <DropdownMenuItem onClick={() => openfullupdate(p)}>
                             <Edit className="mr-2 h-4 w-4" /> Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem>
@@ -403,8 +519,17 @@ export default function ProductsPage() {
                           <DropdownMenuItem>
                             <QrCode className="mr-2 h-4 w-4" /> QR Code
                           </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href={`/products/${p.id}/landing-page`}>
+                              <Globe className="mr-2 h-4 w-4" /> Landing Page
+                            </Link>
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive">
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => deleteProduct(p.id)}
+                            disabled={isDeleting}
+                          >
                             <Trash2 className="mr-2 h-4 w-4" /> Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -464,7 +589,7 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Edit Drawer - unchanged */}
+      {/* Edit Drawer */}
       <Sheet open={editDrawerOpen} onOpenChange={setEditDrawerOpen}>
         <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
           <div className="sticky top-0 bg-background border-b z-10">
@@ -474,48 +599,86 @@ export default function ProductsPage() {
             </SheetHeader>
           </div>
 
-          {editingProduct && (
-            <div className="space-y-6 p-6">
-              <div className="grid gap-4">
-                <div>
-                  <Label>Product Name</Label>
-                  <Input defaultValue={editingProduct.name} />
-                </div>
-                <div>
-                  <Label>SKU</Label>
-                  <Input defaultValue={editingProduct.sku} />
-                </div>
-                <div>
-                  <Label>Price</Label>
-                  <Input defaultValue={editingProduct.price.replace("$", "")} />
-                </div>
-                <div>
-                  <Label>Category</Label>
-                  <Select defaultValue={editingProduct.categoryId.toString()}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {renderCategoryOptions(categories)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Description</Label>
-                  <Textarea rows={4} defaultValue="Premium quality product with advanced features." />
-                </div>
+          <div className="space-y-6 p-6">
+            <div className="grid gap-4">
+              <div>
+                <Label htmlFor="name">Product Name</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
               </div>
-
-              <div className="flex gap-3 pt-6 border-t sticky bottom-0 bg-background">
-                <Button variant="outline" className="flex-1" onClick={() => setEditDrawerOpen(false)}>
-                  Cancel
-                </Button>
-                <Button className="flex-1" onClick={() => setEditDrawerOpen(false)}>
-                  Save Changes
-                </Button>
+              <div>
+                <Label htmlFor="sku">SKU</Label>
+                <Input
+                  id="sku"
+                  value={formData.sku}
+                  onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="price">Price</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.01"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Category</Label>
+                <Select
+                  value={formData.categoryId}
+                  onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Category</SelectItem>
+                    {renderCategoryTree(categories)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  rows={4}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="status"
+                  checked={formData.is_active}
+                  onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                />
+                <Label htmlFor="status">Active</Label>
               </div>
             </div>
-          )}
+
+            <div className="flex gap-3 pt-6 border-t sticky bottom-0 bg-background">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setEditDrawerOpen(false)}
+                disabled={isSaving}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={saveProduct}
+                disabled={isSaving}
+              >
+                {isSaving ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </div>
         </SheetContent>
       </Sheet>
     </DashboardLayout>

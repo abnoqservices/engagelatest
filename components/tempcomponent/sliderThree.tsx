@@ -1,75 +1,166 @@
 "use client";
-import React from "react";
+
+import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import axiosClient from "@/lib/axiosClient";
 
-interface Field {
-  name: string;
-  url?: string;
-  value?: string;
+const DEFAULT_IMAGE =
+  "https://lh3.googleusercontent.com/hzTpTV1Qwyi4crcaB_lEaRTg603ttzm_6Uw8SwBC-iQ9-PeWdFdNpejyPzFdVqWLBjf8o58sDjs8M9wV01MCyjJ3XX6GBIiUrLRiQi9ui8m0tp0";
+
+interface GalleryImage {
+  id: number;
+  url: string;
+  position: number;
 }
 
-export default function sliderThree({ data }: { data: any }) {
+interface ProductData {
+  name: string;
+  price: number;
+  is_active?: boolean;
+}
 
+interface SliderThreeProps {
+  productId: number;
+}
 
-  // Extract images
-  const imageFields = data.filter((f) => f.name === "image");
+export default function SliderThree({ productId }: SliderThreeProps) {
+  const [images, setImages] = useState<GalleryImage[]>([]);
+  const [product, setProduct] = useState<ProductData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Extract title/subtitle
-  const titleField = data.find((f) => f.name === "title");
-  const subtitleField = data.find((f) => f.name === "subtitle");
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!productId) {
+        setImages([{ id: 0, url: DEFAULT_IMAGE, position: 1 }]);
+        setProduct(null);
+        setLoading(false);
+        return;
+      }
 
-  const title = titleField?.value || "";
-  const subtitle = subtitleField?.value || "";
+      try {
+        setLoading(true);
+        setError(null);
 
-  // Slides preparation
-  const slides =
-    imageFields.length > 0
-      ? imageFields.map((img, index) => ({
-          id: index + 1,
-          image: img?.url || "https://lh3.googleusercontent.com/hzTpTV1Qwyi4crcaB_lEaRTg603ttzm_6Uw8SwBC-iQ9-PeWdFdNpejyPzFdVqWLBjf8o58sDjs8M9wV01MCyjJ3XX6GBIiUrLRiQi9ui8m0tp0",
-          title,
-          subtitle,
-        }))
-      : [
-          {
-            id: 1,
-            image: "https://lh3.googleusercontent.com/hzTpTV1Qwyi4crcaB_lEaRTg603ttzm_6Uw8SwBC-iQ9-PeWdFdNpejyPzFdVqWLBjf8o58sDjs8M9wV01MCyjJ3XX6GBIiUrLRiQi9ui8m0tp0",
-            title,
-            subtitle,
-          },
-        ];
+        // Fetch product name and price
+        const productRes = await axiosClient.get(`/products/${productId}`);
+
+        if (!productRes.data?.success && !productRes.data?.name) {
+          // Some APIs return data directly, others wrap in { success, data }
+          throw new Error("Failed to load product details");
+        }
+
+        const productData = productRes.data.data || productRes.data;
+
+        setProduct({
+          name: productData.name || "Untitled Product",
+          price: parseFloat(productData.price) || 0,
+        });
+
+        // Fetch gallery images (same as original Slider)
+        const imagesRes = await axiosClient.get("/product-images", {
+          params: { product_id: productId },
+        });
+
+        if (!imagesRes.data?.success) {
+          throw new Error(imagesRes.data?.message || "API returned success: false");
+        }
+
+        const galleryImages = (imagesRes.data.data || [])
+          .filter((item: any) => item.type === "gallery" && item.url?.trim())
+          .map((item: any) => ({
+            id: item.id,
+            url: item.url.trim(),
+            position: item.position ?? 999,
+          }))
+          .sort((a: GalleryImage, b: GalleryImage) => a.position - b.position);
+
+        setImages(
+          galleryImages.length > 0
+            ? galleryImages
+            : [{ id: 0, url: DEFAULT_IMAGE, position: 1 }]
+        );
+      } catch (err: any) {
+        console.error("Error fetching data:", err);
+        const message =
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to load product data";
+        setError(message);
+        setImages([{ id: 0, url: DEFAULT_IMAGE, position: 1 }]);
+        setProduct({ name: "Product Unavailable", price: 0 });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [productId]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="w-full max-w-[1200px] mx-auto aspect-square flex items-center justify-center bg-muted rounded-xl">
+        <p className="text-muted-foreground">Loading product...</p>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="w-full max-w-[1200px] mx-auto aspect-square flex items-center justify-center bg-destructive/10 rounded-xl">
+        <p className="text-destructive">Error: {error}</p>
+      </div>
+    );
+  }
+
+  const title = product?.name || "No Product Name";
+  const subtitle = product?.price > 0 ? `$${product.price.toFixed(2)}` : "";
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto">
+    <div className="card-header-slider">
       <Swiper
         modules={[Navigation, Pagination, Autoplay]}
         spaceBetween={20}
         slidesPerView={1}
         navigation
         pagination={{ clickable: true }}
-        autoplay={{ delay: 2500 }}
-        loop
+        autoplay={{
+          delay: 2500,
+          disableOnInteraction: false,
+        }}
+        loop={images.length > 1}
+      
       >
-        {slides.map((item) => (
-          <SwiperSlide key={item.id}>
-            {/* 1:1 PERFECT SQUARE CONTAINER */}
-            <div className="relative w-full max-w-[400px] mx-auto aspect-square">
+        {images.map((img) => (
+          <SwiperSlide key={img.id}>
+            <div className="relative w-full  mx-auto aspect-square">
               <img
-                src={item.image}
-                alt={item.title}
-                className="w-full h-full object-cover rounded-xl"
+                src={img.url}
+                alt={title}
+                className="w-full h-full object-cover rounded-xl shadow-lg"
+                loading="lazy"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = DEFAULT_IMAGE;
+                }}
               />
 
-              {(item.title || item.subtitle) && (
-             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white drop-shadow-lg text-center w-auto px-4 py-2 bg-black/40 rounded-lg inline-block">
-             <h2 className="text-2xl font-bold">{item.title}</h2>
-             <p className="text-lg">{item.subtitle}</p>
-           </div>
-           
+              {(title || subtitle) && (
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white drop-shadow-lg text-center w-auto px-6 py-3 bg-black/50 backdrop-blur-sm rounded-xl">
+                  <h2 className="text-sl md:text-sl font-bold leading-tight">
+                    {title}
+                  </h2>
+                  {subtitle && (
+                    <p className="text-sl md:text-sl font-semibold mt-1">
+                      {subtitle}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           </SwiperSlide>

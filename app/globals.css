@@ -290,10 +290,14 @@
 /* Global card class */
 /* Global card class */
 .card-header {
-  @apply bg-white shadow-lg rounded-2xl p-4 flex flex-col items-center text-center mb-2 mx-2 mt-2  ;
+  @apply bg-white  rounded-2xl p-4 flex flex-col items-center text-center mb-2 mx-2 mt-2  ;
 }
-
-
+.card-header-slider{
+  @apply bg-white  rounded-2xl flex flex-col items-center text-center mb-2 mx-2 mt-2  ;
+}
+.card-header-social-contact {
+  @apply bg-white  rounded-2xl p-4  items-center text-center mb-2 mx-2 mt-2  ;
+}
 /* Circular logo style */
 .card-header-top {
   @apply bg-white rounded-b-2xl mx-2 mt-2 shadow-md;
@@ -334,4 +338,11 @@
 }
 .core-header-title{
   @apply  text-2xl md:text-2xl text-center font-bold text-gray-900 leading-tight mb-4
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
