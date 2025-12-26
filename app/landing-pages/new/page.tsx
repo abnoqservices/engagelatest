@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import axiosClient from "@/lib/axiosClient";
-import { showToast } from "@/lib/showToast"; 
+import { showToast } from "@/lib/showToast"; // ← Our new toast
 
 import {
   DndContext,
@@ -64,7 +64,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Eye, EyeOff ,Plus ,Check, ChevronsUpDown} from "lucide-react";
 
-
+// and if you want search:
 import { Command, CommandInput ,CommandList,CommandEmpty ,CommandGroup,CommandItem} from "@/components/ui/command";
 const Perview = dynamic(() => import("@/app/preview/dummuypreview/page"), { ssr: false });
 
@@ -99,6 +99,11 @@ export default function LandingPageBuilder({productId: productId}: {productId?: 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const [open, setOpen] = React.useState(false);
   const [selectedValue, setSelectedValue] = React.useState("");
+
+
+
+// 2️⃣ debounce helper (NEW)
+const saveTimers = React.useRef<Map<number, NodeJS.Timeout>>(new Map());
   React.useEffect(() => {
     const fetchData = async () => {
       try {
@@ -192,47 +197,68 @@ export default function LandingPageBuilder({productId: productId}: {productId?: 
       showToast("Section removed", "success");
     } catch (error) {
       showToast("Failed to remove section", "error");
-
+      // Optionally refetch here
     }
   };
 
-  const debouncedUpdateContent = React.useCallback((sec: ActiveSection, newContent: Record<string, any>) => {
+  const updateSectionContent = (sec: ActiveSection, newContent: Record<string, any>) => {
     if (!productId || !sec.sectionId) return;
-
-    setActiveSections(prev => prev.map(s =>
-      s.sectionId === sec.sectionId ? { ...s, content: newContent, saving: true } : s
-    ));
-
-    axiosClient.put(`/products/${productId}/landing-page/sections/${sec.sectionId}`, { content: newContent })
-      .then(() => {
-        setActiveSections(prev => prev.map(s =>
-          s.sectionId === sec.sectionId ? { ...s, saving: false } : s
-        ));
-      })
-      .catch(() => {
+  
+    setActiveSections(prev =>
+      prev.map(s =>
+        s.sectionId === sec.sectionId
+          ? { ...s, content: newContent, saving: true }
+          : s
+      )
+    );
+  
+    const timers = saveTimers.current;
+  
+    if (timers.has(sec.sectionId)) {
+      clearTimeout(timers.get(sec.sectionId)!);
+    }
+  
+    const timer = setTimeout(async () => {
+      try {
+        await axiosClient.put(
+          `/products/${productId}/landing-page/sections/${sec.sectionId}`,
+          { content: newContent }
+        );
+  
+        setActiveSections(prev =>
+          prev.map(s =>
+            s.sectionId === sec.sectionId
+              ? { ...s, saving: false }
+              : s
+          )
+        );
+      } catch {
         showToast("Failed to save content", "error");
-        setActiveSections(prev => prev.map(s =>
-          s.sectionId === sec.sectionId ? { ...s, saving: false } : s
-        ));
-      });
-  }, [productId]);
-
-  const updateContentOptimistic = React.useCallback((sec: ActiveSection, newContent: Record<string, any>) => {
-    setActiveSections(prev => prev.map(s => s.sectionId === sec.sectionId ? { ...s, content: newContent } : s));
-    const timeout = setTimeout(() => debouncedUpdateContent(sec, newContent), 800);
-    return () => clearTimeout(timeout);
-  }, [debouncedUpdateContent]);
-
+        setActiveSections(prev =>
+          prev.map(s =>
+            s.sectionId === sec.sectionId
+              ? { ...s, saving: false }
+              : s
+          )
+        );
+      }
+    }, 800);
+  
+    timers.set(sec.sectionId, timer);
+  };
+  
+  // 4️⃣ drag & drop (KEEP THIS)
   const onDragEnd = async ({ active, over }: any) => {
     if (!over || active.id === over.id || !productId) return;
-
+  
     const oldIndex = activeSections.findIndex(s => s.sectionId === active.id);
     const newIndex = activeSections.findIndex(s => s.sectionId === over.id);
+  
     const newOrder = arrayMove(activeSections, oldIndex, newIndex);
-
+  
     setActiveSections(newOrder);
     setReordering(true);
-
+  
     try {
       await axiosClient.post(`/products/${productId}/landing-page/reorder`, {
         sections: newOrder.map((sec, idx) => ({
@@ -240,8 +266,9 @@ export default function LandingPageBuilder({productId: productId}: {productId?: 
           sort_order: idx + 1,
         })),
       });
+  
       showToast("Order saved", "success");
-    } catch (error) {
+    } catch {
       showToast("Failed to reorder sections", "error");
       setActiveSections(activeSections);
     } finally {
@@ -338,7 +365,7 @@ export default function LandingPageBuilder({productId: productId}: {productId?: 
                             onSelect={(currentValue) => {
                               handleAddSection(currentValue);
                               setSelectedValue(currentValue);
-                              
+                              // Optionally close popover if you have popoverOpen state
                             }}
                           >
                             <Check
@@ -380,7 +407,7 @@ export default function LandingPageBuilder({productId: productId}: {productId?: 
                             item={item}
                             onTogglePublish={() => togglePublish(item)}
                             onRemove={() => removeSection(item)}
-                            onContentChange={(content) => updateContentOptimistic(item, content)}
+                            onContentChange={(content) => updateSectionContent(item, content)}
                             disabled={reordering}
                           />
                         ))}
@@ -396,15 +423,17 @@ export default function LandingPageBuilder({productId: productId}: {productId?: 
             </Card>
           </div>
 
- 
+          {/* Preview */}
+        {/* Preview */}
+{/* Responsive Mobile Preview */}
 
 {productId && (
   <div className="w-full lg:fixed lg:inset-y-0 lg:right-0 lg:w-1/2 lg:flex lg:items-center lg:justify-center lg:pointer-events-none lg:z-10">
     <div className="w-full h-[80%] lg:max-w-lg lg:pointer-events-auto">
-    
+      {/* Card only renders when previewVisible is true */}
       {previewVisible && (
         <Card className="shadow-xl lg:shadow-2xl mx-auto lg:mx-0 transition-all duration-300">
-         
+          {/* Header with Toggle Button - Visible on ALL devices */}
           <CardHeader className="flex flex-row items-center justify-between ">
             <div>
               <CardTitle className="text-lg lg:text-xl">Mobile Preview</CardTitle>
@@ -413,7 +442,7 @@ export default function LandingPageBuilder({productId: productId}: {productId?: 
               </CardDescription>
             </div>
 
-         
+            {/* Eye toggle button - always visible */}
             <Button
               variant="ghost"
               size="icon"
@@ -424,7 +453,7 @@ export default function LandingPageBuilder({productId: productId}: {productId?: 
             </Button>
           </CardHeader>
 
-    
+          {/* Phone Frame */}
           <CardContent className="flex justify-center ">
             <div className="h-[700px]
               relative shadow-2xl
@@ -448,7 +477,7 @@ export default function LandingPageBuilder({productId: productId}: {productId?: 
         </Card>
       )}
 
-     
+      {/* Floating "Show Preview" Button when hidden */}
       {!previewVisible && (
         <div className="fixed bottom-6 right-6 z-50 lg:bottom-8 lg:right-8">
           <Button
@@ -507,9 +536,9 @@ function SortableSectionItem({
   ref={setNodeRef}
   style={style}
 >
-
+  {/* Header wrapper */}
   <div className="flex items-center justify-between px-4 py-3">
-  
+    {/* Trigger (button) */}
     <AccordionTrigger className="flex items-center gap-3 flex-1 hover:no-underline text-left">
       <GripVertical
         className="h-5 w-5 text-gray-400 cursor-grab"
@@ -524,7 +553,7 @@ function SortableSectionItem({
       )}
     </AccordionTrigger>
 
-  
+    {/* Actions (NOT inside trigger) */}
     <div className="flex items-center gap-4 ml-4">
       <Switch
         checked={item.enabled}
@@ -741,18 +770,22 @@ function SortableSectionItem({
                 const file = e.target.files?.[0];
                 if (!file) return;
 
-             
+                // Show loading state (optional)
                 handleFieldChange(field.key, "Uploading...");
 
-               
+                // Convert to base64 or upload to your server
                 const reader = new FileReader();
                 reader.onload = () => {
                   const base64 = reader.result as string;
-                  handleFieldChange(field.key, base64); 
+                  handleFieldChange(field.key, base64); // Store base64 string
                 };
                 reader.readAsDataURL(file);
 
-            
+                // If you have an upload endpoint:
+                // const formData = new FormData();
+                // formData.append("file", file);
+                // const res = await axiosClient.post("/upload", formData);
+                // handleFieldChange(field.key, res.data.url);
               }}
             />
             {item.content[field.key] && typeof item.content[field.key] === "string" && (

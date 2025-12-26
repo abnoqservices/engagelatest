@@ -317,7 +317,7 @@ export default function ProductsPage() {
             {cat.name}
           </span>
         </SelectItem>
-        {cat.children && cat.children.length > 0 && renderCategoryTree(cat.children, level + 1)}
+        {cat.children && cat.children.length >= 0 && renderCategoryTree(cat.children, level + 1)}
       </React.Fragment>
     ));
   };

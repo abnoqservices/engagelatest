@@ -3453,7 +3453,7 @@ function ProductsPage() {
                         lineNumber: 314,
                         columnNumber: 9
                     }, this),
-                    cat.children && cat.children.length > 0 && renderCategoryTree(cat.children, level + 1)
+                    cat.children && cat.children.length >= 0 && renderCategoryTree(cat.children, level + 1)
                 ]
             }, cat.id, true, {
                 fileName: "[project]/app/products/page.tsx",

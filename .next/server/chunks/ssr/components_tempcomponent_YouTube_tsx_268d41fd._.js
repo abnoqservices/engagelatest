@@ -1,3 +1,0 @@
-module.exports=[243,a=>{"use strict";var b=a.i(87924);function c({data:a}){let c=a?.find(a=>"videoUrl"===a.name),d=(a=>{if(!a)return"";let b=a.split("v=")[1]?.split("&")[0];return`https://www.youtube.com/embed/${b}`})(c?.value||"");return(0,b.jsx)("div",{className:"card-header  aspect-video relative rounded-lg overflow-hidden",children:(0,b.jsx)("iframe",{src:d,className:"absolute top-0 left-0 w-full h-full rounded-lg",allow:"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",allowFullScreen:!0})})}a.s(["default",()=>c])},25878,a=>{a.n(a.i(243))}];
-
-//# sourceMappingURL=components_tempcomponent_YouTube_tsx_268d41fd._.js.map

@@ -286,6 +286,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$badge$2e
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$plus$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__Plus$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/plus.js [app-rsc] (ecmascript) <export default as Plus>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$users$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__Users$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/users.js [app-rsc] (ecmascript) <export default as Users>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$trending$2d$up$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__TrendingUp$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/trending-up.js [app-rsc] (ecmascript) <export default as TrendingUp>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$zap$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__Zap$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/zap.js [app-rsc] (ecmascript) <export default as Zap>");
 ;
 ;
 ;
@@ -293,6 +294,55 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 ;
 ;
 function PersonasPage() {
+    // In a real app, these would come from:
+    // - Aggregated data from GET /api/contacts with scoring computed client-side or via backend
+    // - Possibly a dedicated /api/personas or /api/contacts/scores endpoint
+    const personas = [
+        {
+            name: "Hot Lead",
+            scoreRange: "90–100",
+            count: 145,
+            color: "bg-red-600",
+            description: "High intent – ready for sales"
+        },
+        {
+            name: "Qualified Lead",
+            scoreRange: "80–89",
+            count: 234,
+            color: "bg-orange-600",
+            description: "Strong fit + engagement"
+        },
+        {
+            name: "Marketing Qualified",
+            scoreRange: "70–79",
+            count: 456,
+            color: "bg-amber-600",
+            description: "Engaged – nurture + score"
+        },
+        {
+            name: "Warm Prospect",
+            scoreRange: "60–69",
+            count: 789,
+            color: "bg-yellow-600",
+            description: "Showing interest"
+        },
+        {
+            name: "Cold / Low Priority",
+            scoreRange: "40–59",
+            count: 1234,
+            color: "bg-blue-600",
+            description: "Low engagement"
+        },
+        {
+            name: "Unqualified / Archived",
+            scoreRange: "0–39",
+            count: 567,
+            color: "bg-gray-600",
+            description: "Not a fit or inactive"
+        }
+    ];
+    // Rough total for percentage calculation (in real app → from API summary)
+    const totalContacts = personas.reduce((sum, p)=>sum + p.count, 0);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$dashboard$2f$layout$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["DashboardLayout"], {
         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             className: "space-y-6",
@@ -304,24 +354,33 @@ function PersonasPage() {
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
                                     className: "text-3xl font-bold text-foreground",
-                                    children: "Customer Personas"
+                                    children: "Contact Personas"
                                 }, void 0, false, {
                                     fileName: "[project]/app/customers/personas/page.tsx",
-                                    lineNumber: 13,
+                                    lineNumber: 64,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                    className: "text-muted-foreground mt-2",
-                                    children: "AI-powered customer segmentation and scoring"
-                                }, void 0, false, {
+                                    className: "text-muted-foreground mt-2 flex items-center gap-1.5",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$zap$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__Zap$3e$__["Zap"], {
+                                            className: "h-4 w-4 text-amber-600"
+                                        }, void 0, false, {
+                                            fileName: "[project]/app/customers/personas/page.tsx",
+                                            lineNumber: 66,
+                                            columnNumber: 15
+                                        }, this),
+                                        "AI-powered lead scoring & segmentation based on behavior, source and custom fields"
+                                    ]
+                                }, void 0, true, {
                                     fileName: "[project]/app/customers/personas/page.tsx",
-                                    lineNumber: 14,
+                                    lineNumber: 65,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/customers/personas/page.tsx",
-                            lineNumber: 12,
+                            lineNumber: 63,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["Button"], {
@@ -330,166 +389,136 @@ function PersonasPage() {
                                     className: "h-4 w-4 mr-2"
                                 }, void 0, false, {
                                     fileName: "[project]/app/customers/personas/page.tsx",
-                                    lineNumber: 19,
+                                    lineNumber: 71,
                                     columnNumber: 13
                                 }, this),
                                 "Create Persona"
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/customers/personas/page.tsx",
-                            lineNumber: 18,
+                            lineNumber: 70,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/customers/personas/page.tsx",
-                    lineNumber: 11,
+                    lineNumber: 62,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "grid gap-6 md:grid-cols-2 lg:grid-cols-3",
-                    children: [
-                        {
-                            name: "Hot Lead",
-                            score: "90-100",
-                            count: 145,
-                            color: "bg-red-500"
-                        },
-                        {
-                            name: "Decision Maker",
-                            score: "80-89",
-                            count: 234,
-                            color: "bg-orange-500"
-                        },
-                        {
-                            name: "Engaged Prospect",
-                            score: "70-79",
-                            count: 456,
-                            color: "bg-amber-500"
-                        },
-                        {
-                            name: "Interested Visitor",
-                            score: "60-69",
-                            count: 789,
-                            color: "bg-yellow-500"
-                        },
-                        {
-                            name: "Casual Browser",
-                            score: "40-59",
-                            count: 1234,
-                            color: "bg-blue-500"
-                        },
-                        {
-                            name: "Low Priority",
-                            score: "0-39",
-                            count: 567,
-                            color: "bg-gray-500"
-                        }
-                    ].map((persona, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["Card"], {
+                    children: personas.map((persona)=>{
+                        const percentage = Math.round(persona.count / totalContacts * 100);
+                        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["Card"], {
+                            className: "overflow-hidden",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["CardHeader"], {
+                                    className: "pb-4",
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "flex items-start justify-between",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["CardTitle"], {
-                                                        className: "text-base",
+                                                        className: "text-lg font-semibold",
                                                         children: persona.name
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/customers/personas/page.tsx",
-                                                        lineNumber: 38,
-                                                        columnNumber: 21
+                                                        lineNumber: 86,
+                                                        columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["CardDescription"], {
+                                                        className: "mt-1",
                                                         children: [
                                                             "Score: ",
-                                                            persona.score
+                                                            persona.scoreRange,
+                                                            " • ",
+                                                            persona.description
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/customers/personas/page.tsx",
-                                                        lineNumber: 39,
-                                                        columnNumber: 21
+                                                        lineNumber: 87,
+                                                        columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/customers/personas/page.tsx",
-                                                lineNumber: 37,
-                                                columnNumber: 19
+                                                lineNumber: 85,
+                                                columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: `h-3 w-3 rounded-full ${persona.color}`
+                                                className: `h-4 w-4 rounded-full ${persona.color} ring-2 ring-offset-2 ring-offset-background`
                                             }, void 0, false, {
                                                 fileName: "[project]/app/customers/personas/page.tsx",
-                                                lineNumber: 41,
-                                                columnNumber: 19
+                                                lineNumber: 91,
+                                                columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/customers/personas/page.tsx",
-                                        lineNumber: 36,
-                                        columnNumber: 17
+                                        lineNumber: 84,
+                                        columnNumber: 19
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/app/customers/personas/page.tsx",
-                                    lineNumber: 35,
-                                    columnNumber: 15
+                                    lineNumber: 83,
+                                    columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["CardContent"], {
-                                    className: "space-y-4",
+                                    className: "space-y-5",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: "flex items-center justify-between mb-2",
+                                                    className: "flex items-center justify-between mb-2 text-sm",
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                            className: "text-sm text-muted-foreground",
-                                                            children: "Customers"
+                                                            className: "text-muted-foreground",
+                                                            children: "Contacts"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/customers/personas/page.tsx",
-                                                            lineNumber: 47,
-                                                            columnNumber: 21
+                                                            lineNumber: 98,
+                                                            columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                            className: "text-2xl font-bold",
+                                                            className: "font-semibold",
                                                             children: persona.count.toLocaleString()
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/customers/personas/page.tsx",
-                                                            lineNumber: 48,
-                                                            columnNumber: 21
+                                                            lineNumber: 99,
+                                                            columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/customers/personas/page.tsx",
-                                                    lineNumber: 46,
-                                                    columnNumber: 19
+                                                    lineNumber: 97,
+                                                    columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: "h-2 bg-muted rounded-full overflow-hidden",
+                                                    className: "h-2.5 bg-muted rounded-full overflow-hidden",
                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: `h-full ${persona.color}`,
+                                                        className: `h-full ${persona.color} transition-all`,
                                                         style: {
-                                                            width: `${Math.min(persona.count / 15, 100)}%`
+                                                            width: `${percentage}%`
                                                         }
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/customers/personas/page.tsx",
-                                                        lineNumber: 51,
-                                                        columnNumber: 21
+                                                        lineNumber: 102,
+                                                        columnNumber: 23
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/customers/personas/page.tsx",
-                                                    lineNumber: 50,
-                                                    columnNumber: 19
+                                                    lineNumber: 101,
+                                                    columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/customers/personas/page.tsx",
-                                            lineNumber: 45,
-                                            columnNumber: 17
+                                            lineNumber: 96,
+                                            columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: "flex gap-2",
+                                            className: "flex gap-3",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["Button"], {
                                                     variant: "outline",
@@ -497,18 +526,18 @@ function PersonasPage() {
                                                     className: "flex-1",
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$users$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__Users$3e$__["Users"], {
-                                                            className: "h-4 w-4 mr-1"
+                                                            className: "h-4 w-4 mr-1.5"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/customers/personas/page.tsx",
-                                                            lineNumber: 56,
-                                                            columnNumber: 21
+                                                            lineNumber: 111,
+                                                            columnNumber: 23
                                                         }, this),
-                                                        "View All"
+                                                        "View Contacts"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/customers/personas/page.tsx",
-                                                    lineNumber: 55,
-                                                    columnNumber: 19
+                                                    lineNumber: 110,
+                                                    columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["Button"], {
                                                     variant: "outline",
@@ -516,40 +545,41 @@ function PersonasPage() {
                                                     className: "flex-1",
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$trending$2d$up$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__TrendingUp$3e$__["TrendingUp"], {
-                                                            className: "h-4 w-4 mr-1"
+                                                            className: "h-4 w-4 mr-1.5"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/customers/personas/page.tsx",
-                                                            lineNumber: 60,
-                                                            columnNumber: 21
+                                                            lineNumber: 115,
+                                                            columnNumber: 23
                                                         }, this),
-                                                        "Insights"
+                                                        "Scoring Insights"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/customers/personas/page.tsx",
-                                                    lineNumber: 59,
-                                                    columnNumber: 19
+                                                    lineNumber: 114,
+                                                    columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/customers/personas/page.tsx",
-                                            lineNumber: 54,
-                                            columnNumber: 17
+                                            lineNumber: 109,
+                                            columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/customers/personas/page.tsx",
-                                    lineNumber: 44,
-                                    columnNumber: 15
+                                    lineNumber: 95,
+                                    columnNumber: 17
                                 }, this)
                             ]
-                        }, i, true, {
+                        }, persona.name, true, {
                             fileName: "[project]/app/customers/personas/page.tsx",
-                            lineNumber: 34,
-                            columnNumber: 13
-                        }, this))
+                            lineNumber: 82,
+                            columnNumber: 15
+                        }, this);
+                    })
                 }, void 0, false, {
                     fileName: "[project]/app/customers/personas/page.tsx",
-                    lineNumber: 25,
+                    lineNumber: 77,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["Card"], {
@@ -557,107 +587,130 @@ function PersonasPage() {
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["CardHeader"], {
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["CardTitle"], {
-                                    children: "Scoring Rules"
+                                    children: "Lead Scoring Configuration"
                                 }, void 0, false, {
                                     fileName: "[project]/app/customers/personas/page.tsx",
-                                    lineNumber: 72,
+                                    lineNumber: 128,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["CardDescription"], {
-                                    children: "Configure how customer scores are calculated"
+                                    children: "Points assigned to contact activities, sources and custom field values"
                                 }, void 0, false, {
                                     fileName: "[project]/app/customers/personas/page.tsx",
-                                    lineNumber: 73,
+                                    lineNumber: 129,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/customers/personas/page.tsx",
-                            lineNumber: 71,
+                            lineNumber: 127,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["CardContent"], {
-                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "space-y-4",
-                                children: [
-                                    {
-                                        action: "Product QR Scan",
-                                        points: 10
-                                    },
-                                    {
-                                        action: "Landing Page Visit",
-                                        points: 5
-                                    },
-                                    {
-                                        action: "Demo Video Watch",
-                                        points: 15
-                                    },
-                                    {
-                                        action: "Form Submission",
-                                        points: 25
-                                    },
-                                    {
-                                        action: "Email Open",
-                                        points: 3
-                                    },
-                                    {
-                                        action: "Email Link Click",
-                                        points: 7
-                                    }
-                                ].map((rule, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "flex items-center justify-between p-4 rounded-lg border",
-                                        children: [
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                className: "font-medium",
-                                                children: rule.action
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/customers/personas/page.tsx",
-                                                lineNumber: 86,
-                                                columnNumber: 19
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["Badge"], {
-                                                variant: "secondary",
-                                                children: [
-                                                    "+",
-                                                    rule.points,
-                                                    " points"
-                                                ]
-                                            }, void 0, true, {
-                                                fileName: "[project]/app/customers/personas/page.tsx",
-                                                lineNumber: 87,
-                                                columnNumber: 19
-                                            }, this)
-                                        ]
-                                    }, i, true, {
-                                        fileName: "[project]/app/customers/personas/page.tsx",
-                                        lineNumber: 85,
-                                        columnNumber: 17
-                                    }, this))
-                            }, void 0, false, {
-                                fileName: "[project]/app/customers/personas/page.tsx",
-                                lineNumber: 76,
-                                columnNumber: 13
-                            }, this)
-                        }, void 0, false, {
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "space-y-3",
+                                    children: [
+                                        {
+                                            action: "Form Submission (high-value)",
+                                            points: 25
+                                        },
+                                        {
+                                            action: "Demo / Product Video ≥ 75%",
+                                            points: 20
+                                        },
+                                        {
+                                            action: "Pricing Page Visit",
+                                            points: 15
+                                        },
+                                        {
+                                            action: "QR Scan / Booth Capture",
+                                            points: 12
+                                        },
+                                        {
+                                            action: "Email Link Click (2+)",
+                                            points: 10
+                                        },
+                                        {
+                                            action: "Website Session ≥ 2 min",
+                                            points: 8
+                                        },
+                                        {
+                                            action: "Email Opened",
+                                            points: 4
+                                        },
+                                        {
+                                            action: "Visitor from High-intent Source",
+                                            points: "+5–15"
+                                        },
+                                        {
+                                            action: "AI-detected Buying Intent",
+                                            points: "+10–30"
+                                        }
+                                    ].map((rule, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            className: "flex items-center justify-between p-3.5 rounded-lg border bg-card/40 hover:bg-card/70 transition-colors",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                    className: "font-medium",
+                                                    children: rule.action
+                                                }, void 0, false, {
+                                                    fileName: "[project]/app/customers/personas/page.tsx",
+                                                    lineNumber: 150,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["Badge"], {
+                                                    variant: "secondary",
+                                                    className: "text-sm font-semibold",
+                                                    children: [
+                                                        "+",
+                                                        rule.points,
+                                                        " pts"
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/app/customers/personas/page.tsx",
+                                                    lineNumber: 151,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, i, true, {
+                                            fileName: "[project]/app/customers/personas/page.tsx",
+                                            lineNumber: 146,
+                                            columnNumber: 17
+                                        }, this))
+                                }, void 0, false, {
+                                    fileName: "[project]/app/customers/personas/page.tsx",
+                                    lineNumber: 134,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                    className: "text-xs text-muted-foreground mt-5 italic",
+                                    children: "Scoring combines behavioral events, contact source (factors_ai, website, product_lp, …), custom field values and origin metadata. Rules can be managed in settings."
+                                }, void 0, false, {
+                                    fileName: "[project]/app/customers/personas/page.tsx",
+                                    lineNumber: 158,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
                             fileName: "[project]/app/customers/personas/page.tsx",
-                            lineNumber: 75,
+                            lineNumber: 133,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/customers/personas/page.tsx",
-                    lineNumber: 70,
+                    lineNumber: 126,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/app/customers/personas/page.tsx",
-            lineNumber: 10,
+            lineNumber: 61,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/app/customers/personas/page.tsx",
-        lineNumber: 9,
+        lineNumber: 60,
         columnNumber: 5
     }, this);
 }

@@ -172,30 +172,13 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$axiosClient$2e$ts__$5
 ;
 async function LandingPage({ params }) {
     const { slug } = await params;
-    const productId = Number(slug);
+    // const productId = Number(slug);
     // Optional: early invalid ID handling (you can also let client handle it)
-    if (isNaN(productId)) {
-        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-            className: "flex h-screen items-center justify-center",
-            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                className: "text-xl text-red-600",
-                children: "Invalid Product ID"
-            }, void 0, false, {
-                fileName: "[project]/app/preview/[slug]/page.jsx",
-                lineNumber: 59,
-                columnNumber: 9
-            }, this)
-        }, void 0, false, {
-            fileName: "[project]/app/preview/[slug]/page.jsx",
-            lineNumber: 58,
-            columnNumber: 7
-        }, this);
-    }
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$app$2f$preview$2f5b$slug$5d2f$LandingPageClient$2e$jsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["default"], {
-        slug: productId
+        slug: slug
     }, void 0, false, {
         fileName: "[project]/app/preview/[slug]/page.jsx",
-        lineNumber: 64,
+        lineNumber: 59,
         columnNumber: 10
     }, this);
 }

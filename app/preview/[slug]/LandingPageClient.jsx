@@ -8,21 +8,22 @@ import Preview from "@/app/preview/dummuypreview/page";
 export default function LandingPageClient({ slug }) {
   const [isLoading, setIsLoading] = React.useState(true);
   const [payload, setPayload] = React.useState(null);
-
+  const [productId, setproductId] = React.useState(null);
   React.useEffect(() => {
-
-    if (!slug || isNaN(slug)) {
-      setIsLoading(false);
-      return;
-    }
+  
+    // if (!slug || isNaN(slug)) {
+    //   setIsLoading(false);
+    //   return;
+    // }
 
     const fetchPreviewData = async () => {
       try {
         setIsLoading(true);
 
-        const res = await axiosClient.get(`/products/${slug}/landing-page`);
-
+        const res = await axiosClient.get(`public/products/${slug}/landing-page`);
+        setproductId(res.data?.data?.product_id);
         if (res.data?.success && res.data?.data?.sections?.length > 0) {
+        
           const activeSections = res.data.data.sections
             .filter((sec) => sec.is_published)
             .sort((a, b) => a.sort_order - b.sort_order);
@@ -41,6 +42,7 @@ export default function LandingPageClient({ slug }) {
               paragraphSize: 16,
             },
           });
+       
         } else {
           // No published sections
           setPayload({
@@ -113,5 +115,5 @@ export default function LandingPageClient({ slug }) {
   }
 
 
-  return <Preview data={payload} productId={slug} />;
+  return <Preview data={payload} productId={productId} />;
 }

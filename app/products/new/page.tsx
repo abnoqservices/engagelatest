@@ -49,7 +49,7 @@ import { DashboardLayout } from "@/components/dashboard/layout";
 import { Spinner } from "@/components/ui/spinner";
 import axiosClient from "@/lib/axiosClient";
 import { showToast } from "@/lib/showToast"
-
+import axios from "axios";
 interface Category {
   id: number;
   name: string;
@@ -136,7 +136,7 @@ export default function NewProductPage(): React.ReactElement {
   const [alertMessage, setAlertMessage] = React.useState<AlertType>({ type: "", message: "" });
   const [showPreview, setShowPreview] = React.useState(false);
   const [previewLoading, setPreviewLoading] = React.useState(false);
-
+ const [qrimg,setQr] = React.useState<string | null>(null);
 
   const showAlert = (type: "success" | "error", message: string, duration = 5000) => {
     showToast(message, type);
@@ -196,9 +196,26 @@ export default function NewProductPage(): React.ReactElement {
       setLoadingCategories(false);
     }
   };
+ const fetchQrCode = async (productId:number) => {
+  const baseUrl = `http://localhost/preview/${productId}`;
+ const res = await fetch("/api/qr", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ baseUrl }),
+  });
+  const blob = await res.blob();
+  const previewUrl = URL.createObjectURL(blob);
+  const qrFile = new File([blob], "qr.png", { type: "image/png" });
+  const formData = new FormData();
+  formData.append("qr_code", qrFile);   // 👈 IMPORTANT
+  await axiosClient.post(`/products/${productId}/qr-code`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
 
   React.useEffect(() => {
-  
     loadCategories();
   }, []);
 
@@ -379,7 +396,7 @@ export default function NewProductPage(): React.ReactElement {
       const newProductId = response.data?.data?.id || response.data?.id;
 
       if (!newProductId) throw new Error("No product ID returned");
-
+      fetchQrCode(newProductId);
       setProductId(newProductId);
       clearDraft(); 
       setActiveTab("media");
@@ -530,9 +547,10 @@ export default function NewProductPage(): React.ReactElement {
       <div className="min-h-screen bg-slate-50 p-6">
         <div className="max-w-7xl mx-auto space-y-6">
          
-
+          
           <div className="flex items-center justify-between">
             <div>
+              {/* <img src="https://product-qr.s3.amazonaws.com/product-qr/32_15-mobile-x-proe_1766654763.png"/> */}
               <h1 className="text-3xl font-bold text-slate-900">Add New Product</h1>
               <p className="text-sm text-slate-600 mt-1">Step-by-step product creation</p>
               {productId && <p className="text-xs text-blue-600 mt-1">Product ID: {productId}</p>}

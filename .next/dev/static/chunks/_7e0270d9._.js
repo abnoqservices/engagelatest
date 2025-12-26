@@ -364,17 +364,19 @@ function LandingPageClient({ slug }) {
     _s();
     const [isLoading, setIsLoading] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"](true);
     const [payload, setPayload] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"](null);
+    const [productId, setproductId] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"](null);
     __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"]({
         "LandingPageClient.useEffect": ()=>{
-            if (!slug || isNaN(slug)) {
-                setIsLoading(false);
-                return;
-            }
+            // if (!slug || isNaN(slug)) {
+            //   setIsLoading(false);
+            //   return;
+            // }
             const fetchPreviewData = {
                 "LandingPageClient.useEffect.fetchPreviewData": async ()=>{
                     try {
                         setIsLoading(true);
-                        const res = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$axiosClient$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].get(`/products/${slug}/landing-page`);
+                        const res = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$axiosClient$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].get(`public/products/${slug}/landing-page`);
+                        setproductId(res.data?.data?.product_id);
                         if (res.data?.success && res.data?.data?.sections?.length > 0) {
                             const activeSections = res.data.data.sections.filter({
                                 "LandingPageClient.useEffect.fetchPreviewData.activeSections": (sec)=>sec.is_published
@@ -457,12 +459,12 @@ function LandingPageClient({ slug }) {
                 className: "h-12 w-12 animate-spin text-gray-600"
             }, void 0, false, {
                 fileName: "[project]/app/preview/[slug]/LandingPageClient.jsx",
-                lineNumber: 101,
+                lineNumber: 103,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/app/preview/[slug]/LandingPageClient.jsx",
-            lineNumber: 100,
+            lineNumber: 102,
             columnNumber: 7
         }, this);
     }
@@ -472,20 +474,20 @@ function LandingPageClient({ slug }) {
             children: "No preview data available."
         }, void 0, false, {
             fileName: "[project]/app/preview/[slug]/LandingPageClient.jsx",
-            lineNumber: 109,
+            lineNumber: 111,
             columnNumber: 7
         }, this);
     }
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$app$2f$preview$2f$dummuypreview$2f$page$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
         data: payload,
-        productId: slug
+        productId: productId
     }, void 0, false, {
         fileName: "[project]/app/preview/[slug]/LandingPageClient.jsx",
-        lineNumber: 116,
+        lineNumber: 118,
         columnNumber: 10
     }, this);
 }
-_s(LandingPageClient, "yLi0XGauL7LrL0ELc1+y8uLtwmA=");
+_s(LandingPageClient, "dZrULI7Px5Hq3KY4WrN81f/eQhk=");
 _c = LandingPageClient;
 var _c;
 __turbopack_context__.k.register(_c, "LandingPageClient");

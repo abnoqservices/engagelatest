@@ -1,14 +1,22 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
+  "/api/qr/route": "app/api/qr/route.js",
+  "/campaigns/new/page": "app/campaigns/new/page.js",
+  "/campaigns/page": "app/campaigns/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/landing-pages/global-sections/page": "app/landing-pages/global-sections/page.js",
+  "/events/[slug]/analytics/page": "app/events/[slug]/analytics/page.js",
+  "/events/[slug]/edit/page": "app/events/[slug]/edit/page.js",
+  "/events/booths/page": "app/events/booths/page.js",
+  "/events/new/page": "app/events/new/page.js",
+  "/events/page": "app/events/page.js",
+  "/forms/page": "app/forms/page.js",
   "/landing-pages/page": "app/landing-pages/page.js",
-  "/page": "app/page.js",
+  "/offers/new/page": "app/offers/new/page.js",
+  "/offers/page": "app/offers/page.js",
   "/preview/[slug]/page": "app/preview/[slug]/page.js",
-  "/preview/page": "app/preview/page.js",
   "/products/[slug]/landing-page/page": "app/products/[slug]/landing-page/page.js",
   "/products/new/page": "app/products/new/page.js",
   "/products/page": "app/products/page.js",
-  "/signin/page": "app/signin/page.js",
-  "/signup/page": "app/signup/page.js"
+  "/products/update/page": "app/products/update/page.js",
+  "/signin/page": "app/signin/page.js"
 }
