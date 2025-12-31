@@ -41712,3 +41712,8 @@ Import traces:
        or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
        height and width.
 [02:15:40.813] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://localhost:3000/analytics color: rgb(120, 120, 120) color: inherit {"dp":"/analytics","o":"http://localhost:3000/analytics","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1767171677257}
+[02:24:50.407] Server  LOG      ✓ Compiled in 115ms
+[02:25:20.434] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
+[02:25:20.434] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/events/7/analytics","route":"/events/[slug]/analytics"}
+[02:25:20.434] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://localhost:3000/events/7/analytics color: rgb(120, 120, 120) color: inherit {"dp":"/events/[slug]/analytics","o":"http://localhost:3000/events/7/analytics","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1767172256932}
+[02:25:20.434] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://localhost:3000/signin color: rgb(120, 120, 120) color: inherit {"dp":"/signin","o":"http://localhost:3000/signin","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1767172257008}
