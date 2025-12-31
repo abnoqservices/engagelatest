@@ -1,14 +1,13 @@
-// app/dashboard/contacts/create-or-import/page.tsx
 'use client'
+
 import { DashboardLayout } from "@/components/dashboard/layout"
-import { useState, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { format } from 'date-fns'
-import { CalendarIcon, FileUp, Loader2, Plus, Upload, Users } from 'lucide-react'
-import Papa from 'papaparse'
+import { CalendarIcon, FileUp, Loader2, Plus } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -44,15 +43,33 @@ import {
 } from '@/components/ui/popover'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import { Progress } from '@/components/ui/progress'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 
 import axiosClient from '@/lib/axiosClient'
 import { showToast } from '@/lib/showToast'
 
 // ────────────────────────────────────────────────
-// SHARED SCHEMA
+// TYPES
+// ────────────────────────────────────────────────
+interface CustomField {
+  id: number
+  key: string
+  label: string
+  type: string
+  options: { choices?: string[] } | null
+  is_required: boolean
+  is_active: boolean
+  order: number
+}
+
+// ────────────────────────────────────────────────
+// SHARED SCHEMA (core fields)
 // ────────────────────────────────────────────────
 const contactSchema = z.object({
   first_name: z.string().max(255).optional().nullable(),
@@ -65,13 +82,13 @@ const contactSchema = z.object({
   identified_at: z.date().optional().nullable(),
   status: z.enum(['active', 'archived']).optional(),
   deduplicate: z.boolean().default(true),
-  source_metadata_json: z.string().optional(),
+  source_metadata_json: z.string().optional().nullable(),
 })
 
 type ContactForm = z.infer<typeof contactSchema>
 
 // ────────────────────────────────────────────────
-// MANUAL FORM DEFAULTS
+// DEFAULT VALUES - MANUAL
 // ────────────────────────────────────────────────
 const manualDefault: ContactForm = {
   first_name: '',
@@ -88,12 +105,73 @@ const manualDefault: ContactForm = {
 }
 
 // ────────────────────────────────────────────────
-// MAIN PAGE COMPONENT
+// BULK SCHEMA
+// ────────────────────────────────────────────────
+const bulkSchema = z.object({
+  contact_type: z.enum([
+    'manual',
+    'manual_bulk_import',
+    'ai_detection',
+    'visitor_capture',
+    'api',
+  ]),
+  contact_source: z.enum([
+    'dashboard',
+    'csv_import',
+    'factors_ai',
+    'clearbit',
+    'website',
+    'product_lp',
+    'zapier',
+  ]),
+  csv_file: z
+    .custom<File>((v) => v instanceof File, { message: 'Please select a CSV file' })
+    .optional()
+    .refine((file) => !file || file.name.endsWith('.csv'), {
+      message: 'File must be a .csv',
+    }),
+})
+
+type BulkFormValues = z.infer<typeof bulkSchema>
+
+const bulkDefault: BulkFormValues = {
+  contact_type: 'manual_bulk_import',
+  contact_source: 'csv_import',
+  csv_file: undefined,
+}
+
+// ────────────────────────────────────────────────
+// MAIN COMPONENT
 // ────────────────────────────────────────────────
 export default function CreateOrImportContactsPage() {
   const router = useRouter()
 
-  // ── Manual creation ─────────────────────────────
+  // Custom fields
+  const [customFields, setCustomFields] = useState<CustomField[]>([])
+  const [customValues, setCustomValues] = useState<Record<string, any>>({})
+  const [loadingCustomFields, setLoadingCustomFields] = useState(true)
+
+  // ── Fetch custom fields ───────────────────────────────
+  useEffect(() => {
+    const fetchCustomFields = async () => {
+      try {
+        const res = await axiosClient.get('/contacts/custom-fields')
+        if (res.data.success) {
+          const active = res.data.data
+            .filter((f: CustomField) => f.is_active)
+            .sort((a: CustomField, b: CustomField) => a.order - b.order)
+          setCustomFields(active)
+        }
+      } catch (err) {
+        showToast('Could not load custom fields', 'error')
+      } finally {
+        setLoadingCustomFields(false)
+      }
+    }
+    fetchCustomFields()
+  }, [])
+
+  // ── MANUAL FORM ───────────────────────────────────────
   const manualForm = useForm<ContactForm>({
     resolver: zodResolver(contactSchema),
     defaultValues: manualDefault,
@@ -101,120 +179,15 @@ export default function CreateOrImportContactsPage() {
 
   const [manualSubmitting, setManualSubmitting] = useState(false)
 
-  const onManualSubmit = async (values: ContactForm) => {
-    setManualSubmitting(true)
-    const payload = preparePayload(values)
-
-    try {
-      const res = await axiosClient.post('/contacts', payload)
-      showToast(res.data.message || 'Contact created', 'success')
-      router.push(`/dashboard/contacts/${res.data.data.id}`)
-    } catch (err: any) {
-      handleApiError(err, manualForm.setError)
-    } finally {
-      setManualSubmitting(false)
-    }
-  }
-
-  // ── Bulk import ─────────────────────────────────
-  const [csvFile, setCsvFile] = useState<File | null>(null)
-  const [rows, setRows] = useState<any[]>([])
-  const [importType, setImportType] = useState('manual_bulk_import')
-  const [importSource, setImportSource] = useState('csv_import')
-  const [importDeduplicate, setImportDeduplicate] = useState(true)
-  const [importProgress, setImportProgress] = useState(0)
-  const [importStatus, setImportStatus] = useState<'idle' | 'processing' | 'done' | 'error'>('idle')
-  const [importResult, setImportResult] = useState({ success: 0, skipped: 0, failed: 0 })
-
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !file.name.endsWith('.csv')) {
-      showToast('Please select a valid .csv file', 'error')
-      return
-    }
-
-    setCsvFile(file)
-
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (result) => {
-        if (result.data.length === 0) {
-          showToast('CSV file is empty or invalid', 'error')
-          return
-        }
-        setRows(result.data)
-        showToast(`Loaded ${result.data.length} rows from CSV`, 'success')
-      },
-      error: () => showToast('Failed to parse CSV file', 'error'),
-    })
-  }
-
-  const startBulkImport = async () => {
-    if (!rows.length) {
-      showToast('No contacts loaded from CSV', 'error')
-      return
-    }
-
-    setImportProgress(0)
-    setImportStatus('processing')
-    setImportResult({ success: 0, skipped: 0, failed: 0 })
-
-    let processed = 0
-    const total = rows.length
-
-    for (const row of rows) {
-      const contact: any = {
-        first_name: row.first_name || row['First Name'] || '',
-        last_name: row.last_name || row['Last Name'] || '',
-        email: row.email || row['Email'] || '',
-        phone: row.phone || row['Phone'] || '',
-        company: row.company || row['Company'] || '',
-        contact_type: importType,
-        contact_source: importSource,
-        deduplicate: importDeduplicate,
-        status: 'active',
-        source_metadata: { 
-          imported_file: csvFile?.name, 
-          row_index: processed + 1,
-          original_source: importSource
-        }
-      }
-
-      const payload = preparePayload(contact as ContactForm)
-
-      try {
-        await axiosClient.post('/contacts', payload)
-        setImportResult(prev => ({ ...prev, success: prev.success + 1 }))
-      } catch (err: any) {
-        if (err.response?.status === 409) {
-          setImportResult(prev => ({ ...prev, skipped: prev.skipped + 1 }))
-        } else {
-          setImportResult(prev => ({ ...prev, failed: prev.failed + 1 }))
-        }
-      }
-
-      processed++
-      setImportProgress(Math.round((processed / total) * 100))
-    }
-
-    setImportStatus('done')
-    showToast(
-      `Import finished: ${importResult.success} added, ${importResult.skipped} skipped, ${importResult.failed} failed`,
-      'success'
-    )
-  }
-
-  // ── Shared helpers ──────────────────────────────
   const preparePayload = (values: ContactForm) => {
     const payload: any = {}
+
     if (values.first_name?.trim()) payload.first_name = values.first_name.trim()
     if (values.last_name?.trim()) payload.last_name = values.last_name.trim()
     if (values.email?.trim()) payload.email = values.email.trim()
     if (values.phone?.trim()) payload.phone = values.phone.trim()
     if (values.company?.trim()) payload.company = values.company.trim()
+
     if (values.contact_type) payload.contact_type = values.contact_type
     if (values.contact_source) payload.contact_source = values.contact_source
     if (values.status) payload.status = values.status
@@ -228,7 +201,7 @@ export default function CreateOrImportContactsPage() {
       try {
         payload.source_metadata = JSON.parse(values.source_metadata_json)
       } catch {
-        throw new Error('Invalid JSON in source metadata')
+        showToast('Invalid JSON in source metadata', 'error')
       }
     }
 
@@ -238,355 +211,547 @@ export default function CreateOrImportContactsPage() {
   const handleApiError = (err: any, setError?: any) => {
     const res = err.response
     if (res?.status === 409) {
-      showToast(`Duplicate found (ID: ${res.data.data?.duplicate_id || '?'})`, 'warning')
+      showToast(`Duplicate contact found (ID: ${res.data.data?.duplicate_id || '?'})`, 'warning')
     } else if (res?.status === 422 && setError) {
       Object.entries(res.data.errors || {}).forEach(([key, msgs]: [string, any]) => {
         setError(key, { message: msgs.join(', ') })
       })
-      showToast('Validation errors – check fields', 'error')
+      showToast('Please check the form for validation errors', 'error')
     } else {
-      showToast(res?.data?.message || 'Request failed', 'error')
+      showToast(res?.data?.message || 'Something went wrong', 'error')
+    }
+  }
+
+  const onManualSubmit = async (values: ContactForm) => {
+    setManualSubmitting(true)
+    const payload = preparePayload(values)
+
+    try {
+      const createRes = await axiosClient.post('/contacts', payload)
+      const contactId = createRes.data.data.id
+      showToast('Contact created successfully', 'success')
+
+      if (Object.keys(customValues).length > 0) {
+        try {
+          await axiosClient.put(`/contacts/${contactId}/custom-fields`, {
+            fields: customValues,
+          })
+          showToast('Custom fields saved', 'success')
+        } catch (cfErr: any) {
+          showToast(
+            cfErr.response?.data?.message || 'Some custom fields could not be saved',
+            'warning'
+          )
+        }
+      }
+
+      router.push(`/dashboard/contacts/${contactId}`)
+    } catch (err: any) {
+      handleApiError(err, manualForm.setError)
+    } finally {
+      setManualSubmitting(false)
+    }
+  }
+
+  // ── BULK FORM ─────────────────────────────────────────
+  const bulkForm = useForm<BulkFormValues>({
+    resolver: zodResolver(bulkSchema),
+    defaultValues: bulkDefault,
+  })
+
+  const [bulkSubmitting, setBulkSubmitting] = useState(false)
+
+  const onBulkSubmit = async (values: BulkFormValues) => {
+    setBulkSubmitting(true)
+
+    if (
+      values.contact_type === 'manual_bulk_import' &&
+      values.contact_source === 'csv_import' &&
+      values.csv_file
+    ) {
+      try {
+        const formData = new FormData()
+        formData.append('file', values.csv_file)
+        formData.append('contact_type', values.contact_type)
+        formData.append('contact_source', values.contact_source)
+
+        const res = await axiosClient.post('/contacts/import-csv', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        })
+
+        const imported = res.data?.data?.imported_count ?? res.data?.data?.count ?? 0
+        showToast(`Successfully imported ${imported} contacts`, 'success')
+        router.push('/dashboard/contacts')
+      } catch (err: any) {
+        handleApiError(err)
+        showToast('Bulk import failed. Please check the file format.', 'error')
+      }
+    } else {
+      showToast('Please select Bulk Import type, CSV source and upload a file', 'warning')
+    }
+
+    setBulkSubmitting(false)
+  }
+
+  // ── Custom field renderer ─────────────────────────────
+  const renderCustomFieldInput = (field: CustomField) => {
+    const key = field.key
+    const value = customValues[key]
+
+    switch (field.type) {
+      case 'text':
+      case 'email':
+      case 'phone':
+      case 'url':
+      case 'number':
+        return (
+          <Input
+            type={field.type === 'number' ? 'number' : 'text'}
+            value={value ?? ''}
+            onChange={(e) => setCustomValues((prev) => ({ ...prev, [key]: e.target.value }))}
+          />
+        )
+
+      case 'textarea':
+        return (
+          <Textarea
+            value={value ?? ''}
+            onChange={(e) => setCustomValues((prev) => ({ ...prev, [key]: e.target.value }))}
+            rows={3}
+          />
+        )
+
+      case 'date':
+        return (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  'w-full justify-start text-left font-normal',
+                  !value && 'text-muted-foreground'
+                )}
+              >
+                {value ? format(new Date(value), 'PPP') : <span>Pick a date</span>}
+                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={value ? new Date(value) : undefined}
+                onSelect={(date) =>
+                  setCustomValues((prev) => ({
+                    ...prev,
+                    [key]: date ? date.toISOString() : null,
+                  }))
+                }
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        )
+
+      case 'select':
+        return (
+          <Select
+            value={value ?? ''}
+            onValueChange={(val) => setCustomValues((prev) => ({ ...prev, [key]: val }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select option..." />
+            </SelectTrigger>
+            <SelectContent>
+              {(field.options?.choices || []).map((choice) => (
+                <SelectItem key={choice} value={choice}>
+                  {choice}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )
+
+      case 'boolean':
+        return (
+          <div className="pt-2">
+            <Switch
+              checked={!!value}
+              onCheckedChange={(checked) => setCustomValues((prev) => ({ ...prev, [key]: checked }))}
+            />
+          </div>
+        )
+
+      default:
+        return <Input disabled placeholder={`Unsupported type: ${field.type}`} />
     }
   }
 
   return (
     <DashboardLayout>
-    <div className="container max-w-5xl py-8">
-      <h1 className="text-3xl font-bold mb-2">Add Contacts</h1>
-      <p className="text-muted-foreground mb-6">
-        Create single contact manually or import multiple from CSV. Supports all contact types and sources.
-      </p>
+      <div className="min-h-screen bg-slate-50 p-6">
+        <h1 className="text-3xl font-bold mb-2">Add New Contact</h1>
+        <p className="text-muted-foreground mb-6">
+          Enter details manually or import multiple contacts via CSV.
+        </p>
 
-      <Tabs defaultValue="manual" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="manual">
-            <Plus className="mr-2 h-4 w-4" />
-            Single Contact
-          </TabsTrigger>
-          <TabsTrigger value="bulk">
-            <FileUp className="mr-2 h-4 w-4" />
-            Bulk Import (CSV)
-          </TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="manual" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="manual">
+              <Plus className="mr-2 h-4 w-4" />
+              Single Contact
+            </TabsTrigger>
+            <TabsTrigger value="bulk">
+              <FileUp className="mr-2 h-4 w-4" />
+              Bulk Import (CSV)
+            </TabsTrigger>
+          </TabsList>
 
-        {/* ── MANUAL CREATION ── */}
-        <TabsContent value="manual">
-          <Card>
-            <CardHeader>
-              <CardTitle>Manual Entry</CardTitle>
-              <CardDescription>
-                Add one contact with customizable type and source.
-              </CardDescription>
-            </CardHeader>
+          {/* MANUAL TAB */}
+          <TabsContent value="manual">
+            <Card>
+              <CardHeader>
+                <CardTitle>Manual Contact Entry</CardTitle>
+                <CardDescription>
+                  Fill in the basic information and any custom fields below.
+                </CardDescription>
+              </CardHeader>
 
-            <Form {...manualForm}>
-              <form onSubmit={manualForm.handleSubmit(onManualSubmit)}>
-                <CardContent className="grid gap-6 md:grid-cols-2">
-                  <div className="space-y-4">
-                    <FormField control={manualForm.control} name="first_name" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>First Name</FormLabel>
-                        <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
+              <Form {...manualForm}>
+                <form onSubmit={manualForm.handleSubmit(onManualSubmit)}>
+                  <CardContent className="grid gap-8 md:grid-cols-2">
+                    {/* Core fields */}
+                    <div className="space-y-5">
+                      <h3 className="text-lg font-semibold">Basic Information</h3>
 
-                    <FormField control={manualForm.control} name="last_name" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Last Name</FormLabel>
-                        <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-
-                    <FormField control={manualForm.control} name="email" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl><Input type="email" {...field} value={field.value ?? ''} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-
-                    <FormField control={manualForm.control} name="phone" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone</FormLabel>
-                        <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-
-                    <FormField control={manualForm.control} name="company" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Company</FormLabel>
-                        <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                  </div>
-
-                  <div className="space-y-4">
-                    <FormField control={manualForm.control} name="contact_type" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Type</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="manual">Manual</SelectItem>
-                            <SelectItem value="manual_bulk_import">Manual Bulk Import</SelectItem>
-                            <SelectItem value="ai_detection">AI Detection</SelectItem>
-                            <SelectItem value="visitor_capture">Visitor Capture</SelectItem>
-                            <SelectItem value="api">API</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-
-                    <FormField control={manualForm.control} name="contact_source" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Source</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select source" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="dashboard">Dashboard</SelectItem>
-                            <SelectItem value="csv_import">CSV Import</SelectItem>
-                            <SelectItem value="factors_ai">Factors AI</SelectItem>
-                            <SelectItem value="clearbit">Clearbit</SelectItem>
-                            <SelectItem value="website">Website</SelectItem>
-                            <SelectItem value="product_lp">Product LP</SelectItem>
-                            <SelectItem value="zapier">Zapier</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-
-                    <FormField control={manualForm.control} name="identified_at" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Identified At</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
+                      <FormField
+                        control={manualForm.control}
+                        name="first_name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>First Name</FormLabel>
                             <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "w-full pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, "PPP")
-                                ) : (
-                                  <span>Pick a date</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
+                              <Input {...field} value={field.value ?? ''} />
                             </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(date) =>
-                                date > new Date() || date < new Date("1900-01-01")
-                              }
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-
-                    <FormField control={manualForm.control} name="status" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="archived">Archived</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-
-                    <FormField control={manualForm.control} name="deduplicate" render={({ field }) => (
-                      <FormItem className="flex items-center space-x-2">
-                        <Switch checked={field.value} onCheckedChange={field.onChange} id="dedup-manual" />
-                        <FormLabel htmlFor="dedup-manual">Prevent duplicates</FormLabel>
-                      </FormItem>
-                    )} />
-
-                    <FormField control={manualForm.control} name="source_metadata_json" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Source Metadata (JSON)</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder='{"key": "value"}' 
-                            {...field} 
-                            value={field.value ?? ''} 
-                          />
-                        </FormControl>
-                        <FormDescription>Optional JSON metadata for the contact origin.</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                  </div>
-                </CardContent>
-
-                <CardFooter className="flex justify-end">
-                  <Button type="submit" disabled={manualSubmitting}>
-                    {manualSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Create Contact
-                  </Button>
-                </CardFooter>
-              </form>
-            </Form>
-          </Card>
-        </TabsContent>
-
-        {/* ── BULK IMPORT ── */}
-        <TabsContent value="bulk">
-          <Card>
-            <CardHeader>
-              <CardTitle>Bulk Import from CSV</CardTitle>
-              <CardDescription>
-                Upload CSV file • Supports various types and sources for imported contacts.
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-6">
-              {/* Upload area */}
-              <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                <Input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".csv"
-                  className="hidden"
-                  onChange={handleCsvUpload}
-                />
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={importStatus === 'processing'}
-                >
-                  <Upload className="mr-2 h-5 w-5" />
-                  Select CSV File
-                </Button>
-                {csvFile && (
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    Selected: {csvFile.name} ({(csvFile.size / 1024).toFixed(1)} KB)
-                  </p>
-                )}
-              </div>
-
-              {/* Settings */}
-              {rows.length > 0 && (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div>
-                      <FormLabel>Type</FormLabel>
-                      <Select value={importType} onValueChange={setImportType}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="manual_bulk_import">Manual Bulk Import</SelectItem>
-                          <SelectItem value="ai_detection">AI Detection</SelectItem>
-                          <SelectItem value="visitor_capture">Visitor Capture</SelectItem>
-                          <SelectItem value="api">API</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <FormLabel>Source</FormLabel>
-                      <Select value={importSource} onValueChange={setImportSource}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="csv_import">CSV Import</SelectItem>
-                          <SelectItem value="factors_ai">Factors AI</SelectItem>
-                          <SelectItem value="clearbit">Clearbit</SelectItem>
-                          <SelectItem value="website">Website</SelectItem>
-                          <SelectItem value="product_lp">Product LP</SelectItem>
-                          <SelectItem value="zapier">Zapier</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="flex items-end">
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="dedup-bulk"
-                          checked={importDeduplicate}
-                          onCheckedChange={setImportDeduplicate}
-                        />
-                        <label htmlFor="dedup-bulk" className="text-sm font-medium">
-                          Skip duplicates
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="flex items-end">
-                      <Button
-                        onClick={startBulkImport}
-                        disabled={importStatus === 'processing'}
-                        className="w-full"
-                      >
-                        {importStatus === 'processing' ? (
-                          <>Processing…</>
-                        ) : (
-                          <>Start Import ({rows.length} contacts)</>
+                            <FormMessage />
+                          </FormItem>
                         )}
-                      </Button>
-                    </div>
-                  </div>
+                      />
 
-                  {/* Progress */}
-                  {importStatus !== 'idle' && (
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Import progress</span>
-                        <span>{importProgress}%</span>
-                      </div>
-                      <Progress value={importProgress} className="h-2" />
-                      {importStatus === 'done' && (
-                        <div className="text-sm mt-4 p-3 bg-muted rounded-md">
-                          <p className="font-medium">Result:</p>
-                          <ul className="mt-1 space-y-1">
-                            <li>Added: <strong>{importResult.success}</strong></li>
-                            <li>Skipped (duplicates): <strong>{importResult.skipped}</strong></li>
-                            <li>Failed: <strong>{importResult.failed}</strong></li>
-                          </ul>
+                      <FormField
+                        control={manualForm.control}
+                        name="last_name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Last Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} value={field.value ?? ''} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={manualForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input type="email" {...field} value={field.value ?? ''} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={manualForm.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone</FormLabel>
+                            <FormControl>
+                              <Input {...field} value={field.value ?? ''} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={manualForm.control}
+                        name="company"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Company</FormLabel>
+                            <FormControl>
+                              <Input {...field} value={field.value ?? ''} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={manualForm.control}
+                        name="identified_at"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Identified At</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      'w-full justify-start text-left font-normal',
+                                      !field.value && 'text-muted-foreground'
+                                    )}
+                                  >
+                                    {field.value ? format(field.value, 'PPP') : <span>Pick date</span>}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={field.onChange}
+                                  disabled={(date) =>
+                                    date > new Date() || date < new Date('1900-01-01')
+                                  }
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={manualForm.control}
+                        name="status"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Status</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="active">Active</SelectItem>
+                                <SelectItem value="archived">Archived</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={manualForm.control}
+                        name="deduplicate"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              id="deduplicate"
+                            />
+                            <FormLabel htmlFor="deduplicate" className="cursor-pointer">
+                              Prevent duplicates
+                            </FormLabel>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={manualForm.control}
+                        name="source_metadata_json"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Source Metadata (JSON – optional)</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder='{"campaign": "summer_2025", "utm_source": "newsletter"}'
+                                {...field}
+                                value={field.value ?? ''}
+                                rows={2}
+                              />
+                            </FormControl>
+                            <FormDescription>Advanced usage only</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {/* Custom fields */}
+                    <div className="space-y-5">
+                      <h3 className="text-lg font-semibold">Custom Fields</h3>
+
+                      {loadingCustomFields ? (
+                        <div className="py-6 text-center text-muted-foreground">
+                          <Loader2 className="mx-auto h-6 w-6 animate-spin mb-2" />
+                          <p>Loading custom fields...</p>
+                        </div>
+                      ) : customFields.length === 0 ? (
+                        <div className="py-8 text-center text-muted-foreground border border-dashed rounded-lg">
+                          <p>No custom fields have been created yet.</p>
+                          <p className="text-sm mt-1">
+                            You can add them in Settings → Custom Fields
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-5">
+                          {customFields.map((cf) => (
+                            <div key={cf.id} className="space-y-2">
+                              <FormLabel className="flex items-center gap-1.5">
+                                {cf.label}
+                                {cf.is_required && (
+                                  <span className="text-red-500 text-xs font-medium">*</span>
+                                )}
+                              </FormLabel>
+
+                              {renderCustomFieldInput(cf)}
+
+                              <p className="text-xs text-muted-foreground">
+                                {cf.type}
+                                {cf.options?.choices && ` • ${cf.options.choices.length} options`}
+                              </p>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
-                  )}
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+                  </CardContent>
+
+                  <CardFooter className="flex justify-end gap-4 pt-6 border-t">
+                    <Button
+                      type="submit"
+                      disabled={manualSubmitting || loadingCustomFields}
+                      className="min-w-[140px]"
+                    >
+                      {manualSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Create Contact
+                    </Button>
+                  </CardFooter>
+                </form>
+              </Form>
+            </Card>
+          </TabsContent>
+
+          {/* BULK TAB */}
+          <TabsContent value="bulk">
+            <Card>
+              <CardHeader>
+                <CardTitle>Bulk Import via CSV</CardTitle>
+                <CardDescription>
+                  Upload a CSV file to import multiple contacts at once.
+                </CardDescription>
+              </CardHeader>
+
+              <Form {...bulkForm}>
+                <form onSubmit={bulkForm.handleSubmit(onBulkSubmit)}>
+                  <CardContent className="space-y-6">
+                    <FormField
+                      control={bulkForm.control}
+                      name="contact_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contact Type</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="manual_bulk_import">Bulk Import</SelectItem>
+                              {/* You can add others if needed */}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={bulkForm.control}
+                      name="contact_source"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Source</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select source" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="csv_import">CSV Import</SelectItem>
+                              {/* You can add others if needed */}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {bulkForm.watch('contact_type') === 'manual_bulk_import' &&
+                      bulkForm.watch('contact_source') === 'csv_import' && (
+                        <FormField
+                          control={bulkForm.control}
+                          name="csv_file"
+                          render={({ field: { value, onChange, ...fieldProps } }) => (
+                            <FormItem>
+                              <FormLabel>Upload CSV File</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="file"
+                                  accept=".csv"
+                                  onChange={(e) => onChange(e.target.files?.[0])}
+                                  {...fieldProps}
+                                />
+                              </FormControl>
+                              <FormDescription>
+                                CSV should contain columns: first_name, last_name, email, phone, company, etc.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+
+                    {(bulkForm.watch('contact_type') !== 'manual_bulk_import' ||
+                      bulkForm.watch('contact_source') !== 'csv_import') && (
+                      <p className="text-sm text-muted-foreground pt-4">
+                        Select <strong>Bulk Import</strong> type and <strong>CSV Import</strong> source to enable file upload.
+                      </p>
+                    )}
+                  </CardContent>
+
+                  <CardFooter className="flex justify-end gap-4 pt-6 border-t">
+                    <Button
+                      type="submit"
+                      disabled={bulkSubmitting}
+                      className="min-w-[140px]"
+                    >
+                      {bulkSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Import Contacts
+                    </Button>
+                  </CardFooter>
+                </form>
+              </Form>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </DashboardLayout>
   )
 }

@@ -206,10 +206,7 @@ export default function NewEventPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" disabled={loading}>
-              <Eye className="h-4 w-4 mr-2" />
-              Preview
-            </Button>
+          
             <Button onClick={handleCreateEvent} disabled={loading} className="gap-2">
               {loading ? (
                 <>
@@ -236,11 +233,17 @@ export default function NewEventPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+            <div className="flex items-center space-x-2">
+                <Switch id="is-active" checked={isActive} onCheckedChange={setIsActive} />
+                <Label htmlFor="is-active">
+                  Activate this event immediately
+                </Label>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="event-name">Event Name *</Label>
                 <Input
                   id="event-name"
-                  placeholder="e.g., India Mobile Congress 2025"
+                  placeholder=""
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
@@ -252,7 +255,7 @@ export default function NewEventPage() {
                   <MapPin className="h-5 w-5 text-muted-foreground" />
                   <Input
                     id="location"
-                    placeholder="e.g., New Delhi"
+                    placeholder=""
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                   />
@@ -303,12 +306,7 @@ export default function NewEventPage() {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Switch id="is-active" checked={isActive} onCheckedChange={setIsActive} />
-                <Label htmlFor="is-active">
-                  Activate this event immediately
-                </Label>
-              </div>
+            
             </CardContent>
           </Card>
 
@@ -326,7 +324,7 @@ export default function NewEventPage() {
                   <Label htmlFor="booth-name">Booth Name *</Label>
                   <Input
                     id="booth-name"
-                    placeholder="e.g., Hall 3 – A12"
+                    placeholder=""
                     value={boothName}
                     onChange={(e) => setBoothName(e.target.value)}
                   />
@@ -335,7 +333,7 @@ export default function NewEventPage() {
                   <Label htmlFor="booth-code">Booth Code</Label>
                   <Input
                     id="booth-code"
-                    placeholder="e.g., H3-A12"
+                    placeholder=""
                     value={boothCode}
                     onChange={(e) => setBoothCode(e.target.value)}
                   />

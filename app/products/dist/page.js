@@ -377,7 +377,7 @@ function ProductsPage() {
                 React.createElement("span", { style: { paddingLeft: level * 20 + "px" } },
                     level > 0 && "└─ ",
                     cat.name)),
-            cat.children && cat.children.length >= 0 && renderCategoryTree(cat.children, level + 1))); });
+            cat.children && cat.children.length > 0 && renderCategoryTree(cat.children, level + 1))); });
     };
     var getSelectedCategoryName = function () {
         var findName = function (cats) {

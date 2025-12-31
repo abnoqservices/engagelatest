@@ -101,6 +101,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../../app/customers/custom-fields/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/customers/custom-fields">> = Specific
+  const handler = {} as typeof import("../../../app/customers/custom-fields/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../../app/customers/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/customers">> = Specific
