@@ -50,16 +50,38 @@ pipeline {
                     def imageTag = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}"
                     
                     sh """
+                        # Get task definition
                         aws ecs describe-task-definition --task-definition ${ECS_TASK_DEFINITION} --region ${AWS_REGION} --query taskDefinition > task-definition.json
                         
-                        # Update image in task definition
-                        sed -i.bak 's|"image": ".*"|"image": "${imageTag}"|g' task-definition.json
+                        # Use Python to filter metadata and update image (Python is usually available)
+                        python3 << 'PYTHON_SCRIPT'
+import json
+import sys
+
+# Read the task definition
+with open('task-definition.json', 'r') as f:
+    task_def = json.load(f)
+
+# Remove metadata fields that can't be used in register-task-definition
+fields_to_remove = ['taskDefinitionArn', 'revision', 'status', 'requiresAttributes', 
+                    'compatibilities', 'registeredAt', 'registeredBy']
+for field in fields_to_remove:
+    task_def.pop(field, None)
+
+# Update the image in the first container definition
+if 'containerDefinitions' in task_def and len(task_def['containerDefinitions']) > 0:
+    task_def['containerDefinitions'][0]['image'] = '${imageTag}'
+
+# Write the updated task definition
+with open('task-definition-updated.json', 'w') as f:
+    json.dump(task_def, f, indent=2)
+PYTHON_SCRIPT
                         
                         # Register new task definition
-                        aws ecs register-task-definition --cli-input-json file://task-definition.json --region ${AWS_REGION}
+                        aws ecs register-task-definition --cli-input-json file://task-definition-updated.json --region ${AWS_REGION}
                         
                         # Clean up
-                        rm -f task-definition.json task-definition.json.bak
+                        rm -f task-definition.json task-definition-updated.json
                     """
                 }
             }
