@@ -101,18 +101,6 @@ PYTHON_SCRIPT
             }
         }
 
-        stage('Wait for Deployment') {
-            steps {
-                script {
-                    sh """
-                        aws ecs wait services-stable \
-                            --cluster ${ECS_CLUSTER} \
-                            --services ${ECS_SERVICE} \
-                            --region ${AWS_REGION}
-                    """
-                }
-            }
-        }
     }
 
     post {
