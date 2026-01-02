@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 90, "column": 0}, "map": {"version":3,"sources":["file:///Volumes/D/next/engage33/lib/axiosClient.ts"],"sourcesContent":["import axios from \"axios\";\n\nconst axiosClient = axios.create({\n  baseURL: process.env.NEXT_PUBLIC_API_URL,\n  headers: {\n    Accept: \"application/json\",\n  },\n});\n\n//  Attach token to every request\naxiosClient.interceptors.request.use((config) => {\n  if (typeof window !== \"undefined\") {\n    const token = localStorage.getItem(\"token\"); //  MUST be \"token\"\n\n    if (token) {\n      config.headers.Authorization = `Bearer ${token}`;\n    }\n  }\n\n  return config;\n});\n\n//  Auto logout on 401 (important)\n// axiosClient.interceptors.response.use(\n//   (response) => response,\n//   (error) => {\n//     if (error.response?.status === 401) {\n//       localStorage.removeItem(\"token\");\n//       localStorage.removeItem(\"user\");\n//       window.location.href = \"/signin\";\n//     }\n\n//     return Promise.reject(error);\n//   }\n// );\n\nexport default axiosClient;\n"],"names":[],"mappings":";;;;AAAA;;AAEA,MAAM,cAAc,gJAAK,CAAC,MAAM,CAAC;IAC/B,OAAO;IACP,SAAS;QACP,QAAQ;IACV;AACF;AAEA,iCAAiC;AACjC,YAAY,YAAY,CAAC,OAAO,CAAC,GAAG,CAAC,CAAC;IACpC;;IAQA,OAAO;AACT;uCAgBe"}}]
-}
