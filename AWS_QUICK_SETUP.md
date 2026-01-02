@@ -186,3 +186,4 @@ sed -i.bak "s/us-east-1/$AWS_REGION/g" ecs-task-definition.json
 ./scripts/deploy-ecs.sh
 ```
 
+
