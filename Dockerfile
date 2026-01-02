@@ -43,6 +43,14 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Change ownership
 RUN chown -R nextjs:nodejs /app
 
+# Set environment variables
+ENV DB_USER=postgres
+ENV DB_HOST=localhost
+ENV DB_NAME=productmanagement
+ENV DB_PASSWORD=sky.1765
+ENV DB_PORT=5432
+ENV NEXT_PUBLIC_API_URL=https:/api.pexifly.com/api
+
 USER nextjs
 
 EXPOSE 80
