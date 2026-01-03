@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Get API URL from environment variable (set at build time for Next.js)
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.pexifly.com/api";
+const apiUrl = "https://api.pexifly.com/api";
 
 // Debug log to verify the API URL (remove in production if needed)
 if (typeof window !== "undefined") {
