@@ -20,15 +20,28 @@ RUN npm ci
 # Copy application files (excluding .env files via .dockerignore)
 COPY . .
 
-# Explicitly remove .env files to prevent them from overriding Dockerfile ENV variables
-# Next.js reads .env files at build time and they take precedence over ENV
-RUN rm -f .env .env.local .env.development .env.production .env.*.local 2>/dev/null || true
+# CRITICAL: Remove ALL .env files BEFORE Next.js build reads them
+# Next.js reads .env files at build time and they take precedence over ENV variables
+RUN find . -maxdepth 1 -name ".env*" -type f -exec rm -f {} \; 2>/dev/null || true
+RUN rm -rf .env .env.local .env.development .env.production .env.*.local 2>/dev/null || true
 
-# Verify the environment variable is set
-RUN echo "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}"
+# Verify the environment variable is set and no .env files exist
+RUN echo "=== Environment Check ===" && \
+    echo "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}" && \
+    echo "=== Checking for .env files ===" && \
+    (find . -maxdepth 1 -name ".env*" -type f 2>/dev/null && echo "WARNING: .env files found!" || echo "✓ No .env files found") && \
+    echo "=== End Check ==="
 
 # Build the application
-RUN npm run build
+# Explicitly pass the environment variable to ensure it's used
+# Next.js will embed NEXT_PUBLIC_API_URL in the client bundle at build time
+RUN NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL} npm run build
+
+# Verify the built bundle contains the correct API URL
+# This helps debug if the environment variable was embedded correctly
+RUN echo "=== Verifying built bundle ===" && \
+    (grep -r "api.pexifly.com" .next/static/chunks/ 2>/dev/null | head -3 || echo "Could not verify in chunks") && \
+    echo "=== Build verification complete ==="
 
 # Production stage
 FROM node:20 AS runner
