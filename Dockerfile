@@ -3,23 +3,31 @@ FROM node:20 AS builder
 
 WORKDIR /app
 
+# Accept build argument for API URL (can be overridden at build time)
+ARG NEXT_PUBLIC_API_URL=https://api.pexifly.com/api
+
+# Set environment variables FIRST, before copying any files
+# This ensures they're available during the entire build process
+ENV NEXT_BUILDER=webpack
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
 # Copy package files
 COPY package*.json ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy application files
+# Copy application files (excluding .env files via .dockerignore)
 COPY . .
 
-# Remove .env files to prevent them from overriding Dockerfile ENV variables
-# Next.js reads .env files at build time and they take precedence
+# Explicitly remove .env files to prevent them from overriding Dockerfile ENV variables
+# Next.js reads .env files at build time and they take precedence over ENV
 RUN rm -f .env .env.local .env.development .env.production .env.*.local 2>/dev/null || true
 
+# Verify the environment variable is set
+RUN echo "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}"
+
 # Build the application
-# Set environment variables before build (NEXT_PUBLIC_* vars must be available at build time)
-ENV NEXT_BUILDER=webpack
-ENV NEXT_PUBLIC_API_URL=https://api.pexifly.com/api
 RUN npm run build
 
 # Production stage

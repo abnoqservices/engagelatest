@@ -24,7 +24,8 @@ pipeline {
                     def imageTag = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}"
                     
                     sh """
-                        docker build -t ${ECR_REPOSITORY}:${IMAGE_TAG} .
+                        # Build without cache to ensure .env files are not used
+                        docker build --no-cache --build-arg NEXT_PUBLIC_API_URL=https://api.pexifly.com/api -t ${ECR_REPOSITORY}:${IMAGE_TAG} .
                         docker tag ${ECR_REPOSITORY}:${IMAGE_TAG} ${imageTag}
                     """
                 }
