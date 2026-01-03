@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20 AS builder
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ ENV NEXT_BUILDER=webpack
 RUN npm run build
 
 # Production stage
-FROM node:20-alpine AS runner
+FROM node:20 AS runner
 
 WORKDIR /app
 
@@ -37,8 +37,8 @@ COPY --from=builder /app/package.json ./
 COPY --from=builder /app/tsconfig.json ./
 
 # Create non-root user
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+RUN groupadd --system --gid 1001 nodejs && \
+    useradd --system --uid 1001 nextjs
 
 # Change ownership
 RUN chown -R nextjs:nodejs /app
@@ -54,8 +54,6 @@ ENV NEXT_PUBLIC_API_URL=https://api.pexifly.com/api
 USER nextjs
 
 EXPOSE 80
-
-RUN npm run build
 
 ENV PORT=80
 ENV HOSTNAME="0.0.0.0"
