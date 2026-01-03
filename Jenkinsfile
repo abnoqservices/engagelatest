@@ -24,8 +24,25 @@ pipeline {
                     def imageTag = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}"
                     
                     sh """
+                        # Clean workspace to ensure no .env files
+                        echo "Cleaning workspace..."
+                        find . -name ".env*" -type f -delete 2>/dev/null || true
+                        rm -f .env .env.local .env.production .env.development 2>/dev/null || true
+                        
+                        # Verify no .env files exist
+                        if [ -f .env ]; then
+                            echo "ERROR: .env file still exists in workspace!"
+                            exit 1
+                        fi
+                        
                         # Build without cache to ensure .env files are not used
+                        echo "Building Docker image with NEXT_PUBLIC_API_URL=https://api.pexifly.com/api"
                         docker build --no-cache --build-arg NEXT_PUBLIC_API_URL=https://api.pexifly.com/api -t ${ECR_REPOSITORY}:${IMAGE_TAG} .
+                        
+                        # Verify the built image contains the correct API URL
+                        echo "Verifying built image..."
+                        docker run --rm ${ECR_REPOSITORY}:${IMAGE_TAG} sh -c 'grep -r "api.pexifly.com" /app/.next/static/chunks/ 2>/dev/null | head -1 || echo "Could not verify in image"'
+                        
                         docker tag ${ECR_REPOSITORY}:${IMAGE_TAG} ${imageTag}
                     """
                 }
@@ -35,12 +52,21 @@ pipeline {
         stage('Push to ECR') {
             steps {
                 script {
+                    def imageTag = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}"
+                    
                     sh """
                         aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+                        
+                        # Final verification before push
+                        echo "=== Final Image Verification ==="
+                        echo "Checking for correct API URL in image..."
+                        docker run --rm ${ECR_REPOSITORY}:${IMAGE_TAG} sh -c 'grep -r "api.pexifly.com" /app/.next/static/chunks/ 2>/dev/null | head -1 || echo "WARNING: api.pexifly.com not found in bundle"'
+                        echo "Checking for incorrect localhost URL..."
+                        docker run --rm ${ECR_REPOSITORY}:${IMAGE_TAG} sh -c 'grep -r "127.0.0.1:8000" /app/.next/static/chunks/ 2>/dev/null | head -1 && echo "ERROR: Found 127.0.0.1:8000 in bundle!" || echo "✓ No localhost found"'
+                        echo "=== End Verification ==="
+                        
+                        docker push ${imageTag}
                     """
-                    
-                    def imageTag = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}"
-                    sh "docker push ${imageTag}"
                 }
             }
         }
@@ -71,7 +97,26 @@ for field in fields_to_remove:
 
 # Update the image in the first container definition
 if 'containerDefinitions' in task_def and len(task_def['containerDefinitions']) > 0:
-    task_def['containerDefinitions'][0]['image'] = '${imageTag}'
+    container = task_def['containerDefinitions'][0]
+    container['image'] = '${imageTag}'
+    
+    # CRITICAL: Remove or override NEXT_PUBLIC_API_URL from environment variables
+    # This ensures the build-time value is used, not a runtime override
+    if 'environment' not in container:
+        container['environment'] = []
+    
+    # Remove any existing NEXT_PUBLIC_API_URL from environment
+    container['environment'] = [env for env in container['environment'] 
+                               if env.get('name') != 'NEXT_PUBLIC_API_URL']
+    
+    # Add the correct NEXT_PUBLIC_API_URL (though it's already in the build, this ensures consistency)
+    container['environment'].append({
+        'name': 'NEXT_PUBLIC_API_URL',
+        'value': 'https://api.pexifly.com/api'
+    })
+    
+    print(f"Updated container image to: {container['image']}")
+    print(f"Set NEXT_PUBLIC_API_URL to: https://api.pexifly.com/api")
 
 # Write the updated task definition
 with open('task-definition-updated.json', 'w') as f:
