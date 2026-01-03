@@ -92,11 +92,40 @@ PYTHON_SCRIPT
             steps {
                 script {
                     sh """
+                        # Force stop all running tasks to ensure new image is used
+                        echo "Stopping all running tasks..."
+                        TASK_ARNS=\$(aws ecs list-tasks \
+                            --cluster ${ECS_CLUSTER} \
+                            --service-name ${ECS_SERVICE} \
+                            --region ${AWS_REGION} \
+                            --query 'taskArns[]' \
+                            --output text)
+                        
+                        if [ -n "\$TASK_ARNS" ]; then
+                            for TASK_ARN in \$TASK_ARNS; do
+                                echo "Stopping task: \$TASK_ARN"
+                                aws ecs stop-task \
+                                    --cluster ${ECS_CLUSTER} \
+                                    --task \$TASK_ARN \
+                                    --region ${AWS_REGION} || true
+                            done
+                            echo "Waiting for tasks to stop..."
+                            sleep 10
+                        fi
+                        
+                        # Force new deployment with new task definition
+                        echo "Forcing new deployment..."
                         aws ecs update-service \
                             --cluster ${ECS_CLUSTER} \
                             --service ${ECS_SERVICE} \
                             --force-new-deployment \
                             --region ${AWS_REGION}
+                        
+                        echo "Waiting for service to stabilize..."
+                        aws ecs wait services-stable \
+                            --cluster ${ECS_CLUSTER} \
+                            --services ${ECS_SERVICE} \
+                            --region ${AWS_REGION} || true
                     """
                 }
             }
