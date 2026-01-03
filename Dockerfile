@@ -13,7 +13,9 @@ RUN npm ci
 COPY . .
 
 # Build the application
+# Set environment variables before build (NEXT_PUBLIC_* vars must be available at build time)
 ENV NEXT_BUILDER=webpack
+ENV NEXT_PUBLIC_API_URL=https://api.pexifly.com/api
 RUN npm run build
 
 # Production stage
