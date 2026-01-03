@@ -12,6 +12,10 @@ RUN npm ci
 # Copy application files
 COPY . .
 
+# Remove .env files to prevent them from overriding Dockerfile ENV variables
+# Next.js reads .env files at build time and they take precedence
+RUN rm -f .env .env.local .env.development .env.production .env.*.local 2>/dev/null || true
+
 # Build the application
 # Set environment variables before build (NEXT_PUBLIC_* vars must be available at build time)
 ENV NEXT_BUILDER=webpack
