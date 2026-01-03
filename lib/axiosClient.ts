@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: "https://api.pexifly.com/api",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "https://api.pexifly.com/api",
   headers: {
     Accept: "application/json",
   },
