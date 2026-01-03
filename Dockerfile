@@ -17,19 +17,28 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci
 
-# Copy application files (excluding .env files via .dockerignore)
+# Copy application files - .dockerignore will exclude .env files
+# But we'll verify and remove any that might slip through
 COPY . .
 
-# CRITICAL: Remove ALL .env files BEFORE Next.js build reads them
-# Next.js reads .env files at build time and they take precedence over ENV variables
-RUN find . -maxdepth 1 -name ".env*" -type f -exec rm -f {} \; 2>/dev/null || true
-RUN rm -rf .env .env.local .env.development .env.production .env.*.local 2>/dev/null || true
+# CRITICAL: Remove ALL .env files immediately after copy
+# This is a safety measure in case .dockerignore doesn't catch everything
+RUN find . -name ".env*" -type f -delete 2>/dev/null || true
+RUN rm -f .env .env.local .env.development .env.production .env.*.local *.env 2>/dev/null || true
 
-# Verify the environment variable is set and no .env files exist
+# CRITICAL: Verify NO .env files exist anywhere - BUILD WILL FAIL if any are found
 RUN echo "=== Environment Check ===" && \
     echo "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}" && \
-    echo "=== Checking for .env files ===" && \
-    (find . -maxdepth 1 -name ".env*" -type f 2>/dev/null && echo "WARNING: .env files found!" || echo "✓ No .env files found") && \
+    echo "=== Checking for ANY .env files in entire directory tree ===" && \
+    ENV_FILES=$(find . -name ".env*" -type f 2>/dev/null) && \
+    if [ -n "$ENV_FILES" ]; then \
+        echo "ERROR: .env files found! Build will fail."; \
+        echo "Found files:"; \
+        echo "$ENV_FILES"; \
+        exit 1; \
+    else \
+        echo "✓ No .env files found - safe to build"; \
+    fi && \
     echo "=== End Check ==="
 
 # Build the application
