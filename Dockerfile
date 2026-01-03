@@ -55,8 +55,9 @@ USER nextjs
 
 EXPOSE 80
 
+RUN npm run build
+
 ENV PORT=80
 ENV HOSTNAME="0.0.0.0"
-
-CMD ["npm", "start"]
+CMD ["npm", "run", "start"]
 
