@@ -53,9 +53,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
-import {
-  useSortable
-} from "@dnd-kit/sortable"
+import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 
 import {
@@ -67,6 +65,7 @@ import {
   CalendarClock,
   Hash,
   Lock,
+  ChevronDown as ChevronDownIcon,
   CheckSquare,
   ToggleLeft,
   Upload,
@@ -88,8 +87,8 @@ const fieldTypes = [
   { value: "date", label: "Date", icon: Calendar },
   { value: "time", label: "Time", icon: Clock },
   { value: "datetime", label: "Date & Time", icon: CalendarClock },
-  { value: "select", label: "Dropdown", icon: ChevronDown },
-  { value: "multi_select", label: "Multi-Select", icon: ChevronDown },
+  { value: "select", label: "Dropdown", icon: ChevronDownIcon },
+  { value: "multi_select", label: "Multi-Select", icon: ChevronDownIcon },
   { value: "radio", label: "Radio Group", icon: CheckSquare },
   { value: "checkbox", label: "Checkbox Group", icon: CheckSquare },
   { value: "toggle", label: "Toggle Switch", icon: ToggleLeft },
@@ -132,7 +131,7 @@ interface FormData {
   id?: number
   name: string
   description: string
-  status: string
+  status: "draft" | "active"
   success_message: string
   redirect_url?: string
   send_notification: boolean
@@ -144,7 +143,7 @@ interface FormData {
 export default function CreateFormPage() {
   const params = useParams()
   const router = useRouter()
-  const formId = params?.id as string | undefined
+  const formId = params?.id as string || params.slug
 
   const [loading, setLoading] = React.useState(true)
   const [saving, setSaving] = React.useState(false)
@@ -174,7 +173,6 @@ export default function CreateFormPage() {
     if (formId) {
       loadForm()
     } else {
-      // Default one section for new forms
       setSections([
         {
           tempId: "main",
@@ -184,6 +182,7 @@ export default function CreateFormPage() {
             { tempId: "1", type: "text", label: "Full Name", required: true, placeholder: "John Doe", order: 0 },
             { tempId: "2", type: "email", label: "Email Address", required: true, placeholder: "you@example.com", order: 1 },
           ],
+          collapsed: false,
         },
       ])
       setLoading(false)
@@ -200,19 +199,25 @@ export default function CreateFormPage() {
           name: data.name || "",
           description: data.description || "",
           status: data.is_active ? "active" : "draft",
+          success_message: data.success_message || prev.success_message,
+          redirect_url: data.redirect_url || "",
+          send_notification: data.send_notification ?? true,
+          captcha: data.captcha ?? true,
+          gdpr: data.gdpr ?? false,
+          auto_respond: data.auto_respond ?? true,
         }))
 
-        const sectionsRes = await axiosClient.get(`/forms/${formId}/sections`)
+        const sectionsRes = await axiosClient.post(`/forms/${formId}/sections`)
         if (sectionsRes.data.success && sectionsRes.data.data.length > 0) {
           const loadedSections: Section[] = sectionsRes.data.data.map((sec: any, secIndex: number) => ({
             id: sec.id,
-            tempId: `sec-${sec.id || Date.now()}`,
+            tempId: `sec-${sec.id}`,
             title: sec.title || "Untitled Section",
             order: sec.order ?? secIndex,
             collapsed: false,
             fields: (sec.fields || []).map((f: any, fIndex: number) => ({
               id: f.id,
-              tempId: `field-${f.id || Date.now()}-${Math.random()}`,
+              tempId: `field-${f.id}-${Date.now()}`,
               type: f.type,
               label: f.label,
               required: f.is_required,
@@ -222,18 +227,19 @@ export default function CreateFormPage() {
               order: f.order ?? fIndex,
             })),
           }))
-          // Sort sections by order
           loadedSections.sort((a, b) => a.order - b.order)
-          loadedSections.forEach(sec => sec.fields.sort((a, b) => a.order - b.order))
+          loadedSections.forEach((sec) => sec.fields.sort((a, b) => a.order - b.order))
           setSections(loadedSections)
         } else {
-          // Fallback to single section
-          setSections([{
-            tempId: "main",
-            title: "Main Section",
-            order: 0,
-            fields: [],
-          }])
+          setSections([
+            {
+              tempId: "main",
+              title: "Main Section",
+              order: 0,
+              fields: [],
+              collapsed: false,
+            },
+          ])
         }
       }
     } catch (err) {
@@ -251,12 +257,12 @@ export default function CreateFormPage() {
       fields: [],
       collapsed: false,
     }
-    setSections(prev => [...prev, newSection])
+    setSections((prev) => [...prev, newSection])
   }
 
   const updateSection = (tempId: string, updates: Partial<Section>) => {
-    setSections(prev =>
-      prev.map(s => s.tempId === tempId ? { ...s, ...updates } : s)
+    setSections((prev) =>
+      prev.map((s) => (s.tempId === tempId ? { ...s, ...updates } : s))
     )
   }
 
@@ -268,11 +274,11 @@ export default function CreateFormPage() {
         showToast("Failed to delete section", "error")
       }
     }
-    setSections(prev => prev.filter(s => s.tempId !== section.tempId))
+    setSections((prev) => prev.filter((s) => s.tempId !== section.tempId))
   }
 
   const addField = (sectionTempId: string, type: string = "text") => {
-    const section = sections.find(s => s.tempId === sectionTempId)
+    const section = sections.find((s) => s.tempId === sectionTempId)
     if (!section) return
 
     const newField: Field = {
@@ -287,8 +293,8 @@ export default function CreateFormPage() {
       order: section.fields.length,
     }
 
-    setSections(prev =>
-      prev.map(s =>
+    setSections((prev) =>
+      prev.map((s) =>
         s.tempId === sectionTempId
           ? { ...s, fields: [...s.fields, newField] }
           : s
@@ -297,12 +303,12 @@ export default function CreateFormPage() {
   }
 
   const updateField = (sectionTempId: string, fieldTempId: string, updates: Partial<Field>) => {
-    setSections(prev =>
-      prev.map(s =>
+    setSections((prev) =>
+      prev.map((s) =>
         s.tempId === sectionTempId
           ? {
               ...s,
-              fields: s.fields.map(f =>
+              fields: s.fields.map((f) =>
                 f.tempId === fieldTempId ? { ...f, ...updates } : f
               ),
             }
@@ -312,10 +318,10 @@ export default function CreateFormPage() {
   }
 
   const removeField = (sectionTempId: string, fieldTempId: string) => {
-    setSections(prev =>
-      prev.map(s =>
+    setSections((prev) =>
+      prev.map((s) =>
         s.tempId === sectionTempId
-          ? { ...s, fields: s.fields.filter(f => f.tempId !== fieldTempId) }
+          ? { ...s, fields: s.fields.filter((f) => f.tempId !== fieldTempId) }
           : s
       )
     )
@@ -330,70 +336,57 @@ export default function CreateFormPage() {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
-
     if (!over || active.id === over.id) return
 
     const activeId = active.id as string
     const overId = over.id as string
 
-    // Check if dragging section or field
     if (activeId.startsWith("section-")) {
-      const activeIndex = sections.findIndex(s => s.tempId === activeId.replace("section-", ""))
-      const overIndex = sections.findIndex(s => s.tempId === overId.replace("section-", ""))
+      const activeIndex = sections.findIndex((s) => s.tempId === activeId.replace("section-", ""))
+      const overIndex = sections.findIndex((s) => s.tempId === overId.replace("section-", ""))
       if (activeIndex !== -1 && overIndex !== -1) {
         setSections(arrayMove(sections, activeIndex, overIndex).map((s, idx) => ({ ...s, order: idx })))
       }
     } else {
-      // Field drag - find which section
       let fromSection: Section | null = null
       let fromIndex = -1
       let toSection: Section | null = null
       let toIndex = -1
 
-      sections.forEach(sec => {
-        const fIdx = sec.fields.findIndex(f => f.tempId === activeId)
+      sections.forEach((sec) => {
+        const fIdx = sec.fields.findIndex((f) => f.tempId === activeId)
         if (fIdx !== -1) {
           fromSection = sec
           fromIndex = fIdx
         }
-        const tIdx = sec.fields.findIndex(f => f.tempId === overId)
+        const tIdx = sec.fields.findIndex((f) => f.tempId === overId)
         if (tIdx !== -1) {
           toSection = sec
           toIndex = tIdx
         }
       })
 
-      if (fromSection && toSection && fromIndex !== -1) {
-        if (fromSection.tempId === toSection.tempId) {
-          // Same section
-          const newFields = arrayMove(fromSection.fields, fromIndex, toIndex)
-          setSections(prev =>
-            prev.map(s =>
-              s.tempId === fromSection!.tempId
-                ? { ...s, fields: newFields.map((f, i) => ({ ...f, order: i })) }
-                : s
-            )
+      if (fromSection && toSection && fromIndex !== -1 && fromSection.tempId === toSection.tempId) {
+        const newFields = arrayMove(fromSection.fields, fromIndex, toIndex)
+        setSections((prev) =>
+          prev.map((s) =>
+            s.tempId === fromSection!.tempId
+              ? { ...s, fields: newFields.map((f, i) => ({ ...f, order: i })) }
+              : s
           )
-        }
-        // Cross-section move not allowed for simplicity
+        )
       }
     }
   }
 
   const SortableSection = ({ section }: { section: Section }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-      isDragging,
-    } = useSortable({ id: `section-${section.tempId}` })
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+      id: `section-${section.tempId}`,
+    })
 
     const style = {
       transform: CSS.Transform.toString(transform),
       transition,
-      opacity: isDragging ? 0.5 : 1,
     }
 
     return (
@@ -426,10 +419,7 @@ export default function CreateFormPage() {
 
         {!section.collapsed && (
           <div className="space-y-4 pl-8">
-            <SortableContext
-              items={section.fields.map(f => f.tempId)}
-              strategy={verticalListSortingStrategy}
-            >
+            <SortableContext items={section.fields.map((f) => f.tempId)} strategy={verticalListSortingStrategy}>
               {section.fields.map((field) => (
                 <SortableField key={field.tempId} sectionTempId={section.tempId} field={field} />
               ))}
@@ -460,13 +450,7 @@ export default function CreateFormPage() {
   }
 
   const SortableField = ({ sectionTempId, field }: { sectionTempId: string; field: Field }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-    } = useSortable({ id: field.tempId })
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: field.tempId })
 
     const style = {
       transform: CSS.Transform.toString(transform),
@@ -474,16 +458,11 @@ export default function CreateFormPage() {
     }
 
     return (
-      <div
-        ref={setNodeRef}
-        style={style}
-        className="flex items-start gap-3 rounded-lg border border-border bg-secondary/30 p-4"
-      >
+      <div ref={setNodeRef} style={style} className="flex items-start gap-3 rounded-lg border border-border bg-secondary/30 p-4">
         <div {...attributes} {...listeners} className="cursor-move mt-2">
           <GripVertical className="h-5 w-5 text-muted-foreground" />
         </div>
         <div className="flex-1 space-y-4">
-          {/* Same field editing UI as before */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label className="text-sm">Field Type</Label>
@@ -690,7 +669,6 @@ export default function CreateFormPage() {
     try {
       let savedFormId = formId
 
-      // Save form metadata
       const formPayload = {
         name: formData.name,
         description: formData.description || null,
@@ -705,7 +683,6 @@ export default function CreateFormPage() {
         router.replace(`/forms/${savedFormId}/edit`)
       }
 
-      // Save sections and fields
       for (const section of sections) {
         let sectionId = section.id
 
@@ -722,7 +699,6 @@ export default function CreateFormPage() {
           })
         }
 
-        // Save fields
         for (const field of section.fields) {
           const fieldPayload = {
             form_section_id: sectionId,
@@ -746,10 +722,10 @@ export default function CreateFormPage() {
         }
       }
 
-      showToast(publish ? "Form published!" : "Form saved as draft", "success")
+      showToast(publish ? "Form published successfully!" : "Form saved as draft", "success")
     } catch (err: any) {
       console.error(err)
-      showToast("Failed to save form", "error")
+      showToast(err.response?.data?.message || "Failed to save form", "error")
     } finally {
       setSaving(false)
     }
@@ -758,7 +734,7 @@ export default function CreateFormPage() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="p-8 text-center">Loading...</div>
+        <div className="p-8 text-center">Loading form...</div>
       </DashboardLayout>
     )
   }
@@ -775,31 +751,54 @@ export default function CreateFormPage() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl font-bold">
-                {formId ? "Edit Form" : "Create Form"}
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold">
+                  {formId ? `Edit Form${formData.name ? `: ${formData.name}` : ""}` : "Create New Form"}
+                </h1>
+                {formId && (
+                  <span
+                    className={`px-3 py-1 text-xs font-medium rounded-full ${
+                      formData.status === "active"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300"
+                        : "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300"
+                    }`}
+                  >
+                    {formData.status === "active" ? "Published" : "Draft"}
+                  </span>
+                )}
+              </div>
               <p className="text-sm text-muted-foreground mt-1">
-                Design a custom form with sections and ordering
+                {formId
+                  ? "Update form fields, sections, and settings"
+                  : "Build your form with drag-and-drop sections and fields"}
               </p>
             </div>
           </div>
+
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => saveForm(false)} disabled={saving}>
-              <Save className="h-4 w-4 mr-2" /> Save Draft
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? "Saving..." : "Save Draft"}
             </Button>
-            <Button variant="outline">
-              <Eye className="h-4 w-4 mr-2" /> Preview
+
+            <Button variant="outline" disabled>
+              <Eye className="h-4 w-4 mr-2" />
+              Preview
             </Button>
+
             <Button onClick={() => saveForm(true)} disabled={saving}>
               <Check className="h-4 w-4 mr-2" />
-              {formId ? "Update & Publish" : "Publish Form"}
+              {formId
+                ? formData.status === "active"
+                  ? "Update Live"
+                  : "Publish Now"
+                : "Publish Form"}
             </Button>
           </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
-            {/* Form Details */}
             <Card>
               <CardHeader>
                 <CardTitle>Form Details</CardTitle>
@@ -809,22 +808,22 @@ export default function CreateFormPage() {
                   <Label>Form Name</Label>
                   <Input
                     value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                     placeholder="e.g., Contact Form"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Description</Label>
+                  <Label>Description (Optional)</Label>
                   <Textarea
                     value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                     rows={3}
+                    placeholder="Describe the purpose of this form..."
                   />
                 </div>
               </CardContent>
             </Card>
 
-            {/* Sections & Fields Editor */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -838,13 +837,9 @@ export default function CreateFormPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext
-                    items={sections.map(s => `section-${s.tempId}`)}
+                    items={sections.map((s) => `section-${s.tempId}`)}
                     strategy={verticalListSortingStrategy}
                   >
                     {sections.map((section) => (
@@ -855,23 +850,23 @@ export default function CreateFormPage() {
 
                 {sections.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
-                    No sections yet. Add one to start building your form.
+                    No sections yet. Click "Add Section" to start building your form.
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Success Settings */}
             <Card>
               <CardHeader>
                 <CardTitle>Success Settings</CardTitle>
+                <CardDescription>Configure what happens after submission</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label>Success Message</Label>
                   <Textarea
                     value={formData.success_message}
-                    onChange={(e) => setFormData(prev => ({ ...prev, success_message: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, success_message: e.target.value }))}
                     rows={3}
                   />
                 </div>
@@ -879,15 +874,15 @@ export default function CreateFormPage() {
                   <Label>Redirect URL (Optional)</Label>
                   <Input
                     type="url"
-                    value={formData.redirect_url}
-                    onChange={(e) => setFormData(prev => ({ ...prev, redirect_url: e.target.value }))}
+                    value={formData.redirect_url || ""}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, redirect_url: e.target.value }))}
+                    placeholder="https://example.com/thank-you"
                   />
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Sidebar Preview */}
           <div className="space-y-6">
             <Card>
               <CardHeader>
@@ -904,7 +899,7 @@ export default function CreateFormPage() {
 
                   {sections.map((section) => (
                     <div key={section.tempId} className="space-y-4">
-                      <h4 className="font-semibold text-lg">{section.title}</h4>
+                      {section.title && <h4 className="font-semibold text-lg">{section.title}</h4>}
                       <div className="space-y-4">
                         {section.fields.map((field) => (
                           <div key={field.tempId} className="space-y-1">
@@ -919,12 +914,14 @@ export default function CreateFormPage() {
                     </div>
                   ))}
 
-                  <Button className="w-full" disabled>Submit</Button>
+                  {sections.length === 0 && <p className="text-center text-muted-foreground">No fields yet</p>}
+
+                  <Button className="w-full" disabled>
+                    Submit Form
+                  </Button>
                 </div>
               </CardContent>
             </Card>
-
-            {/* Other settings cards remain same */}
           </div>
         </div>
       </div>
