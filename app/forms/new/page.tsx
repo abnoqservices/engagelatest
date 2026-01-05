@@ -175,17 +175,7 @@ export default function CreateFormPage() {
       loadForm()
     } else {
       // Default one section for new forms
-      setSections([
-        {
-          tempId: "main",
-          title: "Main Section",
-          order: 0,
-          fields: [
-            { tempId: "1", type: "text", label: "Full Name", required: true, placeholder: "John Doe", order: 0 },
-            { tempId: "2", type: "email", label: "Email Address", required: true, placeholder: "you@example.com", order: 1 },
-          ],
-        },
-      ])
+      setSections([])
       setLoading(false)
     }
   }, [formId])
