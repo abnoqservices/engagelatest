@@ -125,7 +125,7 @@ export default function EventsPage() {
       showToast(error.response?.data?.message || "Failed to update event status", "error")
     }
   }
-///events/${event.id}/analytics
+///
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -244,7 +244,7 @@ export default function EventsPage() {
                               Edit
                             </DropdownMenuItem>
                           </Link>
-                          <Link href={`/`}>
+                          <Link href={`/events/${event.id}/analytics`}>
                             <DropdownMenuItem>
                               <BarChart3 className="mr-2 h-4 w-4" />
                               Analytics
