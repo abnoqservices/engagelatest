@@ -5,17 +5,7 @@ import { DashboardLayout } from "@/components/dashboard/layout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -25,396 +15,631 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Upload, Save, Eye, Plus, GripVertical, Trash2, CalendarIcon, MapPin, QrCode, Users, Package, Search, X } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Save, Plus, Search, Package, CalendarIcon, MapPin, Loader2, Check, CheckCircle2, Trash2 } from 'lucide-react'
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
+import axiosClient from "@/lib/axiosClient"
+import { useRouter, useParams } from "next/navigation"
+import { showToast } from "@/lib/showToast"
+import useInfiniteScroll from "react-infinite-scroll-hook"
 
-const MASTER_PRODUCTS = [
-  { id: "1", name: "Premium Laptop", category: "Electronics", sku: "LAP-001", image: "/modern-laptop-workspace.png" },
-  { id: "2", name: "Wireless Headphones", category: "Audio", sku: "AUD-002", image: "/diverse-people-listening-headphones.png" },
-  { id: "3", name: "Smart Watch Pro", category: "Wearables", sku: "WAT-003", image: "/wrist-watch-close-up.png" },
-  { id: "4", name: "Tablet Ultra", category: "Electronics", sku: "TAB-004", image: "/modern-tablet-display.png" },
-  { id: "5", name: "Smartphone X", category: "Mobile", sku: "MOB-005", image: "/modern-smartphone.png" },
-]
+type ProductCategory = {
+  id: number
+  name: string
+  slug: string
+  parent_id: number | null
+  children: ProductCategory[]
+  // ... other fields if needed
+}
 
-export default function NewEventPage() {
-  const [startDate, setStartDate] = React.useState<Date>()
-  const [endDate, setEndDate] = React.useState<Date>()
-  const [booths, setBooths] = React.useState([
-    { id: "1", name: "Booth A1", number: "A1", location: "Hall A", size: "3x3m", products: [] as string[] },
-    { id: "2", name: "Booth A2", number: "A2", location: "Hall A", size: "3x3m", products: [] as string[] },
-    { id: "3", name: "Booth B1", number: "B1", location: "Hall B", size: "6x3m", products: [] as string[] },
-  ])
-  
-  const [selectedBoothId, setSelectedBoothId] = React.useState<string | null>(null)
-  const [productSearch, setProductSearch] = React.useState("")
-  const [selectedProducts, setSelectedProducts] = React.useState<string[]>([])
+type Product = {
+  id: number
+  name: string
+  sku: string
+  url_slug: string
+  category?: ProductCategory
+  primary_image?: string
+}
+
+type BoothProduct = {
+  id: number
+  name: string
+  url_slug: string
+}
+
+type Booth = {
+  id: number
+  booth_name: string
+  booth_code: string | null
+  products: BoothProduct[]
+}
+
+type EventData = {
+  id: number
+  name: string
+  location: string | null
+  start_date: string | null
+  end_date: string | null
+  is_active: boolean
+  booth: Booth | null
+}
+
+export default function EventFormPage() {
+  const router = useRouter()
+  const params = useParams()
+  const eventId = params.id ? Number(params.id) : null
+  const isEditMode = !!eventId
+
+  // Form states
+  const [name, setName] = React.useState("")
+  const [location, setLocation] = React.useState("")
+  const [startDate, setStartDate] = React.useState<Date | undefined>()
+  const [endDate, setEndDate] = React.useState<Date | undefined>()
+  const [isActive, setIsActive] = React.useState(false)
+  const [boothName, setBoothName] = React.useState("")
+  const [boothCode, setBoothCode] = React.useState("")
+
+  const [selectedProductIds, setSelectedProductIds] = React.useState<number[]>([])
+
+  // UI states
+  const [loading, setLoading] = React.useState(false)
+  const [pageLoading, setPageLoading] = React.useState(isEditMode)
+
+  // Product dialog states
   const [isProductDialogOpen, setIsProductDialogOpen] = React.useState(false)
+  const [products, setProducts] = React.useState<Product[]>([])
+  const [productSearch, setProductSearch] = React.useState("")
+  const [selectedCategoryId, setSelectedCategoryId] = React.useState<number | undefined>(undefined)
+  const [categories, setCategories] = React.useState<ProductCategory[]>([])
+  const [categoriesLoaded, setCategoriesLoaded] = React.useState(false)
+  const [loadingCategories, setLoadingCategories] = React.useState(false)
+  const [hasMore, setHasMore] = React.useState(true)
+  const [currentPage, setCurrentPage] = React.useState(1)
+  const [loadingProducts, setLoadingProducts] = React.useState(false)
 
-  const addNewBooth = () => {
-    const newBoothNumber = booths.length + 1
-    const newBooth = {
-      id: Date.now().toString(),
-      name: `Booth ${String.fromCharCode(65 + Math.floor((booths.length) / 10))}${newBoothNumber}`,
-      number: `${String.fromCharCode(65 + Math.floor((booths.length) / 10))}${newBoothNumber}`,
-      location: "Hall A",
-      size: "3x3m",
-      products: [] as string[]
+  const perPage = 20
+
+  // ─── Fetch root categories ────────────────────────────────────────
+  const fetchCategories = React.useCallback(async () => {
+    if (categoriesLoaded || loadingCategories) return
+
+    setLoadingCategories(true)
+    try {
+      const params = new URLSearchParams({ parent_id: 'null' })
+      const res = await axiosClient.get(`/product-categories?${params}`)
+      const data = res.data.data || []
+      setCategories(data)
+      setCategoriesLoaded(true)
+    } catch (err: any) {
+      console.error("Categories fetch failed:", err)
+      showToast("Failed to load product categories", "error")
+      setCategories([])
+    } finally {
+      setLoadingCategories(false)
     }
-    setBooths([...booths, newBooth])
-  }
+  }, [categoriesLoaded, loadingCategories])
 
-  const removeBooth = (boothId: string) => {
-    setBooths(booths.filter(booth => booth.id !== boothId))
-  }
+  // ─── Fetch products ───────────────────────────────────────────────
+  const fetchProducts = async (page: number) => {
+    setLoadingProducts(true)
+    try {
+      const params = new URLSearchParams({
+        per_page: perPage.toString(),
+        page: page.toString(),
+        ...(productSearch && { search: productSearch }),
+        ...(selectedCategoryId && { category_id: selectedCategoryId.toString() }),
+        is_active: "true",
+        with: "images,category",
+      })
 
-  const openProductSelector = (boothId: string) => {
-    setSelectedBoothId(boothId)
-    const booth = booths.find(b => b.id === boothId)
-    setSelectedProducts(booth?.products || [])
-    setIsProductDialogOpen(true)
-  }
+      const res = await axiosClient.get(`/products?${params}`)
+      const newProducts = res.data.data.data || []
 
-  const saveBoothProducts = () => {
-    if (selectedBoothId) {
-      setBooths(booths.map(booth => 
-        booth.id === selectedBoothId 
-          ? { ...booth, products: selectedProducts }
-          : booth
-      ))
+      const productsWithImage = newProducts.map((p: any) => {
+        let primaryUrl: string | undefined
+        if (p.images?.length > 0) {
+          const sorted = [...p.images].sort((a: any, b: any) => (a.position || 999) - (b.position || 999))
+          primaryUrl = sorted[0]?.url
+        }
+        return { ...p, primary_image: primaryUrl }
+      })
+
+      setProducts(prev => page === 1 ? productsWithImage : [...prev, ...productsWithImage])
+
+      const total = res.data.data.total || 0
+      setHasMore(page * perPage < total)
+    } catch (err) {
+      console.error("Products fetch failed:", err)
+      showToast("Failed to load products", "error")
+      setHasMore(false)
+    } finally {
+      setLoadingProducts(false)
     }
-    setIsProductDialogOpen(false)
-    setSelectedBoothId(null)
-    setProductSearch("")
   }
 
-  const toggleProduct = (productId: string) => {
-    setSelectedProducts(prev => 
+  // ─── Dialog open → load categories + products ─────────────────────
+  React.useEffect(() => {
+    if (!isProductDialogOpen) return
+
+    fetchCategories()
+
+    setCurrentPage(1)
+    setProducts([])
+    setHasMore(true)
+    fetchProducts(1)
+  }, [isProductDialogOpen, fetchCategories])
+
+  // ─── Search / category change → reset & refetch ───────────────────
+  React.useEffect(() => {
+    if (!isProductDialogOpen) return
+
+    setCurrentPage(1)
+    setProducts([])
+    setHasMore(true)
+    fetchProducts(1)
+  }, [productSearch, selectedCategoryId, isProductDialogOpen])
+
+  const [sentryRef] = useInfiniteScroll({
+    loading: loadingProducts,
+    hasNextPage: hasMore,
+    onLoadMore: () => {
+      if (!loadingProducts && hasMore) {
+        const nextPage = currentPage + 1
+        setCurrentPage(nextPage)
+        fetchProducts(nextPage)
+      }
+    },
+    disabled: !isProductDialogOpen,
+    rootMargin: "0px 0px 200px 0px",
+  })
+
+  const toggleProduct = (productId: number) => {
+    setSelectedProductIds(prev =>
       prev.includes(productId)
         ? prev.filter(id => id !== productId)
         : [...prev, productId]
     )
   }
 
-  const filteredProducts = MASTER_PRODUCTS.filter(product =>
-    product.name.toLowerCase().includes(productSearch.toLowerCase()) ||
-    product.sku.toLowerCase().includes(productSearch.toLowerCase()) ||
-    product.category.toLowerCase().includes(productSearch.toLowerCase())
-  )
+  // ─── Load event in edit mode ──────────────────────────────────────
+  React.useEffect(() => {
+    if (!isEditMode || !eventId) return
+
+    const loadEvent = async () => {
+      setPageLoading(true)
+      try {
+        const res = await axiosClient.get(`/events/${eventId}`)
+        const event: EventData = res.data.data
+
+        setName(event.name)
+        setLocation(event.location || "")
+        setStartDate(event.start_date ? new Date(event.start_date) : undefined)
+        setEndDate(event.end_date ? new Date(event.end_date) : undefined)
+        setIsActive(event.is_active)
+
+        if (event.booth) {
+          setBoothName(event.booth.booth_name)
+          setBoothCode(event.booth.booth_code || "")
+          setSelectedProductIds(event.booth.products.map(p => p.id))
+        }
+      } catch (err: any) {
+        showToast(err.response?.data?.message || "Failed to load event", "error")
+      } finally {
+        setPageLoading(false)
+      }
+    }
+
+    loadEvent()
+  }, [isEditMode, eventId])
+
+  // ─── Submit ───────────────────────────────────────────────────────
+  const handleSubmit = async () => {
+    if (!name.trim()) return showToast("Event name is required", "error")
+
+    setLoading(true)
+    try {
+      let currentEventId = eventId
+
+      // Create or Update event
+      if (isEditMode) {
+        await axiosClient.put(`/events/${eventId}`, {
+          name,
+          location: location || null,
+          start_date: startDate ? format(startDate, "yyyy-MM-dd") : null,
+          end_date: endDate ? format(endDate, "yyyy-MM-dd") : null,
+          is_active: isActive,
+        })
+      } else {
+        const res = await axiosClient.post("/events", {
+          name,
+          location: location || null,
+          start_date: startDate ? format(startDate, "yyyy-MM-dd") : null,
+          end_date: endDate ? format(endDate, "yyyy-MM-dd") : null,
+          is_active: isActive,
+        })
+        currentEventId = res.data.data.id
+      }
+
+      // Booth
+      if (boothName.trim() && currentEventId) {
+        try {
+          if (isEditMode) {
+            await axiosClient.put(`/events/${currentEventId}/booth`, {
+              booth_name: boothName,
+              booth_code: boothCode || null,
+            })
+          } else {
+            await axiosClient.post(`/events/${currentEventId}/booth`, {
+              booth_name: boothName,
+              booth_code: boothCode || null,
+            })
+          }
+        } catch (e: any) {
+          if (isEditMode && e.response?.status === 404) {
+            await axiosClient.post(`/events/${currentEventId}/booth`, {
+              booth_name: boothName,
+              booth_code: boothCode || null,
+            })
+          } else {
+            throw e
+          }
+        }
+      }
+
+      // Products sync (simple: clear + re-add)
+      if (currentEventId) {
+        try { await axiosClient.delete(`/events/${currentEventId}/products`) } catch {}
+        for (const pid of selectedProductIds) {
+          try {
+            await axiosClient.post(`/events/${currentEventId}/products`, { product_id: pid })
+          } catch (e: any) {
+            if (!e.response?.data?.message?.includes("already")) console.warn(e)
+          }
+        }
+      }
+
+      // Activate if needed
+      if (isActive && currentEventId) {
+        await axiosClient.patch(`/events/${currentEventId}/activate`)
+      }
+
+      showToast(isEditMode ? "Event updated" : "Event created", "success")
+      router.push("/events")
+    } catch (err: any) {
+      showToast(err.response?.data?.message || "Save failed", "error")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (pageLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex justify-center items-center min-h-[60vh]">
+          <Loader2 className="h-10 w-10 animate-spin" />
+        </div>
+      </DashboardLayout>
+    )
+  }
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
+      <div className="max-w-4xl mx-auto space-y-6 py-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Create New Event</h1>
+            <h1 className="text-3xl font-bold">{isEditMode ? "Edit Event" : "Create New Event"}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Set up your event with booths and products
+              {isEditMode ? "Update event, booth & products" : "Configure your event and booth"}
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline">Save Draft</Button>
-            <Button variant="outline" className="gap-2">
-              <Eye className="h-4 w-4" />
-              Preview
-            </Button>
-            <Button className="gap-2">
-              <Save className="h-4 w-4" />
-              Publish Event
-            </Button>
-          </div>
+          <Button onClick={handleSubmit} disabled={loading} className="min-w-36 gap-2">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {loading ? "Saving..." : isEditMode ? "Save Changes" : "Create Event"}
+          </Button>
         </div>
 
-        {/* Event Form */}
-        <Tabs defaultValue="details" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="details">Event Details</TabsTrigger>
-            <TabsTrigger value="booths">Booths</TabsTrigger>
-          </TabsList>
+        <Card>
+          <CardHeader>
+            <CardTitle>Event Details</CardTitle>
+            <CardDescription>
+              {isEditMode ? "Modify event information" : "Only one event can be active at a time."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
 
-          {/* Event Details Tab */}
-          <TabsContent value="details" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Event Information</CardTitle>
-                <CardDescription>Enter the basic details about your event</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="event-name">Event Name *</Label>
-                  <Input id="event-name" placeholder="e.g., Tech Summit 2024" />
-                </div>
+            <div className="flex items-center space-x-2">
+              <Switch id="active" checked={isActive} onCheckedChange={setIsActive} />
+              <Label htmlFor="active">
+                {isEditMode ? "Keep event active" : "Activate immediately"}
+              </Label>
+            </div>
 
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Start Date *</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !startDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {startDate ? format(startDate, "PPP") : "Pick a date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={startDate}
-                          onSelect={setStartDate}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>End Date *</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !endDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {endDate ? format(endDate, "PPP") : "Pick a date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={endDate}
-                          onSelect={setEndDate}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
+            <div className="space-y-2">
+              <Label required>Event Name</Label>
+              <Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Tech Expo 2026" />
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="venue">Venue *</Label>
-                  <div className="flex gap-2">
-                    <MapPin className="mt-2 h-5 w-5 text-muted-foreground" />
-                    <Input id="venue" placeholder="Convention Center, San Francisco" className="flex-1" />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="event-type">Event Type</Label>
-                  <Select>
-                    <SelectTrigger id="event-type">
-                      <SelectValue placeholder="Select event type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="conference">Conference</SelectItem>
-                      <SelectItem value="tradeshow">Trade Show</SelectItem>
-                      <SelectItem value="fair">Fair</SelectItem>
-                      <SelectItem value="exhibition">Exhibition</SelectItem>
-                      <SelectItem value="workshop">Workshop</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Write a detailed event description..."
-                    rows={5}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Event Banner</Label>
-                  <button className="flex w-full items-center justify-center rounded-lg border-2 border-dashed border-slate-200 p-8 hover:border-primary transition-colors">
-                    <div className="text-center">
-                      <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-                      <p className="mt-2 text-sm font-medium">Upload Banner Image</p>
-                      <p className="text-xs text-muted-foreground">Recommended: 1920x1080px</p>
-                    </div>
-                  </button>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Tags</Label>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary">Technology</Badge>
-                    <Badge variant="secondary">Innovation</Badge>
-                    <Button variant="outline" size="sm" className="h-6">
-                      <Plus className="h-3 w-3 mr-1" />
-                      Add Tag
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Booths Tab */}
-          <TabsContent value="booths" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Booth Management</CardTitle>
-                    <CardDescription>Add and manage event booths with product mapping</CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" className="gap-2">
-                      <QrCode className="h-4 w-4" />
-                      Bulk Generate QRs
-                    </Button>
-                    <Button className="gap-2" onClick={addNewBooth}>
-                      <Plus className="h-4 w-4" />
-                      Add Booth
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {booths.map((booth) => (
-                  <div
-                    key={booth.id}
-                    className="rounded-lg border border-slate-200 p-4 space-y-3"
-                  >
-                    <div className="flex items-center gap-4">
-                      <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
-                      <div className="flex-1 grid gap-4 sm:grid-cols-4">
-                        <Input placeholder="Booth name" defaultValue={booth.name} />
-                        <Input placeholder="Number" defaultValue={booth.number} />
-                        <Input placeholder="Location" defaultValue={booth.location} />
-                        <Input placeholder="Size" defaultValue={booth.size} />
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="icon"
-                        onClick={() => openProductSelector(booth.id)}
-                      >
-                        <Package className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => removeBooth(booth.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                    
-                    {booth.products.length > 0 && (
-                      <div className="ml-9 pl-4 border-l-2 border-slate-200">
-                        <p className="text-sm font-medium mb-2">
-                          Mapped Products ({booth.products.length})
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {booth.products.map(productId => {
-                            const product = MASTER_PRODUCTS.find(p => p.id === productId)
-                            return product ? (
-                              <Badge key={productId} variant="secondary" className="gap-1">
-                                <Package className="h-3 w-3" />
-                                {product.name}
-                              </Badge>
-                            ) : null
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-
-                <div className="mt-4 p-4 rounded-lg border border-dashed border-slate-200 text-center">
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Auto-generate booths based on layout
-                  </p>
-                  <div className="flex items-center justify-center gap-2">
-                    <Input placeholder="e.g., A1-A10, B1-B10" className="max-w-xs" />
-                    <Button variant="outline">Generate</Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-          <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
-            <DialogHeader>
-              <DialogTitle>Map Products to Booth</DialogTitle>
-              <DialogDescription>
-                Select products from master data to display in this booth
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4 flex-1 overflow-auto">
-              {/* Search */}
-              <div className="sticky top-0 bg-background z-10 pb-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by name, SKU, or category..."
-                    className="pl-9"
-                    value={productSearch}
-                    onChange={(e) => setProductSearch(e.target.value)}
-                  />
-                </div>
-                {selectedProducts.length > 0 && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    {selectedProducts.length} product(s) selected
-                  </p>
-                )}
-              </div>
-
-              {/* Product List */}
-              <div className="space-y-2">
-                {filteredProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    className="flex items-center gap-4 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer"
-                    onClick={() => toggleProduct(product.id)}
-                  >
-                    <Checkbox
-                      checked={selectedProducts.includes(product.id)}
-                      onCheckedChange={() => toggleProduct(product.id)}
-                    />
-                    <img
-                      src={product.image || "/placeholder.svg"}
-                      alt={product.name}
-                      className="h-12 w-12 rounded object-cover"
-                    />
-                    <div className="flex-1">
-                      <p className="font-medium">{product.name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-xs">
-                          {product.category}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          SKU: {product.sku}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+            <div className="space-y-2">
+              <Label>Location</Label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input className="pl-9" value={location} onChange={e => setLocation(e.target.value)} />
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-4 border-t">
-              <Button variant="outline" onClick={() => setIsProductDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={saveBoothProducts}>
-                Save Products ({selectedProducts.length})
-              </Button>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label>Start Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full justify-start", !startDate && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "PPP") : "Pick date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar mode="single" selected={startDate} onSelect={setStartDate} />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <Label>End Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full justify-start", !endDate && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "PPP") : "Pick date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar mode="single" selected={endDate} onSelect={setEndDate} />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label required>Hall / Booth Name</Label>
+                <Input value={boothName} onChange={e => setBoothName(e.target.value)} placeholder="e.g. Hall 5 - B42" />
+              </div>
+              <div className="space-y-2">
+                <Label>Booth Code</Label>
+                <Input value={boothCode} onChange={e => setBoothCode(e.target.value)} placeholder="e.g. H5-B42" />
+              </div>
+            </div>
+
+            {/* Products section */}
+            <div className="pt-6 border-t">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <Label>Showcased Products</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedProductIds.length} product{selectedProductIds.length !== 1 ? "s" : ""} selected
+                  </p>
+                </div>
+                <Button variant="outline" onClick={() => setIsProductDialogOpen(true)} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Manage Products
+                </Button>
+              </div>
+
+              {selectedProductIds.length > 0 && (
+  <div className="
+    flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory
+    scrollbar-thin scrollbar-thumb-muted-foreground/40
+  ">
+    {selectedProductIds.length > 0 && (
+  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+    {selectedProductIds.map((id) => {
+      const product = products.find((p) => p.id === id) || {
+        id,
+        name: `Product #${id}`,
+        sku: "—",
+        primary_image: undefined,
+        category: { name: "Uncategorized" },
+      }
+
+      return (
+        <div
+          key={id}
+          className={cn(
+            "group relative border rounded-xl overflow-hidden bg-card",
+            "hover:shadow-md hover:border-primary/50 transition-all",
+            "cursor-pointer"
+          )}
+          onClick={() => toggleProduct(id)}
+        >
+          {/* Fixed aspect ratio thumbnail */}
+          <div className="aspect-square relative bg-muted">
+            {product.primary_image ? (
+              <img
+                src={product.primary_image}
+                alt={product.name}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                loading="lazy"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Package className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/50" />
+              </div>
+            )}
+
+            {/* Small remove button – top right corner */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation() // prevent card click from triggering
+                toggleProduct(id)
+              }}
+              className={cn(
+                "absolute top-2 right-2 z-10",
+                "h-7 w-7 rounded-full bg-background/90 backdrop-blur-sm shadow-sm border",
+                "flex items-center justify-center text-muted-foreground",
+                "hover:bg-destructive/10 hover:text-destructive transition-colors",
+                "opacity-80 group-hover:opacity-100 focus:opacity-100"
+              )}
+              aria-label="Remove product"
+            >
+             x
+            </button>
+          </div>
+
+          {/* Title + info below image */}
+          <div className="p-2.5 text-center">
+            <p className="font-medium text-sm line-clamp-2 leading-snug">
+              {product.name}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+              {product.sku ? `SKU: ${product.sku}` : "—"}
+            </p>
+          </div>
+        </div>
+      )
+    })}
+  </div>
+)}
+  </div>
+)}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ─── Product Selection Dialog ──────────────────────────────────────── */}
+        <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
+          <DialogContent className="!max-w-6xl w-[95vw] !max-h-[92vh] p-0 flex flex-col">
+            <div className="p-6 border-b">
+              <DialogHeader className="mb-5">
+                <DialogTitle>Select Products</DialogTitle>
+                <DialogDescription>
+                  Choose which products will be showcased at this event booth.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name or SKU..."
+                    className="pl-10"
+                    value={productSearch}
+                    onChange={e => setProductSearch(e.target.value)}
+                  />
+                </div>
+
+                <Select
+                  value={selectedCategoryId?.toString() ?? "all"}
+                  onValueChange={v => setSelectedCategoryId(v === "all" ? undefined : Number(v))}
+                  disabled={loadingCategories || categories.length === 0}
+                >
+                  <SelectTrigger className="w-full sm:w-64">
+                    <SelectValue placeholder={
+                      loadingCategories
+                        ? "Loading categories..."
+                        : categories.length === 0
+                          ? "No categories"
+                          : "All Categories"
+                    } />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.map(cat => (
+                      <SelectItem key={cat.id} value={cat.id.toString()}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              {loadingProducts && products.length === 0 ? (
+                <div className="flex justify-center items-center h-64">
+                  <Loader2 className="h-10 w-10 animate-spin" />
+                </div>
+              ) : products.length === 0 ? (
+                <div className="text-center py-20 text-muted-foreground">
+                  {productSearch || selectedCategoryId
+                    ? "No matching products found"
+                    : "No products available"}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                  {products.map(product => {
+                    const isSelected = selectedProductIds.includes(product.id)
+                    return (
+                      <div
+                        key={product.id}
+                        className={cn(
+                          "group relative border rounded-xl overflow-hidden cursor-pointer transition-all",
+                          "hover:border-primary/50 hover:shadow-md",
+                          isSelected && "border-primary shadow-sm bg-primary/5"
+                        )}
+                        onClick={() => toggleProduct(product.id)}
+                      >
+                        <div className="absolute top-3 right-3 z-10 pointer-events-none">
+                          <Checkbox
+                            checked={isSelected}
+                            className={cn(
+                              "h-8 w-8 rounded-full border-2 shadow",
+                              isSelected ? "bg-primary border-primary" : "bg-background/80 border-muted"
+                            )}
+                          />
+                        </div>
+
+                        <div className="aspect-square bg-muted relative">
+                          {product.primary_image ? (
+                            <img
+                              src={product.primary_image}
+                              alt={product.name}
+                              className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
+                            />
+                          ) : (
+                            <Package className="absolute inset-0 m-auto h-12 w-12 text-muted-foreground/40" />
+                          )}
+                        </div>
+
+                        <div className="p-3">
+                          <p className="font-medium text-sm line-clamp-2">{product.name}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {product.sku ? `SKU: ${product.sku}` : "—"}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {product.category?.name ?? "Uncategorized"}
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {hasMore && (
+                <div ref={sentryRef} className="py-10 flex justify-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              )}
+            </div>
+
+            <div className="border-t px-6 py-4 bg-muted/40">
+              <div className="flex justify-between items-center">
+                <div className="text-sm font-medium">
+                  {selectedProductIds.length} product{selectedProductIds.length !== 1 ? "s" : ""} selected
+                </div>
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={() => setIsProductDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={() => setIsProductDialogOpen(false)}>
+                    Done
+                  </Button>
+                </div>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
