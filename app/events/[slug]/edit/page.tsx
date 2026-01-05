@@ -103,19 +103,29 @@ export default function EditEventPage() {
 
   // Flatten categories for select dropdown with proper hierarchy display
   const flattenedCategories = React.useMemo(() => {
-    const flatten = (cats: ProductCategory[], parentPath: string[] = []): Array<{id: number, name: string, path: string}> => {
-      const result: Array<{id: number, name: string, path: string}> = []
+    const result: Array<{ id: number; name: string; path: string }> = [];
+    const seen = new Set<number>();
+  
+    const flatten = (cats: ProductCategory[], parentPath: string[] = []) => {
       cats.forEach(cat => {
-        const displayName = parentPath.length > 0 ? `${parentPath.join(' › ')} › ${cat.name}` : cat.name
-        result.push({ id: cat.id, name: displayName, path: displayName })
-        if (cat.children && cat.children.length > 0) {
-          result.push(...flatten(cat.children, [...parentPath, cat.name]))
+        if (seen.has(cat.id)) return;
+        seen.add(cat.id);
+  
+        const displayName = parentPath.length > 0 
+          ? `${parentPath.join(" › ")} › ${cat.name}` 
+          : cat.name;
+  
+        result.push({ id: cat.id, name: displayName, path: displayName });
+  
+        if (cat.children?.length > 0) {
+          flatten(cat.children, [...parentPath, cat.name]);
         }
-      })
-      return result
-    }
-    return flatten(categories)
-  }, [categories])
+      });
+    };
+  
+    flatten(categories);
+    return result;
+  }, [categories]);
 
   const fetchEvent = async () => {
     try {
@@ -190,7 +200,7 @@ export default function EditEventPage() {
       try {
         const promises = productIds.map(async (id) => {
           try {
-            const res = await axiosClient.get(`/products/${id}?with=images,category`)
+            const res = await axiosClient.get(`/products/${id}`)
             const p = res.data.data as Product
             const primary = p.images?.sort((a, b) => (a.position ?? 999) - (b.position ?? 999))?.[0]
             return {
@@ -221,40 +231,66 @@ export default function EditEventPage() {
   }, [eventId])
 
   // FIXED: Fetch ALL categories recursively
-  const fetchCategories = async (parentId?: number | null) => {
-    if (loadingCategories) return
-    
+  const fetchCategories = async (parentId: number | null = null, accumulated: ProductCategory[] = []) => {
+    if (loadingCategories) return;
+  
+    setLoadingCategories(true);
+  
     try {
-      const params = new URLSearchParams()
-      if (parentId !== undefined) {
-        params.set('parent_id', parentId === null ? 'null' : parentId.toString())
+      const params = new URLSearchParams();
+      if (parentId !== null) {
+        params.set("parent_id", parentId.toString());
+      } else {
+        params.set("parent_id", "null"); // top level
       }
-      
-      const res = await axiosClient.get(`/product-categories?${params}`)
-      const newCategories = res.data.data || []
-      
+  
+      const res = await axiosClient.get(`/product-categories?${params}`);
+      const fetched: ProductCategory[] = res.data.data || [];
+  
+      // Add only new categories (by ID)
+      const existingIds = new Set(accumulated.map(c => c.id));
+      const reallyNew = fetched.filter(cat => !existingIds.has(cat.id));
+  
+      const updated = [...accumulated, ...reallyNew];
+  
+      // Recurse into children if any were added
+      if (reallyNew.length > 0) {
+        // We can continue recursively, but for UX it's better to lazy-load children on expand/select
+        // For now we'll just accumulate top-down
+      }
+  
       setCategories(prev => {
-        // Merge new categories without duplicates
-        const existingIds = new Set(prev.map(c => c.id))
-        const merged = [
-          ...prev,
-          ...newCategories.filter((cat: ProductCategory) => !existingIds.has(cat.id))
-        ]
-        
-        // Update children relationships
-        return merged.map(cat => ({
-          ...cat,
-          children: merged.filter(c => c.parent_id === cat.id)
-        })).sort((a, b) => a.name.localeCompare(b.name))
-      })
-      
+        // Final deduplication + rebuild children links
+        const all = [...prev, ...updated];
+        const uniqueMap = new Map<number, ProductCategory>();
+        all.forEach(cat => {
+          if (!uniqueMap.has(cat.id)) {
+            uniqueMap.set(cat.id, { ...cat, children: [] });
+          }
+        });
+  
+        // Rebuild parent → children relationships
+        uniqueMap.forEach(cat => {
+          if (cat.parent_id !== null) {
+            const parent = uniqueMap.get(cat.parent_id);
+            if (parent) {
+              parent.children = [...parent.children, cat];
+            }
+          }
+        });
+  
+        return Array.from(uniqueMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+      });
+  
     } catch (err) {
-      console.error('Failed to fetch categories:', err)
-      showToast("Failed to load categories", "error")
+      console.error("Failed to fetch categories:", err);
+      showToast("Failed to load categories", "error");
     } finally {
-      setLoadingCategories(false)
+      setLoadingCategories(false);
     }
-  }
+  };
+
+  
 
   const fetchProducts = async (page: number, search: string, categoryId?: number) => {
     setLoadingProducts(true)
@@ -649,29 +685,32 @@ export default function EditEventPage() {
                 </div>
 
                 <Select
-                  value={selectedCategoryId ? selectedCategoryId.toString() : 'all'}
-                  onValueChange={v => setSelectedCategoryId(v === 'all' ? undefined : Number(v))}
-                >
-                  <SelectTrigger className="w-[240px] h-10">
-                    <SelectValue 
-                      placeholder={loadingCategories ? "Loading categories..." : "All Categories"} 
-                    />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-96 overflow-y-auto">
-                    <SelectItem value="all">All Categories ({flattenedCategories.length})</SelectItem>
-                    {flattenedCategories.map(cat => (
-                      <SelectItem 
-                        key={cat.id} 
-                        value={cat.id.toString()}
-                        className="truncate"
-                      >
-                        <span className="max-w-[200px] truncate block" title={cat.path}>
-                          {cat.path}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+  value={selectedCategoryId ? selectedCategoryId.toString() : "all"}
+  onValueChange={v => setSelectedCategoryId(v === "all" ? undefined : Number(v))}
+>
+  <SelectTrigger className="w-[240px] h-10">
+    <SelectValue 
+      placeholder={loadingCategories ? "Loading categories..." : "All Categories"} 
+    />
+  </SelectTrigger>
+  <SelectContent className="max-h-96 overflow-y-auto">
+    <SelectItem value="all">
+      All Categories {flattenedCategories.length > 0 ? `(${flattenedCategories.length})` : ""}
+    </SelectItem>
+
+    {flattenedCategories.map(cat => (
+      <SelectItem
+        key={cat.id}               // now safe because we deduplicated
+        value={cat.id.toString()}
+        className="truncate"
+      >
+        <span className="max-w-[220px] truncate block" title={cat.path}>
+          {cat.path}
+        </span>
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
               </div>
             </div>
 

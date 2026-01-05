@@ -404,7 +404,7 @@ export default function EventFormPage() {
 
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label required>Hall / Booth Name</Label>
+                <Label >Hall / Booth Name</Label>
                 <Input value={boothName} onChange={e => setBoothName(e.target.value)} placeholder="e.g. Hall 5 - B42" />
               </div>
               <div className="space-y-2">

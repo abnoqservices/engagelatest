@@ -53,11 +53,8 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
-import {
-  useSortable
-} from "@dnd-kit/sortable"
+import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-
 import {
   Type,
   Mail,
@@ -174,7 +171,6 @@ export default function CreateFormPage() {
     if (formId) {
       loadForm()
     } else {
-      // Default one section for new forms
       setSections([])
       setLoading(false)
     }
@@ -212,12 +208,10 @@ export default function CreateFormPage() {
               order: f.order ?? fIndex,
             })),
           }))
-          // Sort sections by order
           loadedSections.sort((a, b) => a.order - b.order)
           loadedSections.forEach(sec => sec.fields.sort((a, b) => a.order - b.order))
           setSections(loadedSections)
         } else {
-          // Fallback to single section
           setSections([{
             tempId: "main",
             title: "Main Section",
@@ -320,52 +314,48 @@ export default function CreateFormPage() {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
-
     if (!over || active.id === over.id) return
 
     const activeId = active.id as string
     const overId = over.id as string
 
-    // Check if dragging section or field
     if (activeId.startsWith("section-")) {
       const activeIndex = sections.findIndex(s => s.tempId === activeId.replace("section-", ""))
       const overIndex = sections.findIndex(s => s.tempId === overId.replace("section-", ""))
       if (activeIndex !== -1 && overIndex !== -1) {
         setSections(arrayMove(sections, activeIndex, overIndex).map((s, idx) => ({ ...s, order: idx })))
       }
-    } else {
-      // Field drag - find which section
-      let fromSection: Section | null = null
-      let fromIndex = -1
-      let toSection: Section | null = null
-      let toIndex = -1
+      return
+    }
 
-      sections.forEach(sec => {
-        const fIdx = sec.fields.findIndex(f => f.tempId === activeId)
-        if (fIdx !== -1) {
-          fromSection = sec
-          fromIndex = fIdx
-        }
-        const tIdx = sec.fields.findIndex(f => f.tempId === overId)
-        if (tIdx !== -1) {
-          toSection = sec
-          toIndex = tIdx
-        }
-      })
+    let fromSection: Section | null = null
+    let fromIndex = -1
+    let toSection: Section | null = null
+    let toIndex = -1
 
-      if (fromSection && toSection && fromIndex !== -1) {
-        if (fromSection.tempId === toSection.tempId) {
-          // Same section
-          const newFields = arrayMove(fromSection.fields, fromIndex, toIndex)
-          setSections(prev =>
-            prev.map(s =>
-              s.tempId === fromSection!.tempId
-                ? { ...s, fields: newFields.map((f, i) => ({ ...f, order: i })) }
-                : s
-            )
+    sections.forEach(sec => {
+      const fIdx = sec.fields.findIndex(f => f.tempId === activeId)
+      if (fIdx !== -1) {
+        fromSection = sec
+        fromIndex = fIdx
+      }
+      const tIdx = sec.fields.findIndex(f => f.tempId === overId)
+      if (tIdx !== -1) {
+        toSection = sec
+        toIndex = tIdx
+      }
+    })
+
+    if (fromSection && toSection && fromIndex !== -1) {
+      if (fromSection.tempId === toSection.tempId) {
+        const newFields = arrayMove(fromSection.fields, fromIndex, toIndex)
+        setSections(prev =>
+          prev.map(s =>
+            s.tempId === fromSection!.tempId
+              ? { ...s, fields: newFields.map((f, i) => ({ ...f, order: i })) }
+              : s
           )
-        }
-        // Cross-section move not allowed for simplicity
+        )
       }
     }
   }
@@ -472,8 +462,8 @@ export default function CreateFormPage() {
         <div {...attributes} {...listeners} className="cursor-move mt-2">
           <GripVertical className="h-5 w-5 text-muted-foreground" />
         </div>
+
         <div className="flex-1 space-y-4">
-          {/* Same field editing UI as before */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label className="text-sm">Field Type</Label>
@@ -507,6 +497,7 @@ export default function CreateFormPage() {
                 </SelectContent>
               </Select>
             </div>
+
             <div className="space-y-2">
               <Label className="text-sm">Field Label</Label>
               <Input
@@ -538,6 +529,7 @@ export default function CreateFormPage() {
                       onChange={(e) => {
                         const newOpts = [...(field.options || [])]
                         newOpts[idx] = {
+                          ...newOpts[idx],
                           label: e.target.value,
                           value: e.target.value.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, ""),
                         }
@@ -583,6 +575,7 @@ export default function CreateFormPage() {
             </div>
           </div>
         </div>
+
         <Button
           variant="ghost"
           size="icon"
@@ -595,80 +588,137 @@ export default function CreateFormPage() {
     )
   }
 
-  const renderPreviewField = (field: Field) => {
-    const commonProps = {
-      placeholder: field.placeholder || "",
-      disabled: true,
-      className: "h-9 text-sm",
-    }
+  // ... (all imports, interfaces, state, functions remain exactly the same until renderPreviewField)
 
-    switch (field.type) {
-      case "textarea":
-        return <Textarea {...commonProps} rows={3} />
-      case "email":
-      case "url":
-      case "password":
-      case "text":
-      case "phone":
-        return <Input type={field.type === "phone" ? "tel" : field.type} {...commonProps} />
-      case "number":
-      case "rating":
-      case "range":
-        return <Input type="number" {...commonProps} />
-      case "date":
-        return <Input type="date" {...commonProps} />
-      case "time":
-        return <Input type="time" {...commonProps} />
-      case "datetime":
-        return <Input type="datetime-local" {...commonProps} />
-      case "color":
-        return <Input type="color" className="h-9 w-20" disabled />
-      case "select":
-      case "multi_select":
-        return (
+const renderPreviewField = (field: Field) => {
+  // Stable identifier — prefer key if exists, otherwise generate from label, fallback to tempId
+  const baseId = field.key || generateKey(field.label) || `field-${field.tempId}`;
+  const fieldId = `preview-${baseId}`;
+
+  // Shared name for radio/checkbox groups; individual fields use their own for others
+  const fieldName = baseId;
+
+  // Common props for most input-like elements
+  const commonInputProps = {
+    id: fieldId,
+    name: fieldName,
+    placeholder: field.placeholder || "",
+    readOnly: true,
+    tabIndex: -1,
+    onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => e.target.blur(),
+    className: "h-9 text-sm bg-muted/50 cursor-default pointer-events-none",
+  };
+
+  switch (field.type) {
+    case "textarea":
+      return <Textarea {...commonInputProps} rows={3} value={field.label} />;
+
+    case "text":
+    case "email":
+    case "url":
+    case "password":
+    case "phone":
+      return (
+        <Input
+          type={field.type === "phone" ? "tel" : field.type}
+          {...commonInputProps}
+          value={field.label || "example"}
+        />
+      );
+
+    case "number":
+    case "range":
+    case "rating":
+      return <Input type="number" {...commonInputProps} value="42" />;
+
+    case "date":
+      return <Input type="date" {...commonInputProps} value="2025-01-15" />;
+
+    case "time":
+      return <Input type="time" {...commonInputProps} value="14:30" />;
+
+    case "datetime":
+      return <Input type="datetime-local" {...commonInputProps} value="2025-01-15T14:30" />;
+
+    case "color":
+      return (
+        <div className="flex items-center gap-2">
+          <Input
+            type="color"
+            id={fieldId}
+            name={fieldName}
+            value="#6366f1"
+            readOnly
+            className="h-8 w-12 p-1 pointer-events-none"
+          />
+          <span className="text-sm text-muted-foreground">#6366f1</span>
+        </div>
+      );
+
+    case "select":
+    case "multi_select":
+      return (
+        <div className="relative">
           <Select disabled>
-            <SelectTrigger>
-              <SelectValue placeholder="Select an option" />
+            <SelectTrigger id={fieldId} name={fieldName} className="bg-muted/50 cursor-default">
+              <SelectValue placeholder="Option 1" />
             </SelectTrigger>
           </Select>
-        )
-      case "radio":
-        return (
-          <RadioGroup disabled>
-            {(field.options || []).map((opt) => (
+        </div>
+      );
+
+    case "radio":
+      return (
+        <RadioGroup defaultValue="option1" className="space-y-2" name={fieldName}>
+          {(field.options || []).map((opt, index) => {
+            const optId = `${fieldId}-${index}`;
+            return (
               <div key={opt.value} className="flex items-center space-x-2">
-                <RadioGroupItem value={opt.value} />
-                <Label className="text-xs font-normal">{opt.label}</Label>
+                <RadioGroupItem id={optId} value={opt.value} />
+                <Label htmlFor={optId} className="text-sm">{opt.label}</Label>
               </div>
-            ))}
-          </RadioGroup>
-        )
-      case "checkbox":
-        return (
-          <div className="space-y-2">
-            {(field.options || []).map((opt) => (
+            );
+          })}
+        </RadioGroup>
+      );
+
+    case "checkbox":
+      return (
+        <div className="space-y-2">
+          {(field.options || []).map((opt, index) => {
+            const optId = `${fieldId}-${index}`;
+            return (
               <div key={opt.value} className="flex items-center space-x-2">
-                <Checkbox disabled />
-                <Label className="text-xs font-normal">{opt.label}</Label>
+                <Checkbox id={optId} defaultChecked={opt.value === "option1"} />
+                <Label htmlFor={optId} className="text-sm">{opt.label}</Label>
               </div>
-            ))}
-          </div>
-        )
-      case "toggle":
-        return <Switch disabled />
-      case "file":
-      case "image":
-        return <Input type="file" disabled className="h-9" />
-      case "hidden":
-        return (
-          <div className="text-xs text-muted-foreground italic">
-            Hidden field: {field.label}
-          </div>
-        )
-      default:
-        return <Input {...commonProps} />
-    }
+            );
+          })}
+        </div>
+      );
+
+    case "toggle":
+      return <Switch disabled checked={true} />;
+
+    case "file":
+    case "image":
+      return (
+        <div className="border border-dashed rounded-md p-4 text-center text-sm text-muted-foreground bg-muted/30">
+          {field.type === "image" ? "Image preview area" : "File upload area"}
+        </div>
+      );
+
+    case "hidden":
+      return null;
+
+    default:
+      return <Input {...commonInputProps} value={field.label || "example"} />;
   }
+};
+
+// ... (rest of the component remains the same until the preview JSX)
+
+{/* Inside the preview mapping – make sure Label uses htmlFor correctly */}
 
   const saveForm = async (publish: boolean = false) => {
     if (!formData.name.trim()) {
@@ -680,7 +730,6 @@ export default function CreateFormPage() {
     try {
       let savedFormId = formId
 
-      // Save form metadata
       const formPayload = {
         name: formData.name,
         description: formData.description || null,
@@ -695,7 +744,6 @@ export default function CreateFormPage() {
         router.replace(`/forms/${savedFormId}/edit`)
       }
 
-      // Save sections and fields
       for (const section of sections) {
         let sectionId = section.id
 
@@ -712,7 +760,6 @@ export default function CreateFormPage() {
           })
         }
 
-        // Save fields
         for (const field of section.fields) {
           const fieldPayload = {
             form_section_id: sectionId,
@@ -756,7 +803,6 @@ export default function CreateFormPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/forms">
@@ -789,7 +835,6 @@ export default function CreateFormPage() {
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
-            {/* Form Details */}
             <Card>
               <CardHeader>
                 <CardTitle>Form Details</CardTitle>
@@ -814,7 +859,6 @@ export default function CreateFormPage() {
               </CardContent>
             </Card>
 
-            {/* Sections & Fields Editor */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -851,7 +895,6 @@ export default function CreateFormPage() {
               </CardContent>
             </Card>
 
-            {/* Success Settings */}
             <Card>
               <CardHeader>
                 <CardTitle>Success Settings</CardTitle>
@@ -869,7 +912,7 @@ export default function CreateFormPage() {
                   <Label>Redirect URL (Optional)</Label>
                   <Input
                     type="url"
-                    value={formData.redirect_url}
+                    value={formData.redirect_url || ""}
                     onChange={(e) => setFormData(prev => ({ ...prev, redirect_url: e.target.value }))}
                   />
                 </div>
@@ -877,8 +920,7 @@ export default function CreateFormPage() {
             </Card>
           </div>
 
-          {/* Sidebar Preview */}
-          <div className="space-y-6">
+          <div className="rounded-lg border bg-background p-6 space-y-8 pointer-events-none select-none">
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Live Preview</CardTitle>
@@ -896,15 +938,20 @@ export default function CreateFormPage() {
                     <div key={section.tempId} className="space-y-4">
                       <h4 className="font-semibold text-lg">{section.title}</h4>
                       <div className="space-y-4">
-                        {section.fields.map((field) => (
-                          <div key={field.tempId} className="space-y-1">
-                            <Label className="text-sm">
-                              {field.label}
-                              {field.required && <span className="text-destructive ml-1">*</span>}
-                            </Label>
-                            {renderPreviewField(field)}
-                          </div>
-                        ))}
+                        {section.fields.map((field) => {
+                          const baseId = field.key || generateKey(field.label) || `field-${field.tempId}`;
+                          const fieldId = `preview-${baseId}`;
+
+                          return (
+                            <div key={field.tempId} className="space-y-1">
+                              <Label htmlFor={fieldId} className="text-sm">
+                                {field.label}
+                                {field.required && <span className="text-destructive ml-1">*</span>}
+                              </Label>
+                              {renderPreviewField(field)}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   ))}
@@ -913,8 +960,6 @@ export default function CreateFormPage() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Other settings cards remain same */}
           </div>
         </div>
       </div>
