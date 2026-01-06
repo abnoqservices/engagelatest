@@ -25,7 +25,7 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const [organization_id] = useState<number>(1);
+ 
 
   // ✅ FORGOT PASSWORD API
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -41,16 +41,16 @@ export default function ForgotPasswordPage() {
       }
 
       const response = await axiosClient.post("auth/password/forgot", {
-        email,organization_id
+        email
       });
 
       setSuccess(
         response.data.message || "Password reset link sent to your email"
       );
 
-      setTimeout(() => {
-        router.push("/signin");
-      }, 2500);
+      // setTimeout(() => {
+      //   router.push("/signin");
+      // }, 2500);
     } catch (error: any) {
       setError(
         error.response?.data?.message || "Unable to send reset link"
@@ -69,18 +69,6 @@ export default function ForgotPasswordPage() {
           </div>
 
           <CardTitle className="text-2xl font-bold">Forgot Password</CardTitle>
-          <CardDescription>
-            Enter your email to receive a password reset link
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          <div className="grid gap-2">
-            <Button variant="outline" className="w-full" disabled>
-              Forgot password via Email
-            </Button>
-          </div>
-
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <Separator />
@@ -91,6 +79,15 @@ export default function ForgotPasswordPage() {
               </span>
             </div>
           </div>
+          <CardDescription>
+            Enter your email to receive a password reset link
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+         
+
+        
 
           {/* ✅ ERROR MESSAGE */}
           {error && (
