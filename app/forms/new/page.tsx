@@ -33,6 +33,7 @@ import {
   Trash2,
   ChevronDown,
   ChevronUp,
+  Star,
 } from "lucide-react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
@@ -67,9 +68,8 @@ import {
   CheckSquare,
   ToggleLeft,
   Upload,
-  Image,
+  Image as ImageIcon,
   Link2,
-  Star,
   SlidersHorizontal,
   Palette,
   EyeOff,
@@ -91,7 +91,7 @@ const fieldTypes = [
   { value: "checkbox", label: "Checkbox Group", icon: CheckSquare },
   { value: "toggle", label: "Toggle Switch", icon: ToggleLeft },
   { value: "file", label: "File Upload", icon: Upload },
-  { value: "image", label: "Image Upload", icon: Image },
+  { value: "image", label: "Image Upload", icon: ImageIcon },
   { value: "url", label: "URL", icon: Link2 },
   { value: "rating", label: "Rating", icon: Star },
   { value: "range", label: "Range Slider", icon: SlidersHorizontal },
@@ -129,13 +129,9 @@ interface FormData {
   id?: number
   name: string
   description: string
-  status: string
+  status: "draft" | "active"
   success_message: string
   redirect_url?: string
-  send_notification: boolean
-  captcha: boolean
-  gdpr: boolean
-  auto_respond: boolean
 }
 
 export default function CreateFormPage() {
@@ -152,26 +148,28 @@ export default function CreateFormPage() {
     status: "draft",
     success_message: "Thank you for your submission! We'll get back to you soon.",
     redirect_url: "",
-    send_notification: true,
-    captcha: true,
-    gdpr: false,
-    auto_respond: true,
   })
 
   const [sections, setSections] = React.useState<Section[]>([])
+  const [usedKeys, setUsedKeys] = React.useState<Set<string>>(new Set())
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
   React.useEffect(() => {
     if (formId) {
       loadForm()
     } else {
-      setSections([])
+      setSections([
+        {
+          tempId: "main",
+          title: "Main Section",
+          order: 0,
+          fields: [],
+        },
+      ])
       setLoading(false)
     }
   }, [formId])
@@ -181,43 +179,50 @@ export default function CreateFormPage() {
       const res = await axiosClient.get(`/forms/${formId}`)
       if (res.data.success) {
         const data = res.data.data
-        setFormData((prev) => ({
-          ...prev,
+        setFormData({
+          id: data.id,
           name: data.name || "",
           description: data.description || "",
           status: data.is_active ? "active" : "draft",
-        }))
+          success_message: "Thank you for your submission! We'll get back to you soon.",
+          redirect_url: "",
+        })
 
         const sectionsRes = await axiosClient.get(`/forms/${formId}/sections`)
         if (sectionsRes.data.success && sectionsRes.data.data.length > 0) {
-          const loadedSections: Section[] = sectionsRes.data.data.map((sec: any, secIndex: number) => ({
+          const loadedSections = sectionsRes.data.data.map((sec: any, secIndex: number) => ({
             id: sec.id,
             tempId: `sec-${sec.id || Date.now()}`,
             title: sec.title || "Untitled Section",
             order: sec.order ?? secIndex,
             collapsed: false,
-            fields: (sec.fields || []).map((f: any, fIndex: number) => ({
-              id: f.id,
-              tempId: `field-${f.id || Date.now()}-${Math.random()}`,
-              type: f.type,
-              label: f.label,
-              required: f.is_required,
-              key: f.key,
-              placeholder: f.options?.placeholder || "",
-              options: f.options?.choices || undefined,
-              order: f.order ?? fIndex,
-            })),
+            fields: (sec.fields || []).map((f: any, fIndex: number) => {
+              const key = f.key || generateKey(f.label)
+              return {
+                id: f.id,
+                tempId: `field-${f.id || Date.now()}-${Math.random()}`,
+                type: f.type,
+                label: f.label,
+                required: f.is_required,
+                key,
+                placeholder: f.options?.placeholder || "",
+                options: f.options?.choices ? f.options.choices.map((c: string) => ({ label: c, value: c })) : undefined,
+                order: f.order ?? fIndex,
+              }
+            }),
           }))
           loadedSections.sort((a, b) => a.order - b.order)
-          loadedSections.forEach(sec => sec.fields.sort((a, b) => a.order - b.order))
+          loadedSections.forEach((sec) => sec.fields.sort((a, b) => a.order - b.order))
           setSections(loadedSections)
-        } else {
-          setSections([{
-            tempId: "main",
-            title: "Main Section",
-            order: 0,
-            fields: [],
-          }])
+
+          // Populate used keys for uniqueness check
+          const keys = new Set<string>()
+          loadedSections.forEach((sec) =>
+            sec.fields.forEach((f) => {
+              if (f.key) keys.add(f.key)
+            })
+          )
+          setUsedKeys(keys)
         }
       }
     } catch (err) {
@@ -225,6 +230,30 @@ export default function CreateFormPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const generateSlug = (name: string) =>
+    name
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+
+  const generateKey = (label: string) =>
+    label
+      .toLowerCase()
+      .replace(/\s+/g, "_")
+      .replace(/[^a-z0-9_]/g, "")
+
+  const isKeyUnique = (key: string, excludeTempId?: string) => {
+    if (!key) return true
+    for (const section of sections) {
+      for (const field of section.fields) {
+        if (field.tempId !== excludeTempId && field.key === key) return false
+      }
+    }
+    return true
   }
 
   const addSection = () => {
@@ -235,12 +264,12 @@ export default function CreateFormPage() {
       fields: [],
       collapsed: false,
     }
-    setSections(prev => [...prev, newSection])
+    setSections((prev) => [...prev, newSection])
   }
 
   const updateSection = (tempId: string, updates: Partial<Section>) => {
-    setSections(prev =>
-      prev.map(s => s.tempId === tempId ? { ...s, ...updates } : s)
+    setSections((prev) =>
+      prev.map((s) => (s.tempId === tempId ? { ...s, ...updates } : s))
     )
   }
 
@@ -252,43 +281,67 @@ export default function CreateFormPage() {
         showToast("Failed to delete section", "error")
       }
     }
-    setSections(prev => prev.filter(s => s.tempId !== section.tempId))
+    setSections((prev) => prev.filter((s) => s.tempId !== section.tempId))
   }
 
   const addField = (sectionTempId: string, type: string = "text") => {
-    const section = sections.find(s => s.tempId === sectionTempId)
+    const section = sections.find((s) => s.tempId === sectionTempId)
     if (!section) return
+
+    let label = "New Field"
+    let key = generateKey(label)
+    let counter = 1
+    while (!isKeyUnique(key)) {
+      label = `New Field ${counter}`
+      key = generateKey(label)
+      counter++
+    }
 
     const newField: Field = {
       tempId: Date.now().toString(),
       type,
-      label: "New Field",
+      label,
+      key,
       required: false,
-      placeholder: ["textarea", "text", "email", "url", "password"].includes(type) ? "" : undefined,
+      placeholder: ["text", "textarea", "email", "url", "password", "number", "phone", "date", "time", "datetime"].includes(type) ? "" : undefined,
       options: ["select", "multi_select", "radio", "checkbox"].includes(type)
         ? [{ label: "Option 1", value: "option1" }]
         : undefined,
       order: section.fields.length,
     }
 
-    setSections(prev =>
-      prev.map(s =>
+    setSections((prev) =>
+      prev.map((s) =>
         s.tempId === sectionTempId
           ? { ...s, fields: [...s.fields, newField] }
           : s
       )
     )
+    setUsedKeys((prev) => new Set([...prev, key]))
   }
 
   const updateField = (sectionTempId: string, fieldTempId: string, updates: Partial<Field>) => {
-    setSections(prev =>
-      prev.map(s =>
+    setSections((prev) =>
+      prev.map((s) =>
         s.tempId === sectionTempId
           ? {
               ...s,
-              fields: s.fields.map(f =>
-                f.tempId === fieldTempId ? { ...f, ...updates } : f
-              ),
+              fields: s.fields.map((f) => {
+                if (f.tempId === fieldTempId) {
+                  const newField = { ...f, ...updates }
+                  // Update usedKeys if key changed
+                  if (updates.key && updates.key !== f.key) {
+                    setUsedKeys((keys) => {
+                      const newKeys = new Set(keys)
+                      if (f.key) newKeys.delete(f.key)
+                      newKeys.add(updates.key!)
+                      return newKeys
+                    })
+                  }
+                  return newField
+                }
+                return f
+              }),
             }
           : s
       )
@@ -296,20 +349,25 @@ export default function CreateFormPage() {
   }
 
   const removeField = (sectionTempId: string, fieldTempId: string) => {
-    setSections(prev =>
-      prev.map(s =>
+    setSections((prev) =>
+      prev.map((s) =>
         s.tempId === sectionTempId
-          ? { ...s, fields: s.fields.filter(f => f.tempId !== fieldTempId) }
+          ? {
+              ...s,
+              fields: s.fields.filter((f) => {
+                if (f.tempId === fieldTempId && f.key) {
+                  setUsedKeys((keys) => {
+                    const newKeys = new Set(keys)
+                    newKeys.delete(f.key!)
+                    return newKeys
+                  })
+                }
+                return f.tempId !== fieldTempId
+              }),
+            }
           : s
       )
     )
-  }
-
-  const generateKey = (label: string) => {
-    return label
-      .toLowerCase()
-      .replace(/\s+/g, "_")
-      .replace(/[^a-z0-9_]/g, "")
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -320,26 +378,29 @@ export default function CreateFormPage() {
     const overId = over.id as string
 
     if (activeId.startsWith("section-")) {
-      const activeIndex = sections.findIndex(s => s.tempId === activeId.replace("section-", ""))
-      const overIndex = sections.findIndex(s => s.tempId === overId.replace("section-", ""))
+      const activeIndex = sections.findIndex((s) => `section-${s.tempId}` === activeId)
+      const overIndex = sections.findIndex((s) => `section-${s.tempId}` === overId)
       if (activeIndex !== -1 && overIndex !== -1) {
-        setSections(arrayMove(sections, activeIndex, overIndex).map((s, idx) => ({ ...s, order: idx })))
+        setSections(
+          arrayMove(sections, activeIndex, overIndex).map((s, idx) => ({ ...s, order: idx }))
+        )
       }
       return
     }
 
+    // Field drag
     let fromSection: Section | null = null
     let fromIndex = -1
     let toSection: Section | null = null
     let toIndex = -1
 
-    sections.forEach(sec => {
-      const fIdx = sec.fields.findIndex(f => f.tempId === activeId)
+    sections.forEach((sec) => {
+      const fIdx = sec.fields.findIndex((f) => f.tempId === activeId)
       if (fIdx !== -1) {
         fromSection = sec
         fromIndex = fIdx
       }
-      const tIdx = sec.fields.findIndex(f => f.tempId === overId)
+      const tIdx = sec.fields.findIndex((f) => f.tempId === overId)
       if (tIdx !== -1) {
         toSection = sec
         toIndex = tIdx
@@ -349,14 +410,115 @@ export default function CreateFormPage() {
     if (fromSection && toSection && fromIndex !== -1) {
       if (fromSection.tempId === toSection.tempId) {
         const newFields = arrayMove(fromSection.fields, fromIndex, toIndex)
-        setSections(prev =>
-          prev.map(s =>
+        setSections((prev) =>
+          prev.map((s) =>
             s.tempId === fromSection!.tempId
               ? { ...s, fields: newFields.map((f, i) => ({ ...f, order: i })) }
               : s
           )
         )
       }
+    }
+  }
+
+  const getFieldOptionsForApi = (field: Field) => {
+    const opts: Record<string, any> = {}
+
+    if (["text", "textarea", "email", "url", "password", "number", "phone", "date", "time", "datetime"].includes(field.type)) {
+      if (field.placeholder) opts.placeholder = field.placeholder
+    }
+
+    if (["select", "multi_select", "radio", "checkbox"].includes(field.type) && field.options?.length) {
+      opts.choices = field.options.map((o) => o.value) // backend expects array of strings
+    }
+
+    if (field.type === "rating") {
+      opts.min = 1
+      opts.max = 5
+    }
+
+    if (field.type === "range") {
+      opts.min = 0
+      opts.max = 100
+      opts.step = 1
+    }
+
+    if (["file", "image"].includes(field.type)) {
+      opts.max_size = 2048 // KB
+      opts.allowed_types = field.type === "image" ? ["jpg", "png", "webp", "gif"] : ["pdf", "docx", "txt", "zip"]
+    }
+
+    return Object.keys(opts).length > 0 ? opts : null
+  }
+
+  const saveForm = async (publish: boolean = false) => {
+    if (!formData.name.trim()) {
+      showToast("Form name is required", "error")
+      return
+    }
+
+    setSaving(true)
+    try {
+      let savedFormId = formId
+
+      const formPayload = {
+        name: formData.name.trim(),
+        slug: formId ? undefined : generateSlug(formData.name.trim()),
+        description: formData.description.trim() || null,
+        is_active: publish || formData.status === "active",
+      }
+
+      if (formId) {
+        await axiosClient.put(`/forms/${formId}`, formPayload)
+      } else {
+        const res = await axiosClient.post("/forms", formPayload)
+        savedFormId = res.data.data.id
+        router.replace(`/forms/${savedFormId}/edit`)
+      }
+
+      // Save sections and fields
+      for (const section of sections) {
+        let sectionId = section.id
+
+        if (!sectionId) {
+          const res = await axiosClient.post(`/forms/${savedFormId}/sections`, {
+            title: section.title.trim(),
+            order: section.order,
+          })
+          sectionId = res.data.data.id
+        } else {
+          await axiosClient.put(`/sections/${sectionId}`, {
+            title: section.title.trim(),
+            order: section.order,
+          })
+        }
+
+        for (const field of section.fields) {
+          const fieldPayload = {
+            form_section_id: sectionId,
+            label: field.label.trim(),
+            key: field.key || generateKey(field.label),
+            type: field.type,
+            is_required: field.required,
+            is_active: true,
+            order: field.order,
+            options: getFieldOptionsForApi(field),
+          }
+
+          if (field.id) {
+            await axiosClient.put(`/fields/${field.id}`, fieldPayload)
+          } else {
+            await axiosClient.post(`/forms/${savedFormId}/fields`, fieldPayload)
+          }
+        }
+      }
+
+      showToast(publish ? "Form published successfully!" : "Form saved as draft", "success")
+    } catch (err: any) {
+      console.error(err)
+      showToast("Failed to save form", "error")
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -373,7 +535,7 @@ export default function CreateFormPage() {
     const style = {
       transform: CSS.Transform.toString(transform),
       transition,
-      opacity: isDragging ? 0.5 : 1,
+      opacity: isDragging ? 0.6 : 1,
     }
 
     return (
@@ -407,7 +569,7 @@ export default function CreateFormPage() {
         {!section.collapsed && (
           <div className="space-y-4 pl-8">
             <SortableContext
-              items={section.fields.map(f => f.tempId)}
+              items={section.fields.map((f) => f.tempId)}
               strategy={verticalListSortingStrategy}
             >
               {section.fields.map((field) => (
@@ -457,7 +619,7 @@ export default function CreateFormPage() {
       <div
         ref={setNodeRef}
         style={style}
-        className="flex items-start gap-3 rounded-lg border border-border bg-secondary/30 p-4"
+        className="flex items-start gap-3 rounded-lg border bg-secondary/30 p-4"
       >
         <div {...attributes} {...listeners} className="cursor-move mt-2">
           <GripVertical className="h-5 w-5 text-muted-foreground" />
@@ -528,11 +690,8 @@ export default function CreateFormPage() {
                       value={opt.label}
                       onChange={(e) => {
                         const newOpts = [...(field.options || [])]
-                        newOpts[idx] = {
-                          ...newOpts[idx],
-                          label: e.target.value,
-                          value: e.target.value.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, ""),
-                        }
+                        const newValue = e.target.value.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "")
+                        newOpts[idx] = { label: e.target.value, value: newValue }
                         updateField(sectionTempId, field.tempId, { options: newOpts })
                       }}
                     />
@@ -588,214 +747,119 @@ export default function CreateFormPage() {
     )
   }
 
-  // ... (all imports, interfaces, state, functions remain exactly the same until renderPreviewField)
+  const renderPreviewField = (field: Field) => {
+    const baseId = field.key || generateKey(field.label) || `field-${field.tempId}`
+    const fieldId = `preview-${baseId}`
 
-const renderPreviewField = (field: Field) => {
-  // Stable identifier — prefer key if exists, otherwise generate from label, fallback to tempId
-  const baseId = field.key || generateKey(field.label) || `field-${field.tempId}`;
-  const fieldId = `preview-${baseId}`;
-
-  // Shared name for radio/checkbox groups; individual fields use their own for others
-  const fieldName = baseId;
-
-  // Common props for most input-like elements
-  const commonInputProps = {
-    id: fieldId,
-    name: fieldName,
-    placeholder: field.placeholder || "",
-    readOnly: true,
-    tabIndex: -1,
-    onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => e.target.blur(),
-    className: "h-9 text-sm bg-muted/50 cursor-default pointer-events-none",
-  };
-
-  switch (field.type) {
-    case "textarea":
-      return <Textarea {...commonInputProps} rows={3} value={field.label} />;
-
-    case "text":
-    case "email":
-    case "url":
-    case "password":
-    case "phone":
-      return (
-        <Input
-          type={field.type === "phone" ? "tel" : field.type}
-          {...commonInputProps}
-          value={field.label || "example"}
-        />
-      );
-
-    case "number":
-    case "range":
-    case "rating":
-      return <Input type="number" {...commonInputProps} value="42" />;
-
-    case "date":
-      return <Input type="date" {...commonInputProps} value="2025-01-15" />;
-
-    case "time":
-      return <Input type="time" {...commonInputProps} value="14:30" />;
-
-    case "datetime":
-      return <Input type="datetime-local" {...commonInputProps} value="2025-01-15T14:30" />;
-
-    case "color":
-      return (
-        <div className="flex items-center gap-2">
-          <Input
-            type="color"
-            id={fieldId}
-            name={fieldName}
-            value="#6366f1"
-            readOnly
-            className="h-8 w-12 p-1 pointer-events-none"
-          />
-          <span className="text-sm text-muted-foreground">#6366f1</span>
-        </div>
-      );
-
-    case "select":
-    case "multi_select":
-      return (
-        <div className="relative">
-          <Select disabled>
-            <SelectTrigger id={fieldId} name={fieldName} className="bg-muted/50 cursor-default">
-              <SelectValue placeholder="Option 1" />
-            </SelectTrigger>
-          </Select>
-        </div>
-      );
-
-    case "radio":
-      return (
-        <RadioGroup defaultValue="option1" className="space-y-2" name={fieldName}>
-          {(field.options || []).map((opt, index) => {
-            const optId = `${fieldId}-${index}`;
-            return (
-              <div key={opt.value} className="flex items-center space-x-2">
-                <RadioGroupItem id={optId} value={opt.value} />
-                <Label htmlFor={optId} className="text-sm">{opt.label}</Label>
-              </div>
-            );
-          })}
-        </RadioGroup>
-      );
-
-    case "checkbox":
-      return (
-        <div className="space-y-2">
-          {(field.options || []).map((opt, index) => {
-            const optId = `${fieldId}-${index}`;
-            return (
-              <div key={opt.value} className="flex items-center space-x-2">
-                <Checkbox id={optId} defaultChecked={opt.value === "option1"} />
-                <Label htmlFor={optId} className="text-sm">{opt.label}</Label>
-              </div>
-            );
-          })}
-        </div>
-      );
-
-    case "toggle":
-      return <Switch disabled checked={true} />;
-
-    case "file":
-    case "image":
-      return (
-        <div className="border border-dashed rounded-md p-4 text-center text-sm text-muted-foreground bg-muted/30">
-          {field.type === "image" ? "Image preview area" : "File upload area"}
-        </div>
-      );
-
-    case "hidden":
-      return null;
-
-    default:
-      return <Input {...commonInputProps} value={field.label || "example"} />;
-  }
-};
-
-// ... (rest of the component remains the same until the preview JSX)
-
-{/* Inside the preview mapping – make sure Label uses htmlFor correctly */}
-
-  const saveForm = async (publish: boolean = false) => {
-    if (!formData.name.trim()) {
-      showToast("Form name is required", "error")
-      return
+    const commonProps = {
+      id: fieldId,
+      readOnly: true,
+      tabIndex: -1,
+      className: "bg-muted/50 border-muted-foreground/30 cursor-default pointer-events-none",
     }
 
-    setSaving(true)
-    try {
-      let savedFormId = formId
+    switch (field.type) {
+      case "textarea":
+        return <Textarea {...commonProps} rows={3} value="Example long text..." />
 
-      const formPayload = {
-        name: formData.name,
-        description: formData.description || null,
-        is_active: publish || formData.status === "active",
-      }
+      case "text":
+      case "email":
+      case "url":
+      case "password":
+      case "phone":
+        return <Input type={field.type === "phone" ? "tel" : field.type} {...commonProps} value="Example value" />
 
-      if (formId) {
-        await axiosClient.put(`/forms/${formId}`, formPayload)
-      } else {
-        const res = await axiosClient.post("/forms", formPayload)
-        savedFormId = res.data.data.id
-        router.replace(`/forms/${savedFormId}/edit`)
-      }
+      case "number":
+        return <Input type="number" {...commonProps} value="42" />
 
-      for (const section of sections) {
-        let sectionId = section.id
+      case "date":
+        return <Input type="date" {...commonProps} value="2025-01-15" />
 
-        if (!sectionId) {
-          const res = await axiosClient.post(`/forms/${savedFormId}/sections`, {
-            title: section.title,
-            order: section.order,
-          })
-          sectionId = res.data.data.id
-        } else {
-          await axiosClient.put(`/sections/${sectionId}`, {
-            title: section.title,
-            order: section.order,
-          })
-        }
+      case "time":
+        return <Input type="time" {...commonProps} value="14:30" />
 
-        for (const field of section.fields) {
-          const fieldPayload = {
-            form_section_id: sectionId,
-            label: field.label,
-            key: field.key || generateKey(field.label),
-            type: field.type,
-            options:
-              ["select", "multi_select", "radio", "checkbox"].includes(field.type)
-                ? { choices: field.options || [] }
-                : { placeholder: field.placeholder || "" },
-            is_required: field.required,
-            is_active: true,
-            order: field.order,
-          }
+      case "datetime":
+        return <Input type="datetime-local" {...commonProps} value="2025-01-15T14:30" />
 
-          if (field.id) {
-            await axiosClient.put(`/fields/${field.id}`, fieldPayload)
-          } else {
-            await axiosClient.post(`/forms/${savedFormId}/fields`, fieldPayload)
-          }
-        }
-      }
+      case "select":
+      case "multi_select":
+        return (
+          <Select disabled>
+            <SelectTrigger className="bg-muted/50">
+              <SelectValue placeholder={field.placeholder || "Select an option"} />
+            </SelectTrigger>
+          </Select>
+        )
 
-      showToast(publish ? "Form published!" : "Form saved as draft", "success")
-    } catch (err: any) {
-      console.error(err)
-      showToast("Failed to save form", "error")
-    } finally {
-      setSaving(false)
+      case "radio":
+        return (
+          <RadioGroup defaultValue={field.options?.[0]?.value} className="space-y-2">
+            {(field.options || []).map((opt) => (
+              <div key={opt.value} className="flex items-center gap-2">
+                <div className="h-4 w-4 rounded-full border border-primary/50 bg-background" />
+                <span className="text-sm">{opt.label}</span>
+              </div>
+            ))}
+          </RadioGroup>
+        )
+
+      case "checkbox":
+        return (
+          <div className="space-y-2">
+            {(field.options || []).map((opt) => (
+              <div key={opt.value} className="flex items-center gap-2">
+                <div className="h-4 w-4 rounded border border-primary/50 bg-background" />
+                <span className="text-sm">{opt.label}</span>
+              </div>
+            ))}
+          </div>
+        )
+
+      case "toggle":
+        return <Switch disabled checked={true} />
+
+      case "file":
+      case "image":
+        return (
+          <div className="border-2 border-dashed rounded-lg p-6 text-center text-sm text-muted-foreground bg-muted/30">
+            {field.type === "image" ? "Image upload area" : "File upload area"}
+          </div>
+        )
+
+      case "rating":
+        return <div className="flex gap-1 text-2xl">{Array(5).fill("★").join("")}</div>
+
+      case "range":
+        return (
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={50}
+            className="w-full pointer-events-none opacity-60"
+          />
+        )
+
+      case "color":
+        return (
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-12 rounded border shadow-sm" style={{ backgroundColor: "#8b5cf6" }} />
+            <span className="text-sm text-muted-foreground">#8b5cf6</span>
+          </div>
+        )
+
+      case "hidden":
+        return null
+
+      default:
+        return <Input {...commonProps} value="Example value" />
     }
   }
 
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="p-8 text-center">Loading...</div>
+        <div className="p-8 text-center">Loading form...</div>
       </DashboardLayout>
     )
   }
@@ -811,11 +875,9 @@ const renderPreviewField = (field: Field) => {
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl font-bold">
-                {formId ? "Edit Form" : "Create Form"}
-              </h1>
+              <h1 className="text-3xl font-bold">{formId ? "Edit Form" : "Create Form"}</h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Design a custom form with sections and ordering
+                Design a custom form with sections and fields
               </p>
             </div>
           </div>
@@ -835,6 +897,7 @@ const renderPreviewField = (field: Field) => {
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
+            {/* Form Details */}
             <Card>
               <CardHeader>
                 <CardTitle>Form Details</CardTitle>
@@ -844,7 +907,7 @@ const renderPreviewField = (field: Field) => {
                   <Label>Form Name</Label>
                   <Input
                     value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                     placeholder="e.g., Contact Form"
                   />
                 </div>
@@ -852,19 +915,20 @@ const renderPreviewField = (field: Field) => {
                   <Label>Description</Label>
                   <Textarea
                     value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                     rows={3}
                   />
                 </div>
               </CardContent>
             </Card>
 
+            {/* Sections & Fields */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>Form Sections & Fields</CardTitle>
-                    <CardDescription>Organize your form into sections</CardDescription>
+                    <CardDescription>Organize your form into sections and fields</CardDescription>
                   </div>
                   <Button onClick={addSection} size="sm">
                     <Plus className="h-4 w-4 mr-2" /> Add Section
@@ -872,13 +936,9 @@ const renderPreviewField = (field: Field) => {
                 </div>
               </CardHeader>
               <CardContent>
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext
-                    items={sections.map(s => `section-${s.tempId}`)}
+                    items={sections.map((s) => `section-${s.tempId}`)}
                     strategy={verticalListSortingStrategy}
                   >
                     {sections.map((section) => (
@@ -895,6 +955,7 @@ const renderPreviewField = (field: Field) => {
               </CardContent>
             </Card>
 
+            {/* Success Settings */}
             <Card>
               <CardHeader>
                 <CardTitle>Success Settings</CardTitle>
@@ -904,7 +965,7 @@ const renderPreviewField = (field: Field) => {
                   <Label>Success Message</Label>
                   <Textarea
                     value={formData.success_message}
-                    onChange={(e) => setFormData(prev => ({ ...prev, success_message: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, success_message: e.target.value }))}
                     rows={3}
                   />
                 </div>
@@ -913,15 +974,16 @@ const renderPreviewField = (field: Field) => {
                   <Input
                     type="url"
                     value={formData.redirect_url || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, redirect_url: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, redirect_url: e.target.value }))}
                   />
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          <div className="rounded-lg border bg-background p-6 space-y-8 pointer-events-none select-none">
-            <Card>
+          {/* Live Preview */}
+          <div className="space-y-6">
+            <Card className="sticky top-6">
               <CardHeader>
                 <CardTitle className="text-base">Live Preview</CardTitle>
               </CardHeader>
@@ -938,25 +1000,22 @@ const renderPreviewField = (field: Field) => {
                     <div key={section.tempId} className="space-y-4">
                       <h4 className="font-semibold text-lg">{section.title}</h4>
                       <div className="space-y-4">
-                        {section.fields.map((field) => {
-                          const baseId = field.key || generateKey(field.label) || `field-${field.tempId}`;
-                          const fieldId = `preview-${baseId}`;
-
-                          return (
-                            <div key={field.tempId} className="space-y-1">
-                              <Label htmlFor={fieldId} className="text-sm">
-                                {field.label}
-                                {field.required && <span className="text-destructive ml-1">*</span>}
-                              </Label>
-                              {renderPreviewField(field)}
-                            </div>
-                          );
-                        })}
+                        {section.fields.map((field) => (
+                          <div key={field.tempId} className="space-y-1">
+                            <Label htmlFor={`preview-${field.tempId}`} className="text-sm">
+                              {field.label}
+                              {field.required && <span className="text-destructive ml-1">*</span>}
+                            </Label>
+                            {renderPreviewField(field)}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}
 
-                  <Button className="w-full" disabled>Submit</Button>
+                  <Button className="w-full" disabled>
+                    Submit
+                  </Button>
                 </div>
               </CardContent>
             </Card>
