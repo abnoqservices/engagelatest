@@ -133,7 +133,7 @@ export default function FormsPage() {
               Create and manage lead capture forms
             </p>
           </div>
-          <Link href="/forms/new">
+          <Link href="/form-builder">
             <Button className="gap-2">
               <Plus className="h-4 w-4" />
               Create Form
