@@ -98,6 +98,7 @@ export default function QuickAddFieldButtons() {
         allowed_types: ["pdf", "doc", "docx", "txt", "jpg", "png"],
         multiple: false,
       };
+      
     } else if (type === "image") {
       baseField.options = {
         max_size: 5242880, // 5 MB
@@ -121,46 +122,49 @@ export default function QuickAddFieldButtons() {
   };
 
   return (
-    <Card className="border-dashed">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg">Quick Add Field</CardTitle>
-        <CardDescription>Choose a field type to add instantly</CardDescription>
-      </CardHeader>
+<Card className="border-dashed">
+  <CardHeader className="pb-3">
+    <CardTitle className="text-lg">Quick Add Field</CardTitle>
+    <CardDescription>Choose a field type to add instantly</CardDescription>
+  </CardHeader>
 
-      <CardContent className="p-3">
-        <div className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
-          {fieldTypePresets.map((item) => (
-            <Button
-              key={item.type}
-              variant="ghost"
-              className={`
-                w-full justify-between 
-                h-12 px-4 text-left 
-                hover:bg-muted/60 
-                transition-colors
-                ${creating === item.type ? "bg-muted/40 animate-pulse" : ""}
-              `}
-              onClick={() => createDraftField(item.type, item.label)}
-              disabled={creating !== null}
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-xl opacity-80 w-6 text-center">{item.icon}</span>
-                <span className="font-medium">{item.label}</span>
-              </div>
+  <CardContent className="p-3">
+    <div className="grid grid-cols-1 gap-2 max-h-[420px] overflow-y-auto pr-1">
+      {fieldTypePresets.map((item) => (
+        <Button
+          key={item.type}
+          variant="outline"
+          className={`
+            w-full justify-between 
+            h-12 px-4 text-left 
+            border border-border
+            rounded-md
+            hover:bg-muted/60 
+            hover:border-primary/50
+            transition-all
+            ${creating === item.type ? "bg-muted/40 border-primary animate-pulse" : ""}
+          `}
+          onClick={() => createDraftField(item.type, item.label)}
+          disabled={creating !== null}
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-xl opacity-80 w-6 text-center">{item.icon}</span>
+            <span className="font-medium">{item.label}</span>
+          </div>
 
-              {creating === item.type ? (
-                <span className="text-xs text-muted-foreground">adding...</span>
-              ) : (
-                <ChevronRight className="h-4 w-4 opacity-60" />
-              )}
-            </Button>
-          ))}
-        </div>
+          {creating === item.type ? (
+            <span className="text-xs text-muted-foreground">adding...</span>
+          ) : (
+            <ChevronRight className="h-4 w-4 opacity-60" />
+          )}
+        </Button>
+      ))}
+    </div>
 
-        <div className="mt-4 text-xs text-center text-muted-foreground">
-          Click any field type → edit details / validation after adding
-        </div>
-      </CardContent>
-    </Card>
+    <div className="mt-4 text-xs text-center text-muted-foreground">
+      Click any field type → edit details / validation after adding
+    </div>
+  </CardContent>
+</Card>
   );
 }

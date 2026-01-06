@@ -52,7 +52,7 @@ const navigation = [
     ],
   },
   { name: "Catalogs", href: "/catalogs", icon: BookOpen },
-  { name: "Forms", href: "/forms", icon: FileText },
+  { name: "Forms", href: "/form-builder", icon: FileText },
   { name: "Workflows", href: "/workflows", icon: GitBranch },
   { name: "Campaigns", href: "/campaigns", icon: Megaphone },
   { name: "Offers", href: "/offers", icon: Percent },
