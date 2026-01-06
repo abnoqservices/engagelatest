@@ -18,8 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PanelLeft, Eye, Save } from "lucide-react"; // ← optional: nice icons
 
 export default function FormBuilderPage() {
-  const { form, selectedFieldId, reorderFieldsInSection, saveForm } =
-    useFormBuilder();
+  const { form, selectedFieldId, reorderFieldsInSection, saveForm } = useFormBuilder();
 
   const mainSection = form.sections.find((sec) => sec.id === "main");
   const fields = mainSection?.fields.sort((a, b) => a.order - b.order) || [];
@@ -77,7 +76,7 @@ export default function FormBuilderPage() {
               */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-5 lg:gap-6">
                 {/* Toolbox – left sidebar (collapses to top on mobile) */}
-                <div className="md:col-span-4 lg:col-span-4 xl:col-span-4">
+                <div className="md:col-span-3 lg:col-span-3 xl:col-span-3">
                 <QuickAddFieldButtons />
                 </div>
 
@@ -117,11 +116,11 @@ export default function FormBuilderPage() {
                   </div>
                 </div>
 
-                {/* Properties editor – right sidebar */}
-                <div className="md:col-span-4 lg:col-span-4 xl:col-span-4">
+                {/* Properties editor – right sidebar  <FormFieldEditor fieldId={selectedFieldId} />  */}
+                <div className="md:col-span-5 lg:col-span-5 xl:col-span-5">
                   <div className="bg-card border rounded-xl p-4 shadow-sm sticky md:top-20">
                     {selectedFieldId ? (
-                      <FormFieldEditor fieldId={selectedFieldId} />
+                      <></>
                     ) : (
                       <div className="flex flex-col items-center justify-center h-64 text-center text-muted-foreground">
                         <p className="text-base font-medium mb-2">
