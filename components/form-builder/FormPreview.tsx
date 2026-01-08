@@ -5,13 +5,21 @@ import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
 import FieldRenderer from "./FieldRenderer";
 import { useFormBuilder } from "@/hooks/useFormBuilder";
 import { Field } from "@/types/form";
 import { useState } from "react";
+import { buildFormValidationSchema } from "@/lib/buildFormValidationSchema";
 
 // Helper: Generate default values based on field type
 const getDefaultValue = (field: Field): any => {
@@ -50,17 +58,21 @@ export default function FormPreview() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Flatten all fields from all sections for default values & potential schema
+  // Flatten all fields from all sections
   const allFields = builderForm.sections.flatMap((section) => section.fields);
-console.log("All fields in preview:", allFields);
+  const schema = buildFormValidationSchema(allFields);
+
   const methods = useForm({
     mode: "onChange",
     defaultValues: generateDefaultValues(allFields),
-    // resolver: zodResolver(formSchema),  // Uncomment when you have full schema
-    // reValidateMode: "onChange",
+    resolver: zodResolver(schema),
+    reValidateMode: "onChange",
   });
 
-  const { handleSubmit, formState: { isSubmitting: formIsSubmitting } } = methods;
+  const {
+    handleSubmit,
+    formState: { isSubmitting: formIsSubmitting, isSubmitted, isValid, errors },
+  } = methods;
 
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
@@ -69,15 +81,15 @@ console.log("All fields in preview:", allFields);
 
     try {
       console.log("Form submitted with values:", data);
-      
+
       // TODO: Replace with real API call
       // await api.submitForm(data);
-      
-      // Simulate success
-      await new Promise(resolve => setTimeout(resolve, 1200));
-      
+
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+
       setSubmitSuccess(true);
-      methods.reset(); // Optional: clear form after success
+      methods.reset(); // Optional: reset form after success
     } catch (err) {
       console.error("Submission error:", err);
       setSubmitError("Failed to submit form. Please try again.");
@@ -88,6 +100,9 @@ console.log("All fields in preview:", allFields);
 
   const hasFields = allFields.length > 0;
 
+  // Check if there are any validation errors after submit attempt
+  const hasValidationErrors = isSubmitted && !isValid;
+console.log("Validation errors:", hasValidationErrors);
   return (
     <div className="w-full max-w-4xl mx-auto py-8 px-4">
       <Card className="border-2 shadow-lg">
@@ -123,7 +138,7 @@ console.log("All fields in preview:", allFields);
                         {section.title}
                       </h3>
                     )}
-                    
+
                     {section.description && (
                       <p className="text-muted-foreground text-sm">
                         {section.description}
@@ -134,8 +149,8 @@ console.log("All fields in preview:", allFields);
                       {section.fields
                         .sort((a, b) => a.order - b.order)
                         .map((field) => (
-                          <div 
-                            key={field.id} 
+                          <div
+                            key={field.id}
                             className="transition-all duration-200"
                           >
                             <FieldRenderer field={field} mode="preview" />
@@ -145,25 +160,19 @@ console.log("All fields in preview:", allFields);
                   </section>
                 ))}
 
-                <div className="pt-6 border-t">
-                  <Button 
-                    type="submit" 
-                    size="lg" 
-                    className="w-full sm:w-auto min-w-[180px]"
-                    disabled={isSubmitting || formIsSubmitting}
-                  >
-                    {isSubmitting || formIsSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Submitting...
-                      </>
-                    ) : (
-                      "Submit Form"
-                    )}
-                  </Button>
-                </div>
+                {/* Global validation error message */}
+                {hasValidationErrors && (
+                  <Alert variant="destructive" className="mt-6">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Form has errors</AlertTitle>
+                    <AlertDescription>
+                      Please check the highlighted fields and correct them before
+                      submitting.
+                    </AlertDescription>
+                  </Alert>
+                )}
 
-                {/* Feedback messages */}
+                {/* Success / Server error messages */}
                 {submitSuccess && (
                   <Alert className="mt-6 bg-green-50 border-green-200 text-green-800">
                     <AlertTitle>Success!</AlertTitle>
@@ -180,13 +189,36 @@ console.log("All fields in preview:", allFields);
                     <AlertDescription>{submitError}</AlertDescription>
                   </Alert>
                 )}
+
+                <div className="pt-6 border-t">
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="w-full sm:w-auto min-w-[180px]"
+                    disabled={
+                      isSubmitting ||
+                      formIsSubmitting ||
+                      (isSubmitted && !isValid)
+                    }
+                  >
+                    {isSubmitting || formIsSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      "Submit Form"
+                    )}
+                  </Button>
+                </div>
               </form>
             </FormProvider>
           )}
         </CardContent>
 
         <CardFooter className="text-xs text-muted-foreground border-t pt-4">
-          Preview mode • Data is not saved • {new Date().toLocaleDateString()}
+          Preview mode • Data is not saved •{" "}
+          {new Date().toLocaleDateString()}
         </CardFooter>
       </Card>
     </div>

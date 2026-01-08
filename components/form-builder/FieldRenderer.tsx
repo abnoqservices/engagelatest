@@ -21,7 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useFormContext } from "react-hook-form";
 import { Eye, EyeOff, Star, Upload } from "lucide-react";
-import { cn } from "@/lib/utils"; // shadcn cn helper
+import { cn } from "@/lib/utils";
 
 interface FieldRendererProps {
   field: Field;
@@ -29,119 +29,139 @@ interface FieldRendererProps {
 }
 
 export default function FieldRenderer({ field, mode }: FieldRendererProps) {
-  const formContext = useFormContext();
+  // Safely access form context – only in preview mode we expect it to exist
+  const ctx = mode === "preview" ? useFormContext() : null;
+
+  // Destructure with fallback to undefined
+  const register = ctx?.register;
+  const watch = ctx?.watch;
+  const setValue = ctx?.setValue;
+  const errors = ctx?.formState?.errors;
+
   const isDisabled = mode === "builder";
+  const fieldError = errors?.[field.key];
+  const hasError = !!fieldError && mode === "preview";
 
-  const setValue = formContext?.setValue;
-  const watch = formContext?.watch;
+  const errorClasses = hasError
+    ? "border-red-500 focus-visible:ring-red-500 focus-visible:ring-offset-red-500"
+    : "border-input focus-visible:ring-ring";
 
-  const commonProps = {
-    disabled: isDisabled,
-    placeholder: field.options?.placeholder || "",
-  };
+  // Reusable error message
+  const ErrorMessage = () =>
+    hasError ? (
+      <p className="text-sm text-red-600 mt-1.5">
+        {String(fieldError?.message ?? "This field is invalid")}
+      </p>
+    ) : null;
 
   const renderLabel = () => (
-    <Label htmlFor={field.key}>
-      {field.label} {field.is_required && <span className="text-red-500">*</span>}
+    <Label htmlFor={field.key} className="mb-1.5 block">
+      {field.label}
+      {field.is_required && <span className="text-red-500 ml-1">*</span>}
     </Label>
   );
 
-  // Safe value access - only in preview mode
-  const value = mode === "preview" && watch ? watch(field.key) : undefined;
-
-  // Reusable Password Input component
-  const PasswordInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
-    ({ className, disabled, ...props }, ref) => {
-      const [showPassword, setShowPassword] = React.useState(false);
-
-      return (
-        <div className="relative">
-          <Input
-            type={showPassword ? "text" : "password"}
-            className={cn("pr-10", className)}
-            disabled={disabled}
-            ref={ref}
-            {...props}
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="absolute right-0 top-0 h-full px-3 py-0 hover:bg-transparent"
-            onClick={() => setShowPassword((prev) => !prev)}
-            disabled={disabled}
-          >
-            {showPassword ? (
-              <EyeOff className="h-4 w-4" aria-label="Hide password" />
-            ) : (
-              <Eye className="h-4 w-4" aria-label="Show password" />
-            )}
-          </Button>
-        </div>
-      );
-    }
-  );
-  PasswordInput.displayName = "PasswordInput";
-
   switch (field.type) {
+    // Text-like fields
     case "text":
     case "email":
     case "number":
     case "phone":
     case "date":
     case "time":
-    case "password":
+    case "password": {
       const inputType = field.type === "password" ? "password" : field.type;
 
+      const PasswordInput = () => {
+        const [show, setShow] = React.useState(false);
+        return (
+          <div className="relative">
+            <Input
+              type={show ? "text" : "password"}
+              className={cn("pr-10", errorClasses)}
+              disabled={isDisabled}
+              placeholder={field.options?.placeholder || ""}
+              {...(register ? register(field.key) : {})}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+              onClick={() => setShow(!show)}
+              disabled={isDisabled}
+            >
+              {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+          </div>
+        );
+      };
+
       return (
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {renderLabel()}
-          {field.type === "password" ? (
-            <PasswordInput id={field.key} placeholder={commonProps.placeholder} disabled={isDisabled} />
-          ) : (
-            <Input type={inputType} id={field.key} {...commonProps} />
+          {field.type === "password" ? <PasswordInput /> : (
+            <Input
+              type={inputType}
+              className={errorClasses}
+              disabled={isDisabled}
+              placeholder={field.options?.placeholder || ""}
+              {...(register ? register(field.key) : {})}
+            />
           )}
+          <ErrorMessage />
         </div>
       );
+    }
 
     case "textarea":
       return (
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {renderLabel()}
-          <Textarea id={field.key} {...commonProps} />
+          <Textarea
+            className={cn(errorClasses, "min-h-[90px]")}
+            disabled={isDisabled}
+            placeholder={field.options?.placeholder || ""}
+            {...(register ? register(field.key) : {})}
+          />
+          <ErrorMessage />
         </div>
       );
 
-    case "select":
+    // Select
+    case "select": {
+      const value = watch?.(field.key) as string | undefined;
+
       return (
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {renderLabel()}
-          <Select disabled={isDisabled}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select..." />
+          <Select
+            disabled={isDisabled}
+            value={value}
+            onValueChange={(val) => setValue?.(field.key, val, { shouldValidate: true })}
+          >
+            <SelectTrigger className={errorClasses}>
+              <SelectValue placeholder={field.options?.placeholder || "Select..."} />
             </SelectTrigger>
             <SelectContent>
               {field.options?.choices?.map((choice: string, i: number) => (
                 <SelectItem key={i} value={choice}>
                   {choice}
                 </SelectItem>
-              )) ?? <SelectItem value="">No options</SelectItem>}
+              )) ?? <SelectItem value="">No options available</SelectItem>}
             </SelectContent>
           </Select>
+          <ErrorMessage />
         </div>
       );
+    }
 
+    // Multi Select
     case "multi_select": {
-      const selected =
-        mode === "preview" && watch
-          ? (watch(field.key) as string[] | undefined) ?? []
-          : [];
-
-      const choices = field.options?.choices ?? [];
-
-      const options = choices.map((choice: string) => ({
-        label: choice,
-        value: choice,
+      const selected = (watch?.(field.key) as string[]) ?? [];
+      const options = (field.options?.choices ?? []).map((c: string) => ({
+        label: c,
+        value: c,
       }));
 
       return (
@@ -150,36 +170,26 @@ export default function FieldRenderer({ field, mode }: FieldRendererProps) {
           <MultiSelect
             options={options}
             value={selected}
-            onValueChange={
-              mode === "preview" && setValue
-                ? (vals: string[]) => setValue(field.key, vals, { shouldValidate: true })
-                : undefined
-            }
-            placeholder={field.options?.placeholder || "Select one or more..."}
+            onValueChange={(vals) => setValue?.(field.key, vals, { shouldValidate: true })}
+            placeholder={field.options?.placeholder || "Select options..."}
             disabled={isDisabled}
+            className={cn(hasError && "border-red-500 focus-within:border-red-500")}
           />
+          <ErrorMessage />
         </div>
       );
     }
 
-    case "checkbox":
-      return (
-        <div className="space-y-1">
-          {renderLabel()}
-          {field.options?.choices?.map((choice: string, i: number) => (
-            <div key={i} className="flex items-center space-x-2">
-              <Checkbox id={`${field.key}-${i}`} disabled={isDisabled} />
-              <Label htmlFor={`${field.key}-${i}`}>{choice}</Label>
-            </div>
-          )) ?? <div className="text-sm text-muted-foreground">No options</div>}
-        </div>
-      );
-
+    // Radio
     case "radio":
       return (
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {renderLabel()}
-          <RadioGroup disabled={isDisabled}>
+          <RadioGroup
+            disabled={isDisabled}
+            onValueChange={(val) => setValue?.(field.key, val, { shouldValidate: true })}
+            className={cn(hasError && "text-red-600")}
+          >
             {field.options?.choices?.map((choice: string, i: number) => (
               <div key={i} className="flex items-center space-x-2">
                 <RadioGroupItem value={choice} id={`${field.key}-${i}`} />
@@ -187,64 +197,76 @@ export default function FieldRenderer({ field, mode }: FieldRendererProps) {
               </div>
             )) ?? <div className="text-sm text-muted-foreground">No options</div>}
           </RadioGroup>
+          <ErrorMessage />
         </div>
       );
 
-    case "rating": {
-      const currentValue = mode === "preview" && watch ? Number(watch(field.key) ?? 0) : 0;
-      const maxStars = field.options?.max ?? 5;
-      const starSize = field.options?.size ?? 28; // in pixels
+    // Checkbox (simple version)
+    case "checkbox":
+      return (
+        <div className="space-y-1.5">
+          {renderLabel()}
+          <div className={cn("space-y-2", hasError && "text-red-600")}>
+            {field.options?.choices?.map((choice: string, i: number) => (
+              <div key={i} className="flex items-center space-x-2">
+                <Checkbox id={`${field.key}-${i}`} disabled={isDisabled} />
+                <Label htmlFor={`${field.key}-${i}`}>{choice}</Label>
+              </div>
+            )) ?? <div className="text-sm text-muted-foreground">No options</div>}
+          </div>
+          <ErrorMessage />
+        </div>
+      );
 
-      const handleRatingChange = (newRating: number) => {
-        if (mode === "preview" && setValue) {
-          setValue(field.key, newRating, { shouldValidate: true });
-        }
-      };
+    // Rating
+    case "rating": {
+      const current = Number(watch?.(field.key) ?? 0);
+      const max = field.options?.max ?? 5;
+      const size = field.options?.size ?? 28;
 
       return (
         <div className="space-y-1.5">
           {renderLabel()}
           <div className="flex items-center gap-1">
-            {Array.from({ length: maxStars }).map((_, index) => {
-              const starValue = index + 1;
-              const isActive = currentValue >= starValue;
-
+            {Array.from({ length: max }).map((_, i) => {
+              const val = i + 1;
+              const active = current >= val;
               return (
                 <button
-                  key={index}
+                  key={i}
                   type="button"
                   disabled={isDisabled}
-                  onClick={() => handleRatingChange(starValue)}
+                  onClick={() => setValue?.(field.key, val, { shouldValidate: true })}
                   className={cn(
                     "focus:outline-none transition-all",
-                    isDisabled ? "cursor-not-allowed opacity-70" : "hover:scale-110"
+                    isDisabled ? "opacity-60 cursor-not-allowed" : "hover:scale-110"
                   )}
                 >
                   <Star
+                    size={size}
                     className={cn(
-                      "transition-colors",
-                      isActive ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
+                      active ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
                     )}
-                    size={starSize}
-                    strokeWidth={isActive ? 0 : 1.5}
+                    strokeWidth={active ? 0 : 1.5}
                   />
                 </button>
               );
             })}
-
-            {mode === "preview" && currentValue > 0 && (
+            {current > 0 && (
               <span className="ml-3 text-sm text-muted-foreground">
-                {currentValue} / {maxStars}
+                {current} / {max}
               </span>
             )}
           </div>
+          <ErrorMessage />
         </div>
       );
     }
 
+    // Range (Slider)
     case "range":
       return (
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {renderLabel()}
           <Slider
             defaultValue={[field.options?.min || 0]}
@@ -252,42 +274,44 @@ export default function FieldRenderer({ field, mode }: FieldRendererProps) {
             max={field.options?.max || 100}
             step={field.options?.step || 1}
             disabled={isDisabled}
+            onValueChange={(vals) => setValue?.(field.key, vals[0], { shouldValidate: true })}
           />
+          <ErrorMessage />
         </div>
       );
 
+    // File / Image
     case "file":
     case "image": {
       const isImage = field.type === "image";
       const accept = isImage
-        ? "image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
-        : field.options?.allowed_types?.map((ext: string) => `.${ext}`).join(",") ||
-          "application/pdf,.doc,.docx,.txt";
+        ? "image/*"
+        : field.options?.allowed_types?.map((ext: string) => `.${ext}`).join(",") || "*/*";
 
-      const maxSizeBytes = (field.options?.max_size ?? 2048) * 1024;
-
-      const currentFile = value as File | undefined;
+      const maxSizeKB = field.options?.max_size ?? 2048;
+      const currentFile = watch?.(field.key) as File | null | undefined;
 
       return (
         <div className="space-y-2">
           {renderLabel()}
 
-          {mode === "preview" && setValue ? (
+          {mode === "preview" ? (
             <FileDropzone
               onFilesChange={(files) => {
                 if (files?.length) {
-                  setValue(field.key, files[0], { shouldValidate: true });
+                  setValue?.(field.key, files[0], { shouldValidate: true });
                 }
               }}
               accept={accept}
               maxFiles={1}
-              maxSize={maxSizeBytes}
+              maxSize={maxSizeKB * 1024}
+              className={cn(hasError && "border-red-500")}
             />
           ) : (
-            <div className="border-2 border-dashed rounded-lg p-8 text-center bg-muted/40 pointer-events-none">
+            <div className="border-2 border-dashed rounded-lg p-8 text-center bg-muted/40">
               <Upload className="mx-auto h-10 w-10 text-muted-foreground" />
               <p className="mt-2 text-sm font-medium">
-                {isImage ? "Image upload" : "File upload"} (preview in form mode)
+                {isImage ? "Image" : "File"} upload (preview mode only)
               </p>
             </div>
           )}
@@ -298,7 +322,7 @@ export default function FieldRenderer({ field, mode }: FieldRendererProps) {
                 <img
                   src={URL.createObjectURL(currentFile)}
                   alt="Preview"
-                  className="max-h-40 object-contain rounded border bg-black/5"
+                  className="max-h-40 object-contain rounded border"
                 />
               ) : (
                 <div className="flex items-center gap-2">
@@ -311,15 +335,20 @@ export default function FieldRenderer({ field, mode }: FieldRendererProps) {
             </div>
           )}
 
-          <p className="text-xs text-muted-foreground">
-            Max size: {field.options?.max_size ?? 2048} KB •{" "}
-            {isImage ? "Images only" : "Documents allowed"}
+          <ErrorMessage />
+
+          <p className="text-xs text-muted-foreground mt-2">
+            Max size: {maxSizeKB} KB • {isImage ? "Images" : "Files"} allowed
           </p>
         </div>
       );
     }
 
     default:
-      return <div className="text-destructive">Unsupported field type: {field.type}</div>;
+      return (
+        <div className="text-destructive text-sm">
+          Unsupported field type: <strong>{field.type}</strong>
+        </div>
+      );
   }
 }

@@ -101,7 +101,11 @@ export interface Field {
     | "rating"
     | "range";
   options: FieldOptions;
-  rules: FieldRule[];
+  rules?: Array<{
+    type: string;
+    value?: string | number;
+    message?: string;
+  }>;
   is_required: boolean;
   is_active: boolean;
   order: number;
