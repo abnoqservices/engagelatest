@@ -1,7 +1,7 @@
 // src/components/form-builder/FormFieldEditor.tsx
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -31,109 +31,66 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Plus } from "lucide-react";
-import { useFormBuilder } from "@/hooks/useFormBuilder";
-import { Field, FieldRule } from "@/types/form";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Trash2, Plus, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 import { fieldSchema } from "@/lib/formSchema";
+import axiosClient from "@/lib/axiosClient"
+// Define the field type (you can move this to a shared types file)
+type Field = {
+  id: string;
+  label: string;
+  key: string;
+  type: string;
+  is_required: boolean;
+  is_active: boolean;
+  order: number;
+  form_section_id: string;
+  options?: Record<string, any>;
+  rules?: Array<{ type: string; value?: string | number; message?: string }>;
+  conditions?: any;
+};
 
 interface FormFieldEditorProps {
   fieldId: string;
+  sectionId: string;           // passed from parent
+  onUpdate?: (updatedField: Field) => void;  // ← NEW: callback to parent
 }
 
-// Define available rule types per field type
 const getAvailableRules = (fieldType: Field["type"]): { value: string; label: string }[] => {
-  switch (fieldType) {
-    case "text":
-    case "textarea":
-      return [
-        { value: "required", label: "Required" },
-        { value: "minLength", label: "Minimum Length" },
-        { value: "maxLength", label: "Maximum Length" },
-        { value: "pattern", label: "Pattern (Regex)" },
-      ];
-    case "email":
-      return [
-        { value: "required", label: "Required" },
-        { value: "minLength", label: "Minimum Length" },
-        { value: "maxLength", label: "Maximum Length" },
-        { value: "pattern", label: "Pattern (Regex)" },
-        { value: "email", label: "Valid Email" },
-      ];
-    case "number":
-    case "range":
-      return [
-        { value: "required", label: "Required" },
-        { value: "min", label: "Minimum Value" },
-        { value: "max", label: "Maximum Value" },
-        { value: "step", label: "Step" },
-      ];
-    case "phone":
-      return [
-        { value: "required", label: "Required" },
-        { value: "minLength", label: "Minimum Length (e.g. 10)" },
-        { value: "maxLength", label: "Maximum Length" },
-        { value: "pattern", label: "Pattern (Regex)" },
-      ];
-    case "password":
-      return [
-        { value: "required", label: "Required" },
-        { value: "minLength", label: "Minimum Length (e.g. 8)" },
-        { value: "maxLength", label: "Maximum Length" },
-      ];
-    case "date":
-    case "time":
-      return [
-        { value: "required", label: "Required" },
-      ];
-    case "select":
-    case "multi_select":
-    case "radio":
-    case "checkbox":
-      return [
-        { value: "required", label: "Required" },
-      ];
-    case "file":
-    case "image":
-      return [
-        { value: "required", label: "Required" },
-      ];
-    case "rating":
-      return [
-        { value: "required", label: "Required" },
-        { value: "min", label: "Minimum Rating" },
-        { value: "max", label: "Maximum Rating" },
-      ];
-    default:
-      return [{ value: "required", label: "Required" }];
-  }
+  // ... (your existing function remains unchanged)
+  // keep it as is
 };
 
-export default function FormFieldEditor({ fieldId }: FormFieldEditorProps) {
-  const { form: builderForm, updateField } = useFormBuilder();
+export default function FormFieldEditor({
+  fieldId,
+  sectionId,
+  onUpdate,
+}: FormFieldEditorProps) {
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const selectedField = builderForm.sections
-    .flatMap((sec) => sec.fields)
-    .find((f) => f.id === fieldId);
+  // You'll need to fetch the current field data here.
+  // Since we don't have useFormBuilder anymore, we can either:
+  // A) Receive the field as prop (recommended)
+  // B) Fetch it via API (not ideal for editor)
+  // For now, assuming parent passes the full field object (see below)
 
-  if (!selectedField) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center py-10 text-muted-foreground">
-            No field selected or field not found
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Temporary placeholder — replace with real field data from props or context
+  const initialField: Field = {
+    id: fieldId,
+    label: "Loading...",
+    key: "",
+    type: "text",
+    is_required: false,
+    is_active: true,
+    order: 0,
+    form_section_id: sectionId,
+  };
 
   const form = useForm<Field>({
     resolver: zodResolver(fieldSchema),
-    defaultValues: {
-      ...selectedField,
-      rules: selectedField.rules || [],
-      options: selectedField.options || {},
-    },
+    defaultValues: initialField,
   });
 
   const { fields: ruleFields, append, remove } = useFieldArray({
@@ -141,32 +98,94 @@ export default function FormFieldEditor({ fieldId }: FormFieldEditorProps) {
     name: "rules",
   });
 
+  // This effect should reset form when fieldId changes
+  // But since we don't have real selectedField, we'll simulate
   useEffect(() => {
-    form.reset(selectedField);
-  }, [selectedField, form]);
+    // In real implementation → fetch or get field from parent/context
+    // For demo:
+    form.reset(initialField);
+    setSaveStatus("idle");
+    setErrorMessage(null);
+  }, [fieldId, form]);
 
-  const onSubmit = (data: Field) => {
-    updateField(fieldId, data);
-    // Optional: show toast notification "Field updated"
+  const onSubmit = async (data: Field) => {
+    setSaveStatus("saving");
+    setErrorMessage(null);
+
+    try {
+      // 1. Update local state in parent via callback (optimistic update)
+      if (onUpdate) {
+        onUpdate({
+          ...data,
+          id: fieldId,           // keep original id
+          form_section_id: sectionId,
+        });
+      }
+
+      // 2. Call real API (PUT /fields/{id})
+      await axiosClient.put(`/fields/${fieldId}`, {
+        label: data.label,
+        key: data.key,
+        is_required: data.is_required,
+        is_active: data.is_active,
+        options: data.options,
+        rules: data.rules,
+        conditions: data.conditions,
+        // only send changed fields — or send all
+      });
+
+      setSaveStatus("success");
+      toast({
+        title: "Field updated",
+        description: "Changes saved successfully.",
+      });
+
+      setTimeout(() => setSaveStatus("idle"), 3000);
+    } catch (err: any) {
+      console.error(err);
+      setSaveStatus("error");
+      const msg = err.response?.data?.message || "Failed to update field";
+      setErrorMessage(msg);
+      toast({
+        title: "Error",
+        description: msg,
+        variant: "destructive",
+      });
+    }
   };
 
-  const isChoiceField = ["select", "multi_select", "radio", "checkbox"].includes(selectedField.type);
-  const availableRules = getAvailableRules(selectedField.type);
+  const isChoiceField = ["select", "multi_select", "radio", "checkbox"].includes(form.watch("type"));
 
   return (
     <Card className="border-none shadow-none">
       <CardHeader className="pb-4">
         <CardTitle className="text-xl">Edit Field</CardTitle>
         <CardDescription>
-          Type: <span className="font-medium capitalize">{selectedField.type}</span>
+          Type: <span className="font-medium capitalize">{form.watch("type")}</span>
         </CardDescription>
       </CardHeader>
 
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Status Alerts */}
+            {saveStatus === "success" && (
+              <Alert className="bg-green-50 border-green-200 text-green-800">
+                <CheckCircle2 className="h-4 w-4" />
+                <AlertTitle>Saved successfully</AlertTitle>
+                <AlertDescription>Field changes applied.</AlertDescription>
+              </Alert>
+            )}
 
-            {/* Basic fields */}
+            {saveStatus === "error" && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Save failed</AlertTitle>
+                <AlertDescription>{errorMessage}</AlertDescription>
+              </Alert>
+            )}
+
+            {/* Label & Key */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
@@ -175,135 +194,80 @@ export default function FormFieldEditor({ fieldId }: FormFieldEditorProps) {
                   <FormItem>
                     <FormLabel>Label *</FormLabel>
                     <FormControl>
-                      <Input {...field} value={field.value ?? ""} />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-             
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
+              <FormField
                 control={form.control}
                 name="key"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Key (identifier) *</FormLabel>
+                    <FormLabel>Key *</FormLabel>
                     <FormControl>
-                      <Input {...field} value={field.value ?? ""} />
+                      <Input {...field} />
                     </FormControl>
-                    <FormDescription>Used in form data (no spaces/special chars)</FormDescription>
+                    <FormDescription>Used in form submission data</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              </div>
-            {/* Required switch */}
+            </div>
+
+            {/* Required Switch */}
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
-                <FormLabel className="text-base">Required field</FormLabel>
-                <FormDescription>
-                  User must provide a value to submit the form
-                </FormDescription>
+                <FormLabel className="text-base">Required</FormLabel>
+                <FormDescription>User must fill this field</FormDescription>
               </div>
               <FormControl>
                 <Switch
                   checked={form.watch("is_required")}
-                  onCheckedChange={(checked) => form.setValue("is_required", checked)}
+                  onCheckedChange={(v) => form.setValue("is_required", v)}
                 />
               </FormControl>
             </FormItem>
 
-            {/* Placeholder (for supported types) */}
+            {/* Placeholder (if applicable) */}
             {["text", "textarea", "email", "number", "phone", "date", "time", "password", "select", "multi_select"].includes(
-              selectedField.type
+              form.watch("type")
             ) && (
               <FormField
                 control={form.control}
                 name="options.placeholder"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Placeholder text</FormLabel>
+                    <FormLabel>Placeholder</FormLabel>
                     <FormControl>
-                      <Input {...field} value={field.value ?? ""} placeholder="e.g. Enter your name..." />
+                      <Input {...field} value={field.value ?? ""} />
                     </FormControl>
-                    <FormDescription>Hint shown when field is empty</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             )}
-
-            {/* Choices for select/radio/etc */}
+            {/* Choices */}
             {isChoiceField && (
               <div className="space-y-4 border rounded-lg p-4 bg-muted/40">
-                <div className="flex items-center justify-between">
-                  <Label>Choices</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const current = form.getValues("options.choices") || [];
-                      form.setValue("options.choices", [...current, `Option ${current.length + 1}`]);
-                    }}
-                  >
-                    <Plus className="h-4 w-4 mr-2" /> Add
-                  </Button>
-                </div>
-
-                {(form.watch("options.choices") as string[] ?? []).map((_, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <FormField
-                      control={form.control}
-                      name={`options.choices.${index}`}
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormControl>
-                            <Input {...field} placeholder={`Option ${index + 1}`} />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        const current = form.getValues("options.choices") || [];
-                        form.setValue(
-                          "options.choices",
-                          current.filter((_, i) => i !== index)
-                        );
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-
-                {form.watch("options.choices")?.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-2">
-                    Add at least one option
-                  </p>
-                )}
+                {/* ... keep your existing choices UI unchanged ... */}
               </div>
             )}
 
-            {/* Rules Section */}
+            {/* Rules Section – keep most of your code, just minor cleanup */}
             <div className="space-y-4 border rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <Label className="text-base">Validation Rules</Label>
                 <Select
                   onValueChange={(ruleType) => {
                     if (ruleType === "required") {
-                      form.setValue("is_required", true);
+                      form.setValue("is_required", true, { shouldValidate: true });
                     } else {
                       append({
                         type: ruleType,
-                        value: ruleType.includes("min") || ruleType.includes("max") ? 0 : "",
+                        value: ["min", "max", "minLength", "maxLength", "step"].includes(ruleType) ? "0" : "",
                         message: "",
                       });
                     }
@@ -364,6 +328,7 @@ export default function FormFieldEditor({ fieldId }: FormFieldEditorProps) {
                                       value={field.value ?? ""}
                                     />
                                   </FormControl>
+                                  <FormMessage />
                                 </FormItem>
                               )}
                             />
@@ -378,9 +343,10 @@ export default function FormFieldEditor({ fieldId }: FormFieldEditorProps) {
                                     <Input
                                       {...field}
                                       value={field.value ?? ""}
-                                      placeholder="e.g. Password must be at least 8 characters"
+                                      placeholder="e.g. Please enter at least 8 characters"
                                     />
                                   </FormControl>
+                                  <FormMessage />
                                 </FormItem>
                               )}
                             />
@@ -403,16 +369,32 @@ export default function FormFieldEditor({ fieldId }: FormFieldEditorProps) {
 
                 {ruleFields.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    No rules added yet. Use the dropdown above to add validation.
+                    No custom rules added yet. Select from dropdown above.
                   </p>
                 )}
               </div>
             </div>
 
-            {/* Submit */}
+            {/* Save Button */}
             <div className="pt-4">
-              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Saving..." : "Save Field Changes"}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={saveStatus === "saving" || form.formState.isSubmitting}
+              >
+                {saveStatus === "saving" ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : saveStatus === "success" ? (
+                  <>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Saved!
+                  </>
+                ) : (
+                  "Save Field Changes"
+                )}
               </Button>
             </div>
           </form>

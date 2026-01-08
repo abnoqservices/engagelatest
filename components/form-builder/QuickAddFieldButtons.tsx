@@ -25,11 +25,11 @@ const fieldTypePresets = [
   { type: "time", label: "Time", icon: "⏰" }, // bonus
   { type: "select", label: "Dropdown", icon: "▼" },
   { type: "multi_select", label: "Multi-Select", icon: "▼" },
-  { type: "radio", label: "Radio Group", icon: "○" },
-  { type: "checkbox", label: "Checkbox", icon: "☑" },
+  { type: "radio", label: "Radio Group", icon: "🔘" },
+  { type: "checkbox", label: "Checkbox", icon: "✅" },
   { type: "file", label: "File Upload", icon: "↑" },
-  { type: "image", label: "Image Upload", icon: "🖼" },
-  { type: "rating", label: "Rating", icon: "★" },
+  { type: "image", label: "Image Upload", icon: "🏞️" },
+  { type: "rating", label: "Rating", icon: "⭐" },
   { type: "range", label: "Range Slider", icon: "↔" },
 ];
 
