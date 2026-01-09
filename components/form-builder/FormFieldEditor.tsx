@@ -33,64 +33,103 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Trash2, Plus, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { useFormBuilder } from "@/hooks/useFormBuilder";
+import { Field, FieldRule } from "@/types/form";
 import { fieldSchema } from "@/lib/formSchema";
-import axiosClient from "@/lib/axiosClient"
-// Define the field type (you can move this to a shared types file)
-type Field = {
-  id: string;
-  label: string;
-  key: string;
-  type: string;
-  is_required: boolean;
-  is_active: boolean;
-  order: number;
-  form_section_id: string;
-  options?: Record<string, any>;
-  rules?: Array<{ type: string; value?: string | number; message?: string }>;
-  conditions?: any;
-};
+import { toast } from "@/components/ui/use-toast"; // ← assuming you have shadcn toast
 
 interface FormFieldEditorProps {
   fieldId: string;
-  sectionId: string;           // passed from parent
-  onUpdate?: (updatedField: Field) => void;  // ← NEW: callback to parent
 }
-
 const getAvailableRules = (fieldType: Field["type"]): { value: string; label: string }[] => {
-  // ... (your existing function remains unchanged)
-  // keep it as is
+  switch (fieldType) {
+    case "text":
+    case "textarea":
+      return [
+        { value: "required", label: "Required" },
+        { value: "minLength", label: "Minimum Length" },
+        { value: "maxLength", label: "Maximum Length" },
+        { value: "pattern", label: "Pattern (Regex)" },
+      ];
+    case "email":
+      return [
+        { value: "required", label: "Required" },
+        { value: "minLength", label: "Minimum Length" },
+        { value: "maxLength", label: "Maximum Length" },
+        { value: "pattern", label: "Pattern (Regex)" },
+        { value: "email", label: "Valid Email" },
+      ];
+    case "number":
+    case "range":
+      return [
+        { value: "required", label: "Required" },
+        { value: "min", label: "Minimum Value" },
+        { value: "max", label: "Maximum Value" },
+        { value: "step", label: "Step" },
+      ];
+    case "phone":
+      return [
+        { value: "required", label: "Required" },
+        { value: "minLength", label: "Minimum Length (e.g. 10)" },
+        { value: "maxLength", label: "Maximum Length" },
+        { value: "pattern", label: "Pattern (Regex)" },
+      ];
+    case "password":
+      return [
+        { value: "required", label: "Required" },
+        { value: "minLength", label: "Minimum Length (e.g. 8)" },
+        { value: "maxLength", label: "Maximum Length" },
+      ];
+    case "date":
+    case "time":
+      return [{ value: "required", label: "Required" }];
+    case "select":
+    case "multi_select":
+    case "radio":
+    case "checkbox":
+    case "file":
+    case "image":
+      return [{ value: "required", label: "Required" }];
+    case "rating":
+      return [
+        { value: "required", label: "Required" },
+        { value: "min", label: "Minimum Rating" },
+        { value: "max", label: "Maximum Rating" },
+      ];
+    default:
+      return [{ value: "required", label: "Required" }];
+  }
 };
 
-export default function FormFieldEditor({
-  fieldId,
-  sectionId,
-  onUpdate,
-}: FormFieldEditorProps) {
+
+export default function FormFieldEditor({ fieldId }: FormFieldEditorProps) {
+  const { form: builderForm, updateField } = useFormBuilder();
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // You'll need to fetch the current field data here.
-  // Since we don't have useFormBuilder anymore, we can either:
-  // A) Receive the field as prop (recommended)
-  // B) Fetch it via API (not ideal for editor)
-  // For now, assuming parent passes the full field object (see below)
+  const selectedField = builderForm.sections
+    .flatMap((sec) => sec.fields)
+    .find((f) => f.id === fieldId);
 
-  // Temporary placeholder — replace with real field data from props or context
-  const initialField: Field = {
-    id: fieldId,
-    label: "Loading...",
-    key: "",
-    type: "text",
-    is_required: false,
-    is_active: true,
-    order: 0,
-    form_section_id: sectionId,
-  };
+  if (!selectedField) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center py-10 text-muted-foreground">
+            No field selected or field not found
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const form = useForm<Field>({
     resolver: zodResolver(fieldSchema),
-    defaultValues: initialField,
+    defaultValues: {
+      ...selectedField,
+      rules: selectedField.rules || [],
+      options: selectedField.options || {},
+    },
   });
 
   const { fields: ruleFields, append, remove } = useFieldArray({
@@ -98,77 +137,63 @@ export default function FormFieldEditor({
     name: "rules",
   });
 
-  // This effect should reset form when fieldId changes
-  // But since we don't have real selectedField, we'll simulate
   useEffect(() => {
-    // In real implementation → fetch or get field from parent/context
-    // For demo:
-    form.reset(initialField);
-    setSaveStatus("idle");
+    form.reset(selectedField);
+    setSaveStatus("idle");     // reset status when field changes
     setErrorMessage(null);
-  }, [fieldId, form]);
+  }, [selectedField, form]);
 
   const onSubmit = async (data: Field) => {
     setSaveStatus("saving");
     setErrorMessage(null);
 
     try {
-      // 1. Update local state in parent via callback (optimistic update)
-      if (onUpdate) {
-        onUpdate({
-          ...data,
-          id: fieldId,           // keep original id
-          form_section_id: sectionId,
-        });
-      }
+      // Simulate small delay (realistic feel) – remove if updateField is sync
+      await new Promise((resolve) => setTimeout(resolve, 400));
 
-      // 2. Call real API (PUT /fields/{id})
-      await axiosClient.put(`/fields/${fieldId}`, {
-        label: data.label,
-        key: data.key,
-        is_required: data.is_required,
-        is_active: data.is_active,
-        options: data.options,
-        rules: data.rules,
-        conditions: data.conditions,
-        // only send changed fields — or send all
-      });
+      // The actual update
+      updateField(fieldId, data);
 
       setSaveStatus("success");
       toast({
-        title: "Field updated",
-        description: "Changes saved successfully.",
+        title: "Field saved",
+        description: "Your changes have been applied successfully.",
+        variant: "default",
       });
 
+      // Optional: auto-hide success after 3 seconds
       setTimeout(() => setSaveStatus("idle"), 3000);
+
     } catch (err: any) {
-      console.error(err);
+      console.error("Field save failed:", err);
       setSaveStatus("error");
-      const msg = err.response?.data?.message || "Failed to update field";
-      setErrorMessage(msg);
+      setErrorMessage(err.message || "Failed to save field. Please try again.");
+
       toast({
-        title: "Error",
-        description: msg,
+        title: "Save failed",
+        description: err.message || "Something went wrong while saving the field.",
         variant: "destructive",
       });
     }
   };
 
-  const isChoiceField = ["select", "multi_select", "radio", "checkbox"].includes(form.watch("type"));
+  const isChoiceField = ["select", "multi_select", "radio", "checkbox"].includes(selectedField.type);
+  const availableRules = getAvailableRules(selectedField.type);
 
   return (
     <Card className="border-none shadow-none">
       <CardHeader className="pb-4">
         <CardTitle className="text-xl">Edit Field</CardTitle>
         <CardDescription>
-          Type: <span className="font-medium capitalize">{form.watch("type")}</span>
+          Type: <span className="font-medium capitalize">{selectedField.type}</span>
         </CardDescription>
       </CardHeader>
 
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Status Alerts */}
+
+            {/* Feedback banner */}
             {saveStatus === "success" && (
               <Alert className="bg-green-50 border-green-200 text-green-800">
                 <CheckCircle2 className="h-4 w-4" />
@@ -181,11 +206,11 @@ export default function FormFieldEditor({
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Save failed</AlertTitle>
-                <AlertDescription>{errorMessage}</AlertDescription>
+                <AlertDescription>{errorMessage || "An error occurred. Please try again."}</AlertDescription>
               </Alert>
             )}
 
-            {/* Label & Key */}
+            {/* Basic fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
@@ -194,61 +219,67 @@ export default function FormFieldEditor({
                   <FormItem>
                     <FormLabel>Label *</FormLabel>
                     <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="key"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Key *</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormDescription>Used in form submission data</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Required Switch */}
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">Required</FormLabel>
-                <FormDescription>User must fill this field</FormDescription>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={form.watch("is_required")}
-                  onCheckedChange={(v) => form.setValue("is_required", v)}
-                />
-              </FormControl>
-            </FormItem>
-
-            {/* Placeholder (if applicable) */}
-            {["text", "textarea", "email", "number", "phone", "date", "time", "password", "select", "multi_select"].includes(
-              form.watch("type")
-            ) && (
-              <FormField
-                control={form.control}
-                name="options.placeholder"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Placeholder</FormLabel>
-                    <FormControl>
                       <Input {...field} value={field.value ?? ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+             
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+                control={form.control}
+                name="key"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Key (identifier) *</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value ?? ""} />
+                    </FormControl>
+                    <FormDescription>Used in form data (no spaces/special chars recommended)</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               </div>
+            {/* Required switch */}
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">Required field</FormLabel>
+                <FormDescription>
+                  User must provide a value to submit the form
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={form.watch("is_required")}
+                  onCheckedChange={(checked) => form.setValue("is_required", checked, { shouldValidate: true })}
+                />
+              </FormControl>
+            </FormItem>
+
+            {/* Placeholder */}
+            {["text", "textarea", "email", "number", "phone", "date", "time", "password", "select", "multi_select"].includes(
+              selectedField.type
+            ) && (
+              <FormField
+                control={form.control}
+                name="options.placeholder"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Placeholder text</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value ?? ""} placeholder="e.g. Enter your name..." />
+                    </FormControl>
+                    <FormDescription>Hint shown when field is empty</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
+
             {/* Choices */}
             {isChoiceField && (
               <div className="space-y-4 border rounded-lg p-4 bg-muted/40">

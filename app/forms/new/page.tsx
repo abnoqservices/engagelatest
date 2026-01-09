@@ -33,12 +33,13 @@ import {
   Trash2,
   ChevronDown,
   ChevronUp,
-  Star,
+  X,
 } from "lucide-react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import axiosClient from "@/lib/axiosClient"
 import { showToast } from "@/lib/showToast"
+
 import {
   DndContext,
   closestCenter,
@@ -56,23 +57,12 @@ import {
 } from "@dnd-kit/sortable"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
+import  LivePreview  from "@/components/form-component/LivePreview"
+
 import {
-  Type,
-  Mail,
-  Phone,
-  Calendar,
-  Clock,
-  CalendarClock,
-  Hash,
-  Lock,
-  CheckSquare,
-  ToggleLeft,
-  Upload,
-  Image as ImageIcon,
-  Link2,
-  SlidersHorizontal,
-  Palette,
-  EyeOff,
+  Type, Mail, Phone, Calendar, Clock, CalendarClock, Hash, Lock,
+  CheckSquare, ToggleLeft, Upload, Image, Link2, Star, SlidersHorizontal,
+  Palette, EyeOff,
 } from "lucide-react"
 
 const fieldTypes = [
@@ -91,7 +81,7 @@ const fieldTypes = [
   { value: "checkbox", label: "Checkbox Group", icon: CheckSquare },
   { value: "toggle", label: "Toggle Switch", icon: ToggleLeft },
   { value: "file", label: "File Upload", icon: Upload },
-  { value: "image", label: "Image Upload", icon: ImageIcon },
+  { value: "image", label: "Image Upload", icon: Image },
   { value: "url", label: "URL", icon: Link2 },
   { value: "rating", label: "Rating", icon: Star },
   { value: "range", label: "Range Slider", icon: SlidersHorizontal },
@@ -104,6 +94,19 @@ interface FieldOption {
   value: string
 }
 
+interface ValidationRule {
+  type: string          // e.g. "min_length", "max_length", "min", "max", "regex", "file_size", "allowed_types"
+  value: any
+  message?: string
+}
+
+interface Condition {
+  fieldKey: string      // key of the field we depend on
+  operator: string      // "equals", "not_equals", "contains", "greater_than", etc.
+  value: any
+  action: "show" | "hide"
+}
+
 interface Field {
   id?: number
   tempId: string
@@ -112,7 +115,9 @@ interface Field {
   placeholder?: string
   required: boolean
   key?: string
-  options?: FieldOption[]
+  options?: FieldOption[] | Record<string, any>
+  rules: ValidationRule[]
+  conditions: Condition[] | null
   order: number
 }
 
@@ -129,9 +134,13 @@ interface FormData {
   id?: number
   name: string
   description: string
-  status: "draft" | "active"
+  status: string
   success_message: string
   redirect_url?: string
+  send_notification: boolean
+  captcha: boolean
+  gdpr: boolean
+  auto_respond: boolean
 }
 
 export default function CreateFormPage() {
@@ -148,13 +157,16 @@ export default function CreateFormPage() {
     status: "draft",
     success_message: "Thank you for your submission! We'll get back to you soon.",
     redirect_url: "",
+    send_notification: true,
+    captcha: true,
+    gdpr: false,
+    auto_respond: true,
   })
 
   const [sections, setSections] = React.useState<Section[]>([])
-  const [usedKeys, setUsedKeys] = React.useState<Set<string>>(new Set())
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
@@ -167,7 +179,10 @@ export default function CreateFormPage() {
           tempId: "main",
           title: "Main Section",
           order: 0,
-          fields: [],
+          fields: [
+            { tempId: "1", type: "text", label: "Full Name", required: true, placeholder: "John Doe", order: 0, rules: [], conditions: null },
+            { tempId: "2", type: "email", label: "Email Address", required: true, placeholder: "you@example.com", order: 1, rules: [], conditions: null },
+          ],
         },
       ])
       setLoading(false)
@@ -179,50 +194,38 @@ export default function CreateFormPage() {
       const res = await axiosClient.get(`/forms/${formId}`)
       if (res.data.success) {
         const data = res.data.data
-        setFormData({
-          id: data.id,
+        setFormData(prev => ({
+          ...prev,
           name: data.name || "",
           description: data.description || "",
           status: data.is_active ? "active" : "draft",
-          success_message: "Thank you for your submission! We'll get back to you soon.",
-          redirect_url: "",
-        })
+        }))
 
         const sectionsRes = await axiosClient.get(`/forms/${formId}/sections`)
         if (sectionsRes.data.success && sectionsRes.data.data.length > 0) {
-          const loadedSections = sectionsRes.data.data.map((sec: any, secIndex: number) => ({
+          const loadedSections: Section[] = sectionsRes.data.data.map((sec: any, secIndex: number) => ({
             id: sec.id,
             tempId: `sec-${sec.id || Date.now()}`,
             title: sec.title || "Untitled Section",
             order: sec.order ?? secIndex,
             collapsed: false,
-            fields: (sec.fields || []).map((f: any, fIndex: number) => {
-              const key = f.key || generateKey(f.label)
-              return {
-                id: f.id,
-                tempId: `field-${f.id || Date.now()}-${Math.random()}`,
-                type: f.type,
-                label: f.label,
-                required: f.is_required,
-                key,
-                placeholder: f.options?.placeholder || "",
-                options: f.options?.choices ? f.options.choices.map((c: string) => ({ label: c, value: c })) : undefined,
-                order: f.order ?? fIndex,
-              }
-            }),
+            fields: (sec.fields || []).map((f: any, fIndex: number) => ({
+              id: f.id,
+              tempId: `field-${f.id || Date.now()}-${Math.random()}`,
+              type: f.type,
+              label: f.label,
+              required: f.is_required,
+              key: f.key,
+              placeholder: f.options?.placeholder || "",
+              options: f.options?.choices || f.options || undefined,
+              rules: f.rules || [],
+              conditions: f.conditions || null,
+              order: f.order ?? fIndex,
+            })),
           }))
           loadedSections.sort((a, b) => a.order - b.order)
-          loadedSections.forEach((sec) => sec.fields.sort((a, b) => a.order - b.order))
+          loadedSections.forEach(sec => sec.fields.sort((a, b) => a.order - b.order))
           setSections(loadedSections)
-
-          // Populate used keys for uniqueness check
-          const keys = new Set<string>()
-          loadedSections.forEach((sec) =>
-            sec.fields.forEach((f) => {
-              if (f.key) keys.add(f.key)
-            })
-          )
-          setUsedKeys(keys)
         }
       }
     } catch (err) {
@@ -230,30 +233,6 @@ export default function CreateFormPage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const generateSlug = (name: string) =>
-    name
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "")
-
-  const generateKey = (label: string) =>
-    label
-      .toLowerCase()
-      .replace(/\s+/g, "_")
-      .replace(/[^a-z0-9_]/g, "")
-
-  const isKeyUnique = (key: string, excludeTempId?: string) => {
-    if (!key) return true
-    for (const section of sections) {
-      for (const field of section.fields) {
-        if (field.tempId !== excludeTempId && field.key === key) return false
-      }
-    }
-    return true
   }
 
   const addSection = () => {
@@ -264,84 +243,58 @@ export default function CreateFormPage() {
       fields: [],
       collapsed: false,
     }
-    setSections((prev) => [...prev, newSection])
+    setSections(prev => [...prev, newSection])
   }
 
   const updateSection = (tempId: string, updates: Partial<Section>) => {
-    setSections((prev) =>
-      prev.map((s) => (s.tempId === tempId ? { ...s, ...updates } : s))
-    )
+    setSections(prev => prev.map(s => s.tempId === tempId ? { ...s, ...updates } : s))
   }
 
   const deleteSection = async (section: Section) => {
     if (section.id) {
       try {
         await axiosClient.delete(`/sections/${section.id}`)
-      } catch (err) {
-        showToast("Failed to delete section", "error")
+      } catch {
+        showToast("Failed to delete section from server", "error")
       }
     }
-    setSections((prev) => prev.filter((s) => s.tempId !== section.tempId))
+    setSections(prev => prev.filter(s => s.tempId !== section.tempId))
   }
 
   const addField = (sectionTempId: string, type: string = "text") => {
-    const section = sections.find((s) => s.tempId === sectionTempId)
+    const section = sections.find(s => s.tempId === sectionTempId)
     if (!section) return
-
-    let label = "New Field"
-    let key = generateKey(label)
-    let counter = 1
-    while (!isKeyUnique(key)) {
-      label = `New Field ${counter}`
-      key = generateKey(label)
-      counter++
-    }
 
     const newField: Field = {
       tempId: Date.now().toString(),
       type,
-      label,
-      key,
+      label: "New Field",
       required: false,
-      placeholder: ["text", "textarea", "email", "url", "password", "number", "phone", "date", "time", "datetime"].includes(type) ? "" : undefined,
-      options: ["select", "multi_select", "radio", "checkbox"].includes(type)
+      placeholder: ["text","textarea","email","url","password","number","phone","date","time","datetime"].includes(type) ? "" : undefined,
+      options: ["select","multi_select","radio","checkbox"].includes(type)
         ? [{ label: "Option 1", value: "option1" }]
-        : undefined,
+        : ["rating","range","file","image"].includes(type) ? {} : undefined,
+      rules: [],
+      conditions: null,
       order: section.fields.length,
     }
 
-    setSections((prev) =>
-      prev.map((s) =>
+    setSections(prev =>
+      prev.map(s =>
         s.tempId === sectionTempId
           ? { ...s, fields: [...s.fields, newField] }
           : s
       )
     )
-    setUsedKeys((prev) => new Set([...prev, key]))
   }
 
   const updateField = (sectionTempId: string, fieldTempId: string, updates: Partial<Field>) => {
-    setSections((prev) =>
-      prev.map((s) =>
+    setSections(prev =>
+      prev.map(s =>
         s.tempId === sectionTempId
           ? {
               ...s,
-              fields: s.fields.map((f) => {
-                if (f.tempId === fieldTempId) {
-                  const newField = { ...f, ...updates }
-                  // Update usedKeys if key changed
-                  if (updates.key && updates.key !== f.key) {
-                    setUsedKeys((keys) => {
-                      const newKeys = new Set(keys)
-                      if (f.key) newKeys.delete(f.key)
-                      newKeys.add(updates.key!)
-                      return newKeys
-                    })
-                  }
-                  return newField
-                }
-                return f
-              }),
+              fields: s.fields.map(f => f.tempId === fieldTempId ? { ...f, ...updates } : f)
             }
           : s
       )
@@ -349,25 +302,20 @@ export default function CreateFormPage() {
   }
 
   const removeField = (sectionTempId: string, fieldTempId: string) => {
-    setSections((prev) =>
-      prev.map((s) =>
+    setSections(prev =>
+      prev.map(s =>
         s.tempId === sectionTempId
-          ? {
-              ...s,
-              fields: s.fields.filter((f) => {
-                if (f.tempId === fieldTempId && f.key) {
-                  setUsedKeys((keys) => {
-                    const newKeys = new Set(keys)
-                    newKeys.delete(f.key!)
-                    return newKeys
-                  })
-                }
-                return f.tempId !== fieldTempId
-              }),
-            }
+          ? { ...s, fields: s.fields.filter(f => f.tempId !== fieldTempId) }
           : s
       )
     )
+  }
+
+  const generateKey = (label: string) => {
+    return label
+      .toLowerCase()
+      .replace(/\s+/g, "_")
+      .replace(/[^a-z0-9_]/g, "")
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -378,40 +326,29 @@ export default function CreateFormPage() {
     const overId = over.id as string
 
     if (activeId.startsWith("section-")) {
-      const activeIndex = sections.findIndex((s) => `section-${s.tempId}` === activeId)
-      const overIndex = sections.findIndex((s) => `section-${s.tempId}` === overId)
+      const activeIndex = sections.findIndex(s => s.tempId === activeId.replace("section-", ""))
+      const overIndex = sections.findIndex(s => s.tempId === overId.replace("section-", ""))
       if (activeIndex !== -1 && overIndex !== -1) {
-        setSections(
-          arrayMove(sections, activeIndex, overIndex).map((s, idx) => ({ ...s, order: idx }))
-        )
+        setSections(arrayMove(sections, activeIndex, overIndex).map((s, idx) => ({ ...s, order: idx })))
       }
-      return
-    }
+    } else {
+      // Field drag (same section only in this version)
+      let fromSection: Section | undefined
+      let fromIndex = -1
+      let toSection: Section | undefined
+      let toIndex = -1
 
-    // Field drag
-    let fromSection: Section | null = null
-    let fromIndex = -1
-    let toSection: Section | null = null
-    let toIndex = -1
-
-    sections.forEach((sec) => {
-      const fIdx = sec.fields.findIndex((f) => f.tempId === activeId)
-      if (fIdx !== -1) {
-        fromSection = sec
-        fromIndex = fIdx
+      for (const sec of sections) {
+        const fIdx = sec.fields.findIndex(f => f.tempId === activeId)
+        if (fIdx !== -1) { fromSection = sec; fromIndex = fIdx }
+        const tIdx = sec.fields.findIndex(f => f.tempId === overId)
+        if (tIdx !== -1) { toSection = sec; toIndex = tIdx }
       }
-      const tIdx = sec.fields.findIndex((f) => f.tempId === overId)
-      if (tIdx !== -1) {
-        toSection = sec
-        toIndex = tIdx
-      }
-    })
 
-    if (fromSection && toSection && fromIndex !== -1) {
-      if (fromSection.tempId === toSection.tempId) {
+      if (fromSection && toSection && fromSection.tempId === toSection.tempId) {
         const newFields = arrayMove(fromSection.fields, fromIndex, toIndex)
-        setSections((prev) =>
-          prev.map((s) =>
+        setSections(prev =>
+          prev.map(s =>
             s.tempId === fromSection!.tempId
               ? { ...s, fields: newFields.map((f, i) => ({ ...f, order: i })) }
               : s
@@ -419,36 +356,6 @@ export default function CreateFormPage() {
         )
       }
     }
-  }
-
-  const getFieldOptionsForApi = (field: Field) => {
-    const opts: Record<string, any> = {}
-
-    if (["text", "textarea", "email", "url", "password", "number", "phone", "date", "time", "datetime"].includes(field.type)) {
-      if (field.placeholder) opts.placeholder = field.placeholder
-    }
-
-    if (["select", "multi_select", "radio", "checkbox"].includes(field.type) && field.options?.length) {
-      opts.choices = field.options.map((o) => o.value) // backend expects array of strings
-    }
-
-    if (field.type === "rating") {
-      opts.min = 1
-      opts.max = 5
-    }
-
-    if (field.type === "range") {
-      opts.min = 0
-      opts.max = 100
-      opts.step = 1
-    }
-
-    if (["file", "image"].includes(field.type)) {
-      opts.max_size = 2048 // KB
-      opts.allowed_types = field.type === "image" ? ["jpg", "png", "webp", "gif"] : ["pdf", "docx", "txt", "zip"]
-    }
-
-    return Object.keys(opts).length > 0 ? opts : null
   }
 
   const saveForm = async (publish: boolean = false) => {
@@ -462,9 +369,8 @@ export default function CreateFormPage() {
       let savedFormId = formId
 
       const formPayload = {
-        name: formData.name.trim(),
-        slug: formId ? undefined : generateSlug(formData.name.trim()),
-        description: formData.description.trim() || null,
+        name: formData.name,
+        description: formData.description || null,
         is_active: publish || formData.status === "active",
       }
 
@@ -476,19 +382,19 @@ export default function CreateFormPage() {
         router.replace(`/forms/${savedFormId}/edit`)
       }
 
-      // Save sections and fields
+      // Save sections + fields
       for (const section of sections) {
         let sectionId = section.id
 
         if (!sectionId) {
           const res = await axiosClient.post(`/forms/${savedFormId}/sections`, {
-            title: section.title.trim(),
+            title: section.title,
             order: section.order,
           })
           sectionId = res.data.data.id
         } else {
           await axiosClient.put(`/sections/${sectionId}`, {
-            title: section.title.trim(),
+            title: section.title,
             order: section.order,
           })
         }
@@ -496,13 +402,18 @@ export default function CreateFormPage() {
         for (const field of section.fields) {
           const fieldPayload = {
             form_section_id: sectionId,
-            label: field.label.trim(),
+            label: field.label,
             key: field.key || generateKey(field.label),
             type: field.type,
+            options:
+              ["select", "multi_select", "radio", "checkbox"].includes(field.type)
+                ? { choices: field.options || [] }
+                : field.options || { placeholder: field.placeholder || "" },
+            rules: field.rules || [],
+            conditions: field.conditions,
             is_required: field.required,
             is_active: true,
             order: field.order,
-            options: getFieldOptionsForApi(field),
           }
 
           if (field.id) {
@@ -513,76 +424,253 @@ export default function CreateFormPage() {
         }
       }
 
-      showToast(publish ? "Form published successfully!" : "Form saved as draft", "success")
+      showToast(publish ? "Form published!" : "Form saved as draft", "success")
     } catch (err: any) {
       console.error(err)
-      showToast("Failed to save form", "error")
+      showToast(err.response?.data?.message || "Failed to save form", "error")
     } finally {
       setSaving(false)
     }
   }
 
-  const SortableSection = ({ section }: { section: Section }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-      isDragging,
-    } = useSortable({ id: `section-${section.tempId}` })
+  if (loading) {
+    return <DashboardLayout><div className="p-8 text-center">Loading...</div></DashboardLayout>
+  }
 
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      opacity: isDragging ? 0.6 : 1,
-    }
-
-    return (
-      <div ref={setNodeRef} style={style} className="mb-6">
-        <div className="flex items-center gap-3 mb-3">
-          <div {...attributes} {...listeners} className="cursor-move">
-            <GripVertical className="h-5 w-5 text-muted-foreground" />
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <Header formId={formId} saving={saving} onSaveDraft={() => saveForm(false)} onPublish={() => saveForm(true)} />
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            <FormDetails formData={formData} setFormData={setFormData} />
+            <SectionsEditor
+              sections={sections}
+              setSections={setSections}
+              sensors={sensors}
+              handleDragEnd={handleDragEnd}
+              addSection={addSection}
+              updateSection={updateSection}
+              deleteSection={deleteSection}
+              addField={addField}
+              updateField={updateField}
+              removeField={removeField}
+            />
+            {/* <SuccessSettings formData={formData} setFormData={setFormData} /> */}
           </div>
-          <Input
-            value={section.title}
-            onChange={(e) => updateSection(section.tempId, { title: e.target.value })}
-            className="text-lg font-semibold h-9"
-          />
+          <LivePreview formData={formData} sections={sections} />
+        </div>
+      </div>
+    </DashboardLayout>
+  )
+}
+
+// ──────────────────────────────────────────────
+// Header, FormDetails, SuccessSettings (unchanged)
+// ──────────────────────────────────────────────
+
+function Header({ formId, saving, onSaveDraft, onPublish }: any) {
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <Link href="/forms"><Button variant="ghost" size="icon"><ArrowLeft className="h-5 w-5" /></Button></Link>
+        <div>
+          <h1 className="text-3xl font-bold">{formId ? "Edit Form" : "Create Form"}</h1>
+          <p className="text-sm text-muted-foreground mt-1">Design a custom form with sections and ordering</p>
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={onSaveDraft} disabled={saving}><Save className="h-4 w-4 mr-2" /> Save Draft</Button>
+        {/* <Button variant="outline"><Eye className="h-4 w-4 mr-2" /> Preview</Button> */}
+        <Button onClick={onPublish} disabled={saving}><Check className="h-4 w-4 mr-2" />{formId ? "Update & Publish" : "Publish Form"}</Button>
+      </div>
+    </div>
+  )
+}
+
+function FormDetails({ formData, setFormData }: any) {
+  return (
+    <Card>
+      <CardHeader><CardTitle>Form Details</CardTitle></CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label>Form Name</Label>
+          <Input value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} placeholder="e.g., Contact Form" />
+        </div>
+        <div className="space-y-2">
+          <Label>Description</Label>
+          <Textarea value={formData.description} onChange={e => setFormData(p => ({ ...p, description: e.target.value }))} rows={3} />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// function SuccessSettings({ formData, setFormData }: any) {
+//   return (
+//     <Card>
+//       <CardHeader><CardTitle>Success Settings</CardTitle></CardHeader>
+//       <CardContent className="space-y-6">
+//         <div className="space-y-2">
+//           <Label>Success Message</Label>
+//           <Textarea value={formData.success_message} onChange={e => setFormData(p => ({ ...p, success_message: e.target.value }))} rows={3} />
+//         </div>
+//         <div className="space-y-2">
+//           <Label>Redirect URL (Optional)</Label>
+//           <Input type="url" value={formData.redirect_url} onChange={e => setFormData(p => ({ ...p, redirect_url: e.target.value }))} />
+//         </div>
+//       </CardContent>
+//     </Card>
+//   )
+// }
+
+// ──────────────────────────────────────────────
+// SectionsEditor + SortableSection (minor changes)
+// ──────────────────────────────────────────────
+
+function SectionsEditor(props: any) {
+  const { sections, setSections, sensors, handleDragEnd, addSection, updateSection, deleteSection, addField, updateField, removeField } = props
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Form Sections & Fields</CardTitle>
+            <CardDescription>Organize your form into sections</CardDescription>
+          </div>
+          <Button onClick={addSection} size="sm"><Plus className="h-4 w-4 mr-2" /> Add Section</Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={sections.map((s: any) => `section-${s.tempId}`)} strategy={verticalListSortingStrategy}>
+            {sections.map((section: any) => (
+              <SortableSection
+                key={section.tempId}
+                section={section}
+                updateSection={updateSection}
+                deleteSection={deleteSection}
+                addField={addField}
+                updateField={updateField}
+                removeField={removeField}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
+
+        {sections.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            No sections yet. Add one to start building your form.
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+function SortableSection({
+  section,
+  updateSection,
+  deleteSection,
+  addField,
+  updateField,
+  removeField,
+}: any) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: `section-${section.tempId}` })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="mb-4 border border-gray-300 rounded-md bg-[#f5f5f5] shadow-sm"
+    >
+      {/* ───── Window Header ───── */}
+      <div className="flex items-center gap-2 px-3 py-2 border-b bg-[#eaeaea] rounded-t-md">
+        {/* Drag Handle */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-move text-gray-500 hover:text-gray-700"
+        >
+          <GripVertical className="h-4 w-4" />
+        </div>
+
+        {/* Title */}
+        <Input
+          value={section.title}
+          onChange={e =>
+            updateSection(section.tempId, { title: e.target.value })
+          }
+          placeholder="Section title"
+          className="h-7 text-sm font-medium bg-white border-gray-300 focus:ring-0 focus:border-blue-500"
+        />
+
+        {/* Window Buttons */}
+        <div className="flex gap-1 ml-auto">
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => updateSection(section.tempId, { collapsed: !section.collapsed })}
+            className="h-7 w-7"
+            onClick={() =>
+              updateSection(section.tempId, {
+                collapsed: !section.collapsed,
+              })
+            }
           >
-            {section.collapsed ? <ChevronDown /> : <ChevronUp />}
+            {section.collapsed ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronUp className="h-4 w-4" />
+            )}
           </Button>
+
           <Button
             variant="ghost"
             size="icon"
+            className="h-7 w-7 text-red-600 hover:bg-red-100"
             onClick={() => deleteSection(section)}
-            className="text-destructive"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
+      </div>
 
-        {!section.collapsed && (
-          <div className="space-y-4 pl-8">
-            <SortableContext
-              items={section.fields.map((f) => f.tempId)}
-              strategy={verticalListSortingStrategy}
-            >
-              {section.fields.map((field) => (
-                <SortableField key={field.tempId} sectionTempId={section.tempId} field={field} />
+      {/* ───── Window Body ───── */}
+      {!section.collapsed && (
+        <div className="p-3 bg-[#fafafa]">
+          <SortableContext
+            items={section.fields.map((f: any) => f.tempId)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-2 pl-4 border-l border-gray-300">
+              {section.fields.map((field: any) => (
+                <SortableField
+                  key={field.tempId}
+                  sectionTempId={section.tempId}
+                  field={field}
+                  updateField={updateField}
+                  removeField={removeField}
+                />
               ))}
-            </SortableContext>
+            </div>
+          </SortableContext>
 
-            <Select onValueChange={(type) => addField(section.tempId, type)}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Add a field..." />
+          {/* Add Field Dropdown */}
+          <div className="mt-3">
+            <Select onValueChange={type => addField(section.tempId, type)}>
+              <SelectTrigger className="h-8 text-sm bg-white border-gray-300">
+                <SelectValue placeholder="+ Add field" />
               </SelectTrigger>
               <SelectContent>
-                {fieldTypes.map((type) => {
+                {fieldTypes.map(type => {
                   const Icon = type.icon
                   return (
                     <SelectItem key={type.value} value={type.value}>
@@ -596,432 +684,298 @@ export default function CreateFormPage() {
               </SelectContent>
             </Select>
           </div>
-        )}
-      </div>
-    )
-  }
-
-  const SortableField = ({ sectionTempId, field }: { sectionTempId: string; field: Field }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-    } = useSortable({ id: field.tempId })
-
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-    }
-
-    return (
-      <div
-        ref={setNodeRef}
-        style={style}
-        className="flex items-start gap-3 rounded-lg border bg-secondary/30 p-4"
-      >
-        <div {...attributes} {...listeners} className="cursor-move mt-2">
-          <GripVertical className="h-5 w-5 text-muted-foreground" />
         </div>
+      )}
+    </div>
+  )
+}
 
-        <div className="flex-1 space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label className="text-sm">Field Type</Label>
-              <Select
-                value={field.type}
-                onValueChange={(v) => {
-                  const updates: Partial<Field> = { type: v }
-                  if (["select", "multi_select", "radio", "checkbox"].includes(v)) {
-                    updates.options = field.options || [{ label: "Option 1", value: "option1" }]
-                  } else {
-                    updates.options = undefined
-                  }
-                  updateField(sectionTempId, field.tempId, updates)
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {fieldTypes.map((type) => {
-                    const Icon = type.icon
-                    return (
-                      <SelectItem key={type.value} value={type.value}>
-                        <div className="flex items-center gap-2">
-                          <Icon className="h-4 w-4" />
-                          {type.label}
-                        </div>
-                      </SelectItem>
-                    )
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
+// ──────────────────────────────────────────────
+// SortableField – now with Rules & Conditions
+// ──────────────────────────────────────────────
 
-            <div className="space-y-2">
-              <Label className="text-sm">Field Label</Label>
-              <Input
-                value={field.label}
-                onChange={(e) => updateField(sectionTempId, field.tempId, { label: e.target.value })}
-              />
-            </div>
-          </div>
+function SortableField({ sectionTempId, field, updateField, removeField }: any) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: field.tempId })
+  const style = { transform: CSS.Transform.toString(transform), transition }
 
-          {["text", "textarea", "email", "url", "password", "number", "phone", "date", "time", "datetime"].includes(field.type) && (
-            <div className="space-y-2">
-              <Label className="text-sm">Placeholder</Label>
-              <Input
-                value={field.placeholder || ""}
-                onChange={(e) => updateField(sectionTempId, field.tempId, { placeholder: e.target.value })}
-                placeholder="Optional placeholder..."
-              />
-            </div>
-          )}
-
-          {["select", "multi_select", "radio", "checkbox"].includes(field.type) && (
-            <div className="space-y-2">
-              <Label className="text-sm">Options</Label>
-              <div className="space-y-2">
-                {(field.options || []).map((opt, idx) => (
-                  <div key={idx} className="flex gap-2">
-                    <Input
-                      value={opt.label}
-                      onChange={(e) => {
-                        const newOpts = [...(field.options || [])]
-                        const newValue = e.target.value.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "")
-                        newOpts[idx] = { label: e.target.value, value: newValue }
-                        updateField(sectionTempId, field.tempId, { options: newOpts })
-                      }}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        const newOpts = (field.options || []).filter((_, i) => i !== idx)
-                        updateField(sectionTempId, field.tempId, { options: newOpts })
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const newOpts = [
-                      ...(field.options || []),
-                      { label: "New Option", value: `option_${(field.options || []).length + 1}` },
-                    ]
-                    updateField(sectionTempId, field.tempId, { options: newOpts })
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-1" /> Add Option
-                </Button>
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                checked={field.required}
-                onCheckedChange={(c) => updateField(sectionTempId, field.tempId, { required: !!c })}
-              />
-              <Label className="text-sm font-normal">Required field</Label>
-            </div>
-          </div>
-        </div>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => removeField(sectionTempId, field.tempId)}
-          className="text-destructive"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-    )
+  const addRule = () => {
+    const newRule: ValidationRule = { type: "min_length", value: 0, message: "" }
+    updateField(sectionTempId, field.tempId, { rules: [...(field.rules || []), newRule] })
   }
 
-  const renderPreviewField = (field: Field) => {
-    const baseId = field.key || generateKey(field.label) || `field-${field.tempId}`
-    const fieldId = `preview-${baseId}`
-
-    const commonProps = {
-      id: fieldId,
-      readOnly: true,
-      tabIndex: -1,
-      className: "bg-muted/50 border-muted-foreground/30 cursor-default pointer-events-none",
-    }
-
-    switch (field.type) {
-      case "textarea":
-        return <Textarea {...commonProps} rows={3} value="Example long text..." />
-
-      case "text":
-      case "email":
-      case "url":
-      case "password":
-      case "phone":
-        return <Input type={field.type === "phone" ? "tel" : field.type} {...commonProps} value="Example value" />
-
-      case "number":
-        return <Input type="number" {...commonProps} value="42" />
-
-      case "date":
-        return <Input type="date" {...commonProps} value="2025-01-15" />
-
-      case "time":
-        return <Input type="time" {...commonProps} value="14:30" />
-
-      case "datetime":
-        return <Input type="datetime-local" {...commonProps} value="2025-01-15T14:30" />
-
-      case "select":
-      case "multi_select":
-        return (
-          <Select disabled>
-            <SelectTrigger className="bg-muted/50">
-              <SelectValue placeholder={field.placeholder || "Select an option"} />
-            </SelectTrigger>
-          </Select>
-        )
-
-      case "radio":
-        return (
-          <RadioGroup defaultValue={field.options?.[0]?.value} className="space-y-2">
-            {(field.options || []).map((opt) => (
-              <div key={opt.value} className="flex items-center gap-2">
-                <div className="h-4 w-4 rounded-full border border-primary/50 bg-background" />
-                <span className="text-sm">{opt.label}</span>
-              </div>
-            ))}
-          </RadioGroup>
-        )
-
-      case "checkbox":
-        return (
-          <div className="space-y-2">
-            {(field.options || []).map((opt) => (
-              <div key={opt.value} className="flex items-center gap-2">
-                <div className="h-4 w-4 rounded border border-primary/50 bg-background" />
-                <span className="text-sm">{opt.label}</span>
-              </div>
-            ))}
-          </div>
-        )
-
-      case "toggle":
-        return <Switch disabled checked={true} />
-
-      case "file":
-      case "image":
-        return (
-          <div className="border-2 border-dashed rounded-lg p-6 text-center text-sm text-muted-foreground bg-muted/30">
-            {field.type === "image" ? "Image upload area" : "File upload area"}
-          </div>
-        )
-
-      case "rating":
-        return <div className="flex gap-1 text-2xl">{Array(5).fill("★").join("")}</div>
-
-      case "range":
-        return (
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={50}
-            className="w-full pointer-events-none opacity-60"
-          />
-        )
-
-      case "color":
-        return (
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-12 rounded border shadow-sm" style={{ backgroundColor: "#8b5cf6" }} />
-            <span className="text-sm text-muted-foreground">#8b5cf6</span>
-          </div>
-        )
-
-      case "hidden":
-        return null
-
-      default:
-        return <Input {...commonProps} value="Example value" />
-    }
+  const updateRule = (index: number, updates: Partial<ValidationRule>) => {
+    const newRules = [...(field.rules || [])]
+    newRules[index] = { ...newRules[index], ...updates }
+    updateField(sectionTempId, field.tempId, { rules: newRules })
   }
 
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="p-8 text-center">Loading form...</div>
-      </DashboardLayout>
-    )
+  const removeRule = (index: number) => {
+    const newRules = (field.rules || []).filter((_: any, i: number) => i !== index)
+    updateField(sectionTempId, field.tempId, { rules: newRules })
+  }
+
+  const addCondition = () => {
+    const newCond: Condition = { fieldKey: "", operator: "equals", value: "", action: "show" }
+    const current = field.conditions || []
+    updateField(sectionTempId, field.tempId, { conditions: [...current, newCond] })
+  }
+
+  const updateCondition = (index: number, updates: Partial<Condition>) => {
+    const conds = [...(field.conditions || [])]
+    conds[index] = { ...conds[index], ...updates }
+    updateField(sectionTempId, field.tempId, { conditions: conds })
+  }
+
+  const removeCondition = (index: number) => {
+    const conds = (field.conditions || []).filter((_: any, i: number) => i !== index)
+    updateField(sectionTempId, field.tempId, { conditions: conds.length ? conds : null })
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/forms">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
+    <div ref={setNodeRef} style={style} className="flex items-start gap-3 rounded-lg border bg-secondary/30 p-4">
+      <div {...attributes} {...listeners} className="cursor-move mt-2">
+        <GripVertical className="h-5 w-5 text-muted-foreground" />
+      </div>
+
+      <div className="flex-1 space-y-5">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label className="text-sm">Field Type</Label>
+            <Select
+              value={field.type}
+              onValueChange={v => {
+                const updates: Partial<Field> = { type: v }
+                if (["select","multi_select","radio","checkbox"].includes(v)) {
+                  updates.options = field.options || [{ label: "Option 1", value: "option1" }]
+                } else if (["rating","range"].includes(v)) {
+                  updates.options = field.options || {}
+                }
+                updateField(sectionTempId, field.tempId, updates)
+              }}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {fieldTypes.map(t => {
+                  const Icon = t.icon
+                  return (
+                    <SelectItem key={t.value} value={t.value}>
+                      <div className="flex items-center gap-2"><Icon className="h-4 w-4" /> {t.label}</div>
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-sm">Field Label</Label>
+            <Input
+              value={field.label}
+              onChange={e => updateField(sectionTempId, field.tempId, { label: e.target.value })}
+            />
+          </div>
+        </div>
+
+        {/* Placeholder for text-like fields */}
+        {["text","textarea","email","url","password","number","phone","date","time","datetime"].includes(field.type) && (
+          <div className="space-y-2">
+            <Label className="text-sm">Placeholder</Label>
+            <Input
+              value={field.placeholder || ""}
+              onChange={e => updateField(sectionTempId, field.tempId, { placeholder: e.target.value })}
+            />
+          </div>
+        )}
+
+        {/* Options for choice fields */}
+        {["select","multi_select","radio","checkbox"].includes(field.type) && (
+          <div className="space-y-2">
+            <Label className="text-sm">Options</Label>
+            <div className="space-y-2">
+              {(field.options || []).map((opt: any, idx: number) => (
+                <div key={idx} className="flex gap-2 items-center">
+                  <Input
+                    value={opt.label}
+                    onChange={e => {
+                      const newOpts = [...field.options]
+                      newOpts[idx] = {
+                        label: e.target.value,
+                        value: e.target.value.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, ""),
+                      }
+                      updateField(sectionTempId, field.tempId, { options: newOpts })
+                    }}
+                    placeholder="Option label"
+                  />
+                  <Button variant="ghost" size="icon" onClick={() => {
+                    const newOpts = field.options.filter((_: any, i: number) => i !== idx)
+                    updateField(sectionTempId, field.tempId, { options: newOpts })
+                  }}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button variant="outline" size="sm" onClick={() => {
+                const newOpts = [...(field.options || []), { label: "New Option", value: `opt_${Date.now()}` }]
+                updateField(sectionTempId, field.tempId, { options: newOpts })
+              }}>
+                <Plus className="h-4 w-4 mr-1" /> Add Option
               </Button>
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold">{formId ? "Edit Form" : "Create Form"}</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Design a custom form with sections and fields
-              </p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => saveForm(false)} disabled={saving}>
-              <Save className="h-4 w-4 mr-2" /> Save Draft
-            </Button>
-            <Button variant="outline">
-              <Eye className="h-4 w-4 mr-2" /> Preview
-            </Button>
-            <Button onClick={() => saveForm(true)} disabled={saving}>
-              <Check className="h-4 w-4 mr-2" />
-              {formId ? "Update & Publish" : "Publish Form"}
-            </Button>
+        )}
+
+        {/* Basic options for rating/range/file */}
+        {field.type === "rating" && (
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label className="text-sm">Min</Label>
+              <Input type="number" value={field.options?.min ?? 1} onChange={e => updateField(sectionTempId, field.tempId, { options: { ...field.options, min: Number(e.target.value) } })} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm">Max</Label>
+              <Input type="number" value={field.options?.max ?? 5} onChange={e => updateField(sectionTempId, field.tempId, { options: { ...field.options, max: Number(e.target.value) } })} />
+            </div>
+          </div>
+        )}
+
+        {["range","file","image"].includes(field.type) && (
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label className="text-sm">Min {field.type === "range" ? "Value" : "Size (KB)"}</Label>
+              <Input type="number" value={field.options?.min ?? (field.type === "range" ? 0 : undefined)} onChange={e => updateField(sectionTempId, field.tempId, { options: { ...field.options, min: Number(e.target.value) } })} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm">Max {field.type === "range" ? "Value" : "Size (KB)"}</Label>
+              <Input type="number" value={field.options?.max ?? (field.type === "range" ? 100 : 2048)} onChange={e => updateField(sectionTempId, field.tempId, { options: { ...field.options, max: Number(e.target.value) } })} />
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <Checkbox checked={field.required} onCheckedChange={c => updateField(sectionTempId, field.tempId, { required: !!c })} />
+            <Label className="text-sm font-normal">Required field</Label>
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-6">
-            {/* Form Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Form Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Form Name</Label>
-                  <Input
-                    value={formData.name}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                    placeholder="e.g., Contact Form"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                    rows={3}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Sections & Fields */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Form Sections & Fields</CardTitle>
-                    <CardDescription>Organize your form into sections and fields</CardDescription>
-                  </div>
-                  <Button onClick={addSection} size="sm">
-                    <Plus className="h-4 w-4 mr-2" /> Add Section
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableContext
-                    items={sections.map((s) => `section-${s.tempId}`)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {sections.map((section) => (
-                      <SortableSection key={section.tempId} section={section} />
-                    ))}
-                  </SortableContext>
-                </DndContext>
-
-                {sections.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No sections yet. Add one to start building your form.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Success Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Success Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label>Success Message</Label>
-                  <Textarea
-                    value={formData.success_message}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, success_message: e.target.value }))}
-                    rows={3}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Redirect URL (Optional)</Label>
-                  <Input
-                    type="url"
-                    value={formData.redirect_url || ""}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, redirect_url: e.target.value }))}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+        {/* ─── Rules Section ──────────────────────────────────────────────── */}
+        <div className="space-y-3 border-t pt-4">
+          <div className="flex items-center justify-between">
+            <Label className="text-base font-medium">Validation Rules</Label>
+            <Button variant="outline" size="sm" onClick={addRule}><Plus className="h-3.5 w-3.5 mr-1" /> Add Rule</Button>
           </div>
 
-          {/* Live Preview */}
-          <div className="space-y-6">
-            <Card className="sticky top-6">
-              <CardHeader>
-                <CardTitle className="text-base">Live Preview</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-lg border bg-background p-6 space-y-8">
-                  <div>
-                    <h3 className="text-xl font-bold">{formData.name || "Untitled Form"}</h3>
-                    {formData.description && (
-                      <p className="text-sm text-muted-foreground mt-1">{formData.description}</p>
-                    )}
-                  </div>
+          {(field.rules || []).length === 0 && (
+            <p className="text-sm text-muted-foreground italic">No validation rules yet</p>
+          )}
 
-                  {sections.map((section) => (
-                    <div key={section.tempId} className="space-y-4">
-                      <h4 className="font-semibold text-lg">{section.title}</h4>
-                      <div className="space-y-4">
-                        {section.fields.map((field) => (
-                          <div key={field.tempId} className="space-y-1">
-                            <Label htmlFor={`preview-${field.tempId}`} className="text-sm">
-                              {field.label}
-                              {field.required && <span className="text-destructive ml-1">*</span>}
-                            </Label>
-                            {renderPreviewField(field)}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+          {(field.rules || []).map((rule: ValidationRule, idx: number) => (
+            <div key={idx} className="flex gap-3 items-start bg-background/50 p-3 rounded border">
+              <Select
+                value={rule.type}
+                onValueChange={v => updateRule(idx, { type: v })}
+              >
+                <SelectTrigger className="w-44">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="min_length">Min Length</SelectItem>
+                  <SelectItem value="max_length">Max Length</SelectItem>
+                  <SelectItem value="min">Min Value</SelectItem>
+                  <SelectItem value="max">Max Value</SelectItem>
+                  <SelectItem value="regex">Regex Pattern</SelectItem>
+                  <SelectItem value="file_size">Max File Size (KB)</SelectItem>
+                  <SelectItem value="allowed_types">Allowed File Types</SelectItem>
+                </SelectContent>
+              </Select>
 
-                  <Button className="w-full" disabled>
-                    Submit
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+              <Input
+                placeholder="Value / Pattern"
+                value={rule.value ?? ""}
+                onChange={e => updateRule(idx, { value: e.target.value })}
+                className="flex-1"
+              />
+
+              <Input
+                placeholder="Error message (optional)"
+                value={rule.message ?? ""}
+                onChange={e => updateRule(idx, { message: e.target.value })}
+                className="flex-1"
+              />
+
+              <Button variant="ghost" size="icon" onClick={() => removeRule(idx)}>
+             x
+              </Button>
+            </div>
+          ))}
+        </div>
+
+        {/* ─── Conditions (Show/Hide Logic) ───────────────────────────────── */}
+        <div className="space-y-3 border-t pt-4">
+          <div className="flex items-center justify-between">
+            <Label className="text-base font-medium">Visibility Conditions</Label>
+            <Button variant="outline" size="sm" onClick={addCondition}><Plus className="h-3.5 w-3.5 mr-1" /> Add Condition</Button>
           </div>
+
+          {!field.conditions && (
+            <p className="text-sm text-muted-foreground italic">No visibility conditions</p>
+          )}
+
+          {(field.conditions || []).map((cond: Condition, idx: number) => (
+            <div key={idx} className="flex gap-2 items-center bg-background/50 p-3 rounded border">
+              <Input
+                placeholder="Field key to watch"
+                value={cond.fieldKey}
+                onChange={e => updateCondition(idx, { fieldKey: e.target.value })}
+                className="w-44"
+              />
+
+              <Select value={cond.operator} onValueChange={v => updateCondition(idx, { operator: v })}>
+                <SelectTrigger className="w-36">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="equals">equals</SelectItem>
+                  <SelectItem value="not_equals">not equals</SelectItem>
+                  <SelectItem value="contains">contains</SelectItem>
+                  <SelectItem value="greater_than">greater than</SelectItem>
+                  <SelectItem value="less_than">less than</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Input
+                placeholder="Value"
+                value={cond.value}
+                onChange={e => updateCondition(idx, { value: e.target.value })}
+                className="flex-1"
+              />
+
+              <Select value={cond.action} onValueChange={v => updateCondition(idx, { action: v })}>
+                <SelectTrigger className="w-28">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="show">Show</SelectItem>
+                  <SelectItem value="hide">Hide</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button variant="ghost" size="icon" onClick={() => removeCondition(idx)}>
+              x
+              </Button>
+            </div>
+          ))}
         </div>
       </div>
-    </DashboardLayout>
+
+      <Button variant="ghost" size="icon" onClick={() => removeField(sectionTempId, field.tempId)} className="text-destructive mt-2">
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
   )
 }
+
+// ──────────────────────────────────────────────
+// Live Preview (small enhancement – shows required + some rules)
+// ──────────────────────────────────────────────
+
