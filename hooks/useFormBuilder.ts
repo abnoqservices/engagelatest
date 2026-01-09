@@ -2,6 +2,10 @@
 import { create } from 'zustand';
 import { Form, Field, FormSection } from '@/types/form';
 
+// ──────────────────────────────────────────────
+// NO HOOKS allowed here – this runs only once at module load
+// ──────────────────────────────────────────────
+
 interface FormBuilderState {
   form: Form;
   selectedFieldId: string | null;
@@ -11,7 +15,7 @@ interface FormBuilderState {
   removeField: (fieldId: string) => void;
   reorderFieldsInSection: (sectionId: string, newFields: Field[]) => void;
   selectField: (fieldId: string | null) => void;
-  saveForm: () => void; // For demo, logs to console
+  saveForm: () => void;
 }
 
 export const useFormBuilder = create<FormBuilderState>((set, get) => ({
@@ -76,6 +80,6 @@ export const useFormBuilder = create<FormBuilderState>((set, get) => ({
   saveForm: () => {
     const form = get().form;
     console.log('Saved Form JSON:', JSON.stringify(form, null, 2));
-    // TODO: Send to API here
+    // TODO: Send to API here (if you want full form save later)
   },
 }));
