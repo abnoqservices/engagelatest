@@ -143,7 +143,7 @@ export default function SliderThree({ productId }: SliderThreeProps) {
               <img
                 src={img.url}
                 alt={title}
-                className="w-full h-full object-cover rounded-xl shadow-lg"
+                className="w-full h-full object-cover rounded-xl "
                 loading="lazy"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = DEFAULT_IMAGE;
@@ -151,7 +151,7 @@ export default function SliderThree({ productId }: SliderThreeProps) {
               />
 
               {(title || subtitle) && (
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white drop-shadow-lg text-center w-auto px-6 py-3 bg-black/50 backdrop-blur-sm rounded-xl">
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white drop- text-center w-auto px-6 py-3 bg-black/50 backdrop-blur-sm rounded-xl">
                   <h2 className="text-sl md:text-sl font-bold leading-tight">
                     {title}
                   </h2>

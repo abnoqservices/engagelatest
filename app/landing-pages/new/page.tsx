@@ -283,7 +283,7 @@ export default function LandingPageBuilder({productId: productId}: {productId?: 
           {/* Controls */}
           <div className="space-y-6">
           {productId && (
-  <Card className="border-border shadow-sm">
+  <Card className="border-border ">
     <CardHeader className="pb-4">
       <div className="flex items-center gap-2">
         <div className="p-2 bg-primary/10 rounded-lg">
@@ -500,10 +500,10 @@ function SortableSectionItem({
   };
 
   return (
-    <AccordionItem value={item.sectionKey} className="border rounded-lg bg-white shadow-sm" ref={setNodeRef} style={style}>
+    <AccordionItem value={item.sectionKey} className="border rounded-lg bg-white " ref={setNodeRef} style={style}>
      <AccordionItem
   value={item.sectionKey}
-  className="border rounded-lg bg-white shadow-sm"
+  className="border rounded-lg bg-white "
   ref={setNodeRef}
   style={style}
 >
@@ -648,7 +648,7 @@ function SortableSectionItem({
             <img
               src={item.content[field.key]}
               alt="Thumbnail"
-              className="w-24 h-24 object-cover rounded-lg border shadow-sm"
+              className="w-24 h-24 object-cover rounded-lg border "
               onError={(e) => {
                 (e.target as HTMLImageElement).src = "/placeholder.svg";
               }}

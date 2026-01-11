@@ -140,7 +140,7 @@ export default function OffersPage() {
 
         {/* Stats Cards */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <div className="rounded-xl border border-border bg-card p-6 ">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-muted-foreground">Total Offers</p>
               <Percent className="h-4 w-4 text-muted-foreground" />
@@ -149,7 +149,7 @@ export default function OffersPage() {
             <p className="text-xs text-muted-foreground mt-1">8 active</p>
           </div>
 
-          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <div className="rounded-xl border border-border bg-card p-6 ">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-muted-foreground">Total Redemptions</p>
               <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -158,13 +158,13 @@ export default function OffersPage() {
             <p className="text-xs text-green-600 mt-1">+23% this month</p>
           </div>
 
-          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <div className="rounded-xl border border-border bg-card p-6 ">
             <p className="text-sm font-medium text-muted-foreground">Revenue Impact</p>
             <p className="text-3xl font-bold text-foreground mt-2">$42.3K</p>
             <p className="text-xs text-muted-foreground mt-1">Generated revenue</p>
           </div>
 
-          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <div className="rounded-xl border border-border bg-card p-6 ">
             <p className="text-sm font-medium text-muted-foreground">Avg Redemption</p>
             <p className="text-3xl font-bold text-foreground mt-2">58.1</p>
             <p className="text-xs text-muted-foreground mt-1">Per offer</p>
@@ -172,7 +172,7 @@ export default function OffersPage() {
         </div>
 
         {/* Filters Bar */}
-        <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4  sm:flex-row sm:items-center sm:justify-between">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -210,7 +210,7 @@ export default function OffersPage() {
         </div>
 
         {/* Offers Table */}
-        <div className="rounded-xl border border-slate-200 bg-card shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-card ">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">

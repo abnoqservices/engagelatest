@@ -115,7 +115,7 @@ export default function Social({ productId, Social = true }: SocialProps) {
                 w-full flex items-center justify-between
                 px-8 py-6 rounded-2xl
                 ${platform.color}
-                text-white shadow-lg
+                text-white 
                 transition-all duration-300
                 hover:shadow-2xl hover:-translate-y-1
                 active:scale-[0.98]

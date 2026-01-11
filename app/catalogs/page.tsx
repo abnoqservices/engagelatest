@@ -96,7 +96,7 @@ export default function CatalogsPage() {
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filteredCatalogs.map((catalog) => (
-            <Card key={catalog.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+            <Card key={catalog.id} className="overflow-hidden hover: transition-shadow">
               {/* Catalog Cover */}
               <div className="aspect-[4/3] bg-muted relative overflow-hidden">
                 <img

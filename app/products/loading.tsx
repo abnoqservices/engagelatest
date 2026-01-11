@@ -15,7 +15,7 @@ export default function ProductsLoading() {
         </div>
 
         {/* Filters Bar Skeleton */}
-        <div className="rounded-xl border border-slate-200 bg-card p-4 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-card p-4 ">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <Skeleton className="h-10 w-full max-w-md" />
             <div className="flex flex-wrap gap-2">
@@ -28,7 +28,7 @@ export default function ProductsLoading() {
         </div>
 
         {/* Table Skeleton */}
-        <div className="rounded-xl border border-slate-200 bg-card shadow-sm p-6">
+        <div className="rounded-xl border border-slate-200 bg-card  p-6">
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex items-center gap-4">

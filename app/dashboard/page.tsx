@@ -160,13 +160,13 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 lg:p-8 space-y-6 bg-[#F9FAFB] min-h-screen">
+      <div className="p-6 lg:p-4 space-y-6  min-h-screen">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-[28px] font-bold text-[#1C2434] tracking-tight">Dashboard</h1>
             <p className="text-sm text-gray-500 font-normal mt-1">Welcome back! Here's what's happening with your engagement platform.</p>
           </div>
-          <Button className="bg-[#3C50E0] hover:bg-[#3C50E0]/90 text-white shadow-sm">
+          <Button className="bg-pexifly font-bold text-white ">
             <Download className="w-4 h-4 mr-2" />
             Export Report
           </Button>
@@ -174,7 +174,7 @@ export default function DashboardPage() {
 
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {metrics.slice(0, 2).map((metric) => (
-            <Card key={metric.title} className="bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <Card key={metric.title} className="bg-white border-gray-200  hover: transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className={`w-11 h-11 rounded-full ${metric.bgColor} flex items-center justify-center`}>
@@ -195,7 +195,7 @@ export default function DashboardPage() {
             </Card>
           ))}
 
-          <Card className="bg-white border-gray-200 shadow-sm lg:row-span-2 hover:shadow-md transition-shadow">
+          <Card className="bg-white border-gray-200  lg:row-span-2 hover: transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between pb-3 px-6 pt-6">
               <div>
                 <CardTitle className="text-lg font-bold text-[#1C2434] tracking-tight">Active Campaigns</CardTitle>
@@ -293,7 +293,7 @@ export default function DashboardPage() {
           </Card>
 
           {metrics.slice(2).map((metric) => (
-            <Card key={metric.title} className="bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <Card key={metric.title} className="bg-white border-gray-200  hover: transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className={`w-11 h-11 rounded-full ${metric.bgColor} flex items-center justify-center`}>
@@ -315,7 +315,7 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        <Card className="bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+        <Card className="bg-white border-gray-200  hover: transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between pb-4 px-6 pt-6">
             <div>
               <CardTitle className="text-lg font-bold text-[#1C2434] tracking-tight">QR Scan Activity</CardTitle>
@@ -355,7 +355,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+        <Card className="bg-white border-gray-200  hover: transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between pb-4 px-6 pt-6">
             <div>
               <CardTitle className="text-lg font-bold text-[#1C2434] tracking-tight">Engagement Statistics</CardTitle>
@@ -439,7 +439,7 @@ export default function DashboardPage() {
         </Card>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          <Card className="lg:col-span-2 bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <Card className="lg:col-span-2 bg-white border-gray-200  hover: transition-shadow">
             <CardHeader className="border-b border-gray-100 pb-4 px-6 pt-6">
               <CardTitle className="text-lg font-bold text-gray-900">QR Scans Trend</CardTitle>
               <CardDescription className="text-sm text-gray-600">Daily scan activity over time</CardDescription>
@@ -470,7 +470,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <Card className="bg-white border-gray-200  hover: transition-shadow">
             <CardHeader className="border-b border-gray-100 pb-4 px-6 pt-6">
               <CardTitle className="text-lg font-bold text-gray-900">Top Products</CardTitle>
               <CardDescription className="text-sm text-gray-600">Most scanned this month</CardDescription>
@@ -489,7 +489,7 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <Card className="bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+        <Card className="bg-white border-gray-200  hover: transition-shadow">
           <CardHeader className="border-b border-gray-100 pb-4 px-6 pt-6">
             <CardTitle className="text-lg font-bold text-gray-900">Lead Funnel</CardTitle>
             <CardDescription className="text-sm text-gray-600">Conversion stages breakdown</CardDescription>
@@ -516,7 +516,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+        <Card className="bg-white border-gray-200  hover: transition-shadow">
           <CardHeader className="border-b border-gray-100 pb-4 px-6 pt-6">
             <CardTitle className="text-lg font-bold text-gray-900">Event Heatmap</CardTitle>
             <CardDescription className="text-sm text-gray-600">Booth engagement this week</CardDescription>
@@ -559,7 +559,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+        <Card className="bg-white border-gray-200  hover: transition-shadow">
           <CardHeader className="border-b border-gray-100 pb-4 px-6 pt-6">
             <CardTitle className="text-lg font-bold text-gray-900">Quick Actions</CardTitle>
             <CardDescription className="text-sm text-gray-600">Common tasks and shortcuts</CardDescription>

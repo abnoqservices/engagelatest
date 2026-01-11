@@ -38,7 +38,7 @@ export default function Specification({ data }) {
           <div className="mt-6 text-center">
             <button
               onClick={() => setIsOpen(true)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-md font-medium text-emerald-600 hover:bg-emerald-50 active:scale-95 transition-all"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white rounded-full  font-medium text-emerald-600 hover:bg-emerald-50 active:scale-95 transition-all"
             >
               <span>+ {features.length - 4} more specifications</span>
               <ChevronDown className="w-4 h-4" />

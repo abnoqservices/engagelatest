@@ -147,7 +147,7 @@ export default function Contact({ productId, Contact = true }: ContactProps) {
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-lg 
-                       font-semibold hover:bg-blue-700 transition shadow-md"
+                       font-semibold hover:bg-blue-700 transition "
           >
             {directionButtonText}
             <span className="text-xl">→</span>

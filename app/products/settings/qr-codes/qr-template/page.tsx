@@ -111,11 +111,11 @@ export default function Qrtemplate({
                       onClick={() => setActiveTemplateId(id)}
                       className={`p-5 rounded-xl border-2 transition-all text-center group ${
                         activeTemplateId === id
-                          ? "border-primary bg-primary/5 shadow-lg ring-2 ring-primary/20"
+                          ? "border-primary bg-primary/5  ring-2 ring-primary/20"
                           : "border-border hover:border-primary/50 hover:bg-accent/30"
                       }`}
                     >
-                      <div className="bg-white rounded-lg p-4 mb-3 w-24 h-24 mx-auto shadow-sm group-hover:shadow-md">
+                      <div className="bg-white rounded-lg p-4 mb-3 w-24 h-24 mx-auto  group-hover:">
                         <StyledQR id={id} />
                       </div>
                       <p className="text-sm font-medium">{t?.name || "Template"}</p>

@@ -109,7 +109,7 @@ export default function CampaignsPage() {
 
         {/* Stats Cards */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <div className="rounded-xl border border-border bg-card p-6 ">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-muted-foreground">Total Campaigns</p>
               <Mail className="h-4 w-4 text-muted-foreground" />
@@ -118,7 +118,7 @@ export default function CampaignsPage() {
             <p className="text-xs text-muted-foreground mt-1">+3 this month</p>
           </div>
 
-          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <div className="rounded-xl border border-border bg-card p-6 ">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-muted-foreground">Total Recipients</p>
               <Send className="h-4 w-4 text-muted-foreground" />
@@ -127,7 +127,7 @@ export default function CampaignsPage() {
             <p className="text-xs text-muted-foreground mt-1">Across all campaigns</p>
           </div>
 
-          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <div className="rounded-xl border border-border bg-card p-6 ">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-muted-foreground">Average Open Rate</p>
               <Eye className="h-4 w-4 text-muted-foreground" />
@@ -136,7 +136,7 @@ export default function CampaignsPage() {
             <p className="text-xs text-green-600 mt-1">+5.2% from last month</p>
           </div>
 
-          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <div className="rounded-xl border border-border bg-card p-6 ">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-muted-foreground">Click Rate</p>
               <MessageSquare className="h-4 w-4 text-muted-foreground" />
@@ -147,7 +147,7 @@ export default function CampaignsPage() {
         </div>
 
         {/* Filters Bar */}
-        <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4  sm:flex-row sm:items-center sm:justify-between">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -186,7 +186,7 @@ export default function CampaignsPage() {
         </div>
 
         {/* Campaigns Table */}
-        <div className="rounded-xl border border-border bg-card shadow-sm">
+        <div className="rounded-xl border border-border bg-card ">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">

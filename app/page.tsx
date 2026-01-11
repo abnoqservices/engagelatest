@@ -49,22 +49,22 @@ export default function LandingPage() {
       {/* Features Grid */}
       <section className="container mx-auto px-4 py-20">
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-lg border bg-white p-6 shadow-sm">
+          <div className="rounded-lg border bg-white p-6 ">
             <QrCode className="mb-4 h-10 w-10 text-blue-600" />
             <h3 className="mb-2 text-lg font-semibold">Smart QR Codes</h3>
             <p className="text-sm text-gray-600">Generate dynamic QR codes with tracking and analytics</p>
           </div>
-          <div className="rounded-lg border bg-white p-6 shadow-sm">
+          <div className="rounded-lg border bg-white p-6 ">
             <TrendingUp className="mb-4 h-10 w-10 text-purple-600" />
             <h3 className="mb-2 text-lg font-semibold">Real-Time Analytics</h3>
             <p className="text-sm text-gray-600">Track engagement and customer behavior instantly</p>
           </div>
-          <div className="rounded-lg border bg-white p-6 shadow-sm">
+          <div className="rounded-lg border bg-white p-6 ">
             <Users className="mb-4 h-10 w-10 text-blue-600" />
             <h3 className="mb-2 text-lg font-semibold">Lead Management</h3>
             <p className="text-sm text-gray-600">Capture and nurture leads automatically</p>
           </div>
-          <div className="rounded-lg border bg-white p-6 shadow-sm">
+          <div className="rounded-lg border bg-white p-6 ">
             <Zap className="mb-4 h-10 w-10 text-purple-600" />
             <h3 className="mb-2 text-lg font-semibold">Automation</h3>
             <p className="text-sm text-gray-600">Build workflows for engagement campaigns</p>
