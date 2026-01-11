@@ -64,7 +64,7 @@ const Input = ({ className = "", ...props }: any) => (
 );
 
 const Card = ({ children, className = "" }: any) => (
-  <div className={`rounded-lg border bg-white shadow-sm ${className}`}>{children}</div>
+  <div className={`rounded-lg border bg-white  ${className}`}>{children}</div>
 );
 
 const CardHeader = ({ children, className = "" }: any) => (
@@ -122,7 +122,7 @@ const CustomizeButton = ({
       variant="default"
       size={isSmall ? "sm" : "default"}
       className={`
-        bg-purple-600 hover:bg-purple-700 text-white font-semibold shadow-lg
+        bg-purple-600 hover:bg-purple-700 text-white font-semibold 
         ${isSmall ? "px-3" : "px-6"}
         transition-all duration-200 group
       `}
@@ -355,7 +355,7 @@ export default function LandingPagesPage() {
                 </div>
               </div>
 
-              <Card className="overflow-hidden border-2 border-green-500 shadow-lg">
+              <Card className="overflow-hidden border-2 border-green-500 ">
                 <div className="md:flex">
                   <div className="bg-gray-100 p-8">
                     <div className="aspect-[5/7] w-40 relative rounded-lg overflow-hidden bg-white shadow-xl">
@@ -427,14 +427,14 @@ export default function LandingPagesPage() {
               <div className="flex items-center bg-gray-100 rounded-lg p-1">
                 <button
                   onClick={() => setViewMode("list")}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md transition-all ${viewMode === "list" ? "bg-white text-blue-600 shadow-sm" : "text-gray-600 hover:text-gray-900"}`}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md transition-all ${viewMode === "list" ? "bg-white text-blue-600 " : "text-gray-600 hover:text-gray-900"}`}
                 >
                   <List className="h-4 w-4" />
                   <span className="text-sm font-medium hidden sm:inline">List</span>
                 </button>
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md transition-all ${viewMode === "grid" ? "bg-white text-blue-600 shadow-sm" : "text-gray-600 hover:text-gray-900"}`}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md transition-all ${viewMode === "grid" ? "bg-white text-blue-600 " : "text-gray-600 hover:text-gray-900"}`}
                 >
                   <Grid3X3 className="h-4 w-4" />
                   <span className="text-sm font-medium hidden sm:inline">Grid</span>
@@ -450,10 +450,10 @@ export default function LandingPagesPage() {
               /* List View */
               <div className="space-y-4">
                 {availablePages.map((page) => (
-                  <Card key={page.id} className="overflow-hidden hover:shadow-lg transition-all cursor-pointer group bg-white border" onClick={() => handleActivatePage(page)}>
+                  <Card key={page.id} className="overflow-hidden hover: transition-all cursor-pointer group bg-white border" onClick={() => handleActivatePage(page)}>
                     <div className="flex items-center gap-4 p-4">
                       <div className="relative flex-shrink-0">
-                        <div className="w-20 h-28 rounded-lg overflow-hidden bg-gray-100 shadow-md">
+                        <div className="w-20 h-28 rounded-lg overflow-hidden bg-gray-100 ">
                           <img src={page.url} alt={page.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                         </div>
                         {page.userId === null && <Badge className="absolute -top-2 -left-2 bg-blue-100 text-blue-800 text-xs">Default</Badge>}

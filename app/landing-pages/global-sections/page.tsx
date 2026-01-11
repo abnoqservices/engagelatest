@@ -94,7 +94,7 @@ function SortableSection({ section, children }: { section: Section; children: Re
         value={section.id?.toString() ?? section.tempId!}
         ref={setNodeRef}
         style={style}
-        className="overflow-hidden rounded-xl border bg-card shadow-md hover:shadow-lg transition-shadow duration-200"
+        className="overflow-hidden rounded-xl border bg-card  hover: transition-shadow duration-200"
       >
         <AccordionTrigger className="px-6 py-5 hover:no-underline bg-muted/40">
           <div className="flex items-center justify-between w-full">

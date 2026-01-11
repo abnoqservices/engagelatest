@@ -40,7 +40,7 @@ export default function ProductInfo({ data }: { data: any[] }) {
 
           {/* Main Content */}
           <div className="px-2 pt-8 pb-2 -mt-12 relative">
-            <div className="bg-white rounded-2xl shadow-lg px-8 py-10 text-center">
+            <div className="bg-white rounded-2xl  px-8 py-10 text-center">
               {/* Product Title */}
               <h1 className="text-2xl md:text-2xl font-extrabold text-gray-900 leading-tight">
                 {productName}

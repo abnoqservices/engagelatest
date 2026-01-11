@@ -18,9 +18,8 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { QrCode, ArrowLeft, ArrowRight } from "lucide-react";
+import { QrCode, ArrowLeft, ArrowRight, Eye, EyeOff } from "lucide-react";
 import axiosClient from "@/lib/axiosClient";
-import { Eye, EyeOff } from "lucide-react";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -54,16 +53,21 @@ export default function SignUpPage() {
     },
   });
 
+<<<<<<< Updated upstream
   const generateSlug = (name: string) => {
     return name
+=======
+  const generateSlug = (name: string) =>
+    name
+>>>>>>> Stashed changes
       .toLowerCase()
       .trim()
       .replace(/[^\w\s-]/g, "")
       .replace(/[\s_-]+/g, "-")
       .replace(/^-+|-+$/g, "");
-  };
 
   const handleOrganizationNameChange = (name: string) => {
+<<<<<<< Updated upstream
     setFormData((prev) => {
       const previousGenerated = generateSlug(prev.organization.name);
       const isCurrentlyDefault =
@@ -79,10 +83,19 @@ export default function SignUpPage() {
           slug: newSlug,
         },
       };
+=======
+    const slug = generateSlug(name);
+    setFormData({
+      ...formData,
+      organization: {
+        ...formData.organization,
+        name,
+        slug: formData.organization.slug || slug,
+      },
+>>>>>>> Stashed changes
     });
   };
 
-  // Validate Step 1 (User Details)
   const validateStep1 = () => {
     const { name, email, password, password_confirmation, agreeToTerms } = formData;
 
@@ -91,8 +104,7 @@ export default function SignUpPage() {
       return false;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError("Please enter a valid email address.");
       return false;
     }
@@ -115,14 +127,12 @@ export default function SignUpPage() {
     return true;
   };
 
-  // Validate Step 2 (Organization Details)
   const validateStep2 = () => {
-    const { organization } = formData;
-
-    if (!organization.name) {
+    if (!formData.organization.name) {
       setError("Organization name is required.");
       return false;
     }
+<<<<<<< Updated upstream
 
     if (organization.name.length > 255) {
       setError("Organization name must be less than 255 characters.");
@@ -171,10 +181,19 @@ export default function SignUpPage() {
     if (!validateStep2()) {
       return;
     }
+=======
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (!validateStep2()) return;
+>>>>>>> Stashed changes
 
     setLoading(true);
-
     try {
+<<<<<<< Updated upstream
       const { name, email, password, password_confirmation, organization } = formData;
 
       const orgData: any = {
@@ -189,12 +208,14 @@ export default function SignUpPage() {
         orgData.description = organization.description.trim();
       }
 
+=======
+>>>>>>> Stashed changes
       const res = await axiosClient.post("/auth/register", {
-        name,
-        email,
-        password,
-        password_confirmation,
-        organization: orgData,
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        password_confirmation: formData.password_confirmation,
+        organization: formData.organization,
       });
 
       if (res.data?.data?.access_token) {
@@ -205,6 +226,7 @@ export default function SignUpPage() {
         localStorage.setItem("user", JSON.stringify(res.data.data.user));
       }
 
+<<<<<<< Updated upstream
       setSignupSuccess(true);
       setMessage({
         text: "Account created successfully! Please check your email to verify your account.",
@@ -242,10 +264,17 @@ export default function SignUpPage() {
       } else {
         setMessage({ text: "Something went wrong. Please try again.", type: "error" });
       }
+=======
+      alert("Signup successful! Please verify your email.");
+      router.push("/signin");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Something went wrong.");
+>>>>>>> Stashed changes
     } finally {
       setLoading(false);
     }
   };
+<<<<<<< Updated upstream
 
   const handleResendVerification = async () => {
     setResendMessage({ text: "", type: null });
@@ -278,6 +307,8 @@ export default function SignUpPage() {
     console.log(`[v0] Sign up with ${provider}`);
     router.push("/dashboard");
   };
+=======
+>>>>>>> Stashed changes
 
   const autoSlug = generateSlug(formData.organization.name);
   const slugIsCustom =
@@ -345,6 +376,7 @@ export default function SignUpPage() {
   }
 
   return (
+<<<<<<< Updated upstream
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
@@ -425,31 +457,91 @@ export default function SignUpPage() {
                 </div>
                 <p className="text-xs text-muted-foreground">Must be at least 8 characters long</p>
               </div>
+=======
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
 
+        {/* LEFT — EXISTING FORM (UNCHANGED) */}
+        <div className="flex items-center justify-center p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="space-y-1 text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                <QrCode className="h-6 w-6 text-blue-600" />
+              </div>
+              <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
+              <CardDescription>
+                Get started with EngageIQ today - no credit card required
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="password_confirmation">Confirm Password</Label>
-                <div className="relative">
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span className={currentStep >= 1 ? "font-medium text-blue-600" : ""}>
+                    Step 1: Your Details
+                  </span>
+                  <span className={currentStep >= 2 ? "font-medium text-blue-600" : ""}>
+                    Step 2: Organization
+                  </span>
+                </div>
+                <Progress value={(currentStep / 2) * 100} className="h-2" />
+              </div>
+
+              {error && (
+                <div className="rounded-md bg-red-50 p-3">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
+>>>>>>> Stashed changes
+
+              {/* STEP 1 */}
+              {currentStep === 1 && (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (validateStep1()) setCurrentStep(2);
+                  }}
+                  className="space-y-4"
+                >
                   <Input
-                    id="password_confirmation"
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="••••••••"
+                    placeholder="Full Name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  />
+                  <Input
+                    type="email"
+                    placeholder="Email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
+
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+
+                  <Input
+                    type="password"
+                    placeholder="Confirm Password"
                     value={formData.password_confirmation}
                     onChange={(e) =>
                       setFormData({ ...formData, password_confirmation: e.target.value })
                     }
-                    required
-                    className="pr-10"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                  >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
 
+<<<<<<< Updated upstream
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="terms"
@@ -541,38 +633,103 @@ export default function SignUpPage() {
                   rows={3}
                 />
               </div>
+=======
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      checked={formData.agreeToTerms}
+                      onCheckedChange={(v) =>
+                        setFormData({ ...formData, agreeToTerms: v as boolean })
+                      }
+                    />
+                    <span className="text-sm">
+                      I agree to the{" "}
+                      <Link href="/terms" className="text-blue-600">
+                        Terms
+                      </Link>
+                    </span>
+                  </div>
 
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleBack}
-                  className="flex-1"
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
-                >
-                  {loading ? "Creating Account..." : "Create Account"}
-                </Button>
-              </div>
-            </form>
-          )}
-        </CardContent>
+                  <Button className="w-full">
+                    Next <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </form>
+              )}
 
-        <CardFooter className="flex justify-center">
-          <p className="text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link href="/signin" className="font-medium text-blue-600 hover:underline">
-              Sign in
-            </Link>
+              {/* STEP 2 */}
+              {currentStep === 2 && (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <Input
+                    placeholder="Organization Name"
+                    value={formData.organization.name}
+                    onChange={(e) => handleOrganizationNameChange(e.target.value)}
+                  />
+                  <Textarea
+                    placeholder="Organization Description"
+                    value={formData.organization.description}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        organization: {
+                          ...formData.organization,
+                          description: e.target.value,
+                        },
+                      })
+                    }
+                  />
+
+                  <div className="flex gap-2">
+                    <Button type="button" variant="outline" onClick={() => setCurrentStep(1)}>
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Back
+                    </Button>
+                    <Button type="submit" disabled={loading}>
+                      {loading ? "Creating Account..." : "Create Account"}
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </CardContent>
+
+            <CardFooter className="justify-center">
+              <p className="text-sm text-muted-foreground">
+                Already have an account?{" "}
+                <Link href="/signin" className="text-blue-600">
+                  Sign in
+                </Link>
+              </p>
+            </CardFooter>
+          </Card>
+        </div>
+>>>>>>> Stashed changes
+
+        {/* RIGHT — INFO / TESTIMONIALS */}
+        <div className="hidden lg:flex flex-col justify-center bg-gradient-to-br from-blue-600 to-purple-600 p-12 text-white">
+          <h2 className="text-3xl font-bold mb-6">
+            Build smarter engagement with EngageIQ
+          </h2>
+
+          <p className="mb-8 text-lg text-white/90">
+            Join thousands of teams using EngageIQ to understand users,
+            improve retention, and grow faster.
           </p>
-        </CardFooter>
-      </Card>
+
+          <ul className="space-y-4 mb-10">
+            <li>✔ AI-powered insights</li>
+            <li>✔ Designed for modern teams</li>
+            <li>✔ Secure & scalable</li>
+          </ul>
+
+          <div className="rounded-lg bg-white/10 p-6 backdrop-blur">
+            <p className="italic">
+              “EngageIQ completely changed how we understand user behavior.”
+            </p>
+            <p className="mt-3 text-sm font-medium">
+              — Jamie Lee, Growth Lead
+            </p>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }

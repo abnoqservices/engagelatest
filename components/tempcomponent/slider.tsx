@@ -131,7 +131,7 @@ export default function Slider({ productId, product_gallery = true }: SliderProp
               <img
                 src={img.url}
                 alt="Product gallery image"
-                className="w-full h-full object-cover rounded-xl shadow-lg"
+                className="w-full h-full object-cover rounded-xl "
                 loading="lazy"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = DEFAULT_IMAGE;

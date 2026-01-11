@@ -158,7 +158,7 @@ export function TopNav({ onMenuClick }: TopNavProps) {
             <Input
               type="search"
               placeholder="Search or type command..."
-              className="pl-10 pr-20 bg-gray-50 border-gray-200 focus:bg-white h-10"
+              className="pl-10 pr-20 bg-gray-50 border-gray-200 focus:bg-white h-10 shadow-none"
             />
             <kbd className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 text-xs font-medium text-gray-500 bg-white border border-gray-200 rounded">
               Cmd K

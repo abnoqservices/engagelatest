@@ -308,7 +308,7 @@ export default function QRDesigner() {
         }}
         className={`group relative overflow-hidden rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl ${
           selectedTemplate === id
-            ? "border-purple-600 shadow-lg ring-4 ring-purple-200"
+            ? "border-purple-600  ring-4 ring-purple-200"
             : "border-slate-200 hover:border-purple-400"
         }`}
       >
@@ -317,7 +317,7 @@ export default function QRDesigner() {
           <img
             src={template.previewUrl}
             alt={template.name}
-            className="w-full h-full object-contain rounded-lg shadow-md group-hover:shadow-lg transition-shadow"
+            className="w-full h-full object-contain rounded-lg  group-hover: transition-shadow"
             loading="lazy"
           />
           {/* Optional overlay on hover */}

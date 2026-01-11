@@ -88,7 +88,7 @@ export default function YouTube({ productId, YouTube = true }: YouTubeProps) {
 
   return (
     <div className="card-header">
-    <div className="w-full aspect-video relative rounded-lg overflow-hidden shadow-lg bg-black py-4">
+    <div className="w-full aspect-video relative rounded-lg overflow-hidden  bg-black py-4">
       {/* YouTube Video - Only render iframe if embedUrl is valid */}
       {isYouTube && embedUrl ? (
         <iframe

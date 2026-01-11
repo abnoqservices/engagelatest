@@ -55,6 +55,13 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import axiosClient from "@/lib/axiosClient";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -77,6 +84,8 @@ type Product = {
   leads: number;
   status: boolean;
   description?: string;
+  qr_code_url?: string;
+  url_slug?: string;
 };
 
 export default function ProductsPage() {
@@ -96,6 +105,11 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = React.useState<Product | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  
+  // QR Code Dialog State
+  const [qrCodeDialogOpen, setQrCodeDialogOpen] = React.useState(false);
+  const [selectedProductForQR, setSelectedProductForQR] = React.useState<Product | null>(null);
+  
   const router = useRouter();
   // Form states for edit drawer
   const [formData, setFormData] = React.useState({
@@ -160,6 +174,8 @@ export default function ProductsPage() {
           leads: item.leads || 0,
           status: item.is_active ?? true,
           description: item.description,
+          qr_code_url: item.qr_code_url,
+          url_slug: item.url_slug,
         }));
 
         setProducts(productData);
@@ -306,6 +322,11 @@ export default function ProductsPage() {
      router.push(`/products/update?id=${product.id}`);
   };
 
+  const openQRCodeDialog = (product: Product) => {
+    setSelectedProductForQR(product);
+    setQrCodeDialogOpen(true);
+  };
+
   // Recursive Category Options
   // Recursive Category Options - FIXED for clean hierarchy
   const renderCategoryTree = (items: Category[], level = 0): React.ReactNode => {
@@ -357,7 +378,7 @@ export default function ProductsPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-card p-4 shadow-sm">
+        <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-card p-4 ">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -428,7 +449,7 @@ export default function ProductsPage() {
         </div>
 
         {/* Table */}
-        <div className="rounded-xl border bg-card shadow-sm overflow-x-auto">
+        <div className="rounded-xl border bg-card  overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -516,7 +537,7 @@ export default function ProductsPage() {
                           <DropdownMenuItem>
                             <Copy className="mr-2 h-4 w-4" /> Clone
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openQRCodeDialog(p)}>
                             <QrCode className="mr-2 h-4 w-4" /> QR Code
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
@@ -681,6 +702,86 @@ export default function ProductsPage() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* QR Code Dialog */}
+      <Dialog open={qrCodeDialogOpen} onOpenChange={setQrCodeDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>QR Code</DialogTitle>
+            <DialogDescription>
+              QR code for {selectedProductForQR?.name || "this product"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center space-y-4 py-4">
+            {selectedProductForQR?.qr_code_url ? (
+              <>
+                <div className="p-4 bg-white rounded-lg border-2 border-slate-200">
+                  <Image
+                    src={selectedProductForQR.qr_code_url}
+                    alt={`QR Code for ${selectedProductForQR.name}`}
+                    width={256}
+                    height={256}
+                    className="w-64 h-64"
+                  />
+                </div>
+                <div className="text-center space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Product: <span className="font-medium">{selectedProductForQR.name}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    SKU: {selectedProductForQR.sku}
+                  </p>
+                  {selectedProductForQR.url_slug && (
+                    <p className="text-xs text-muted-foreground break-all">
+                      URL: /q/{selectedProductForQR.url_slug}
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-2 w-full">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      if (selectedProductForQR?.qr_code_url) {
+                        window.open(selectedProductForQR.qr_code_url, "_blank");
+                      }
+                    }}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      if (selectedProductForQR?.qr_code_url) {
+                        navigator.clipboard.writeText(selectedProductForQR.qr_code_url);
+                        toast({
+                          title: "Copied",
+                          description: "QR code URL copied to clipboard",
+                        });
+                      }
+                    }}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy URL
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 space-y-2">
+                <QrCode className="h-12 w-12 mx-auto text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  QR code not available for this product
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  QR code will be generated automatically when the product is created
+                </p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

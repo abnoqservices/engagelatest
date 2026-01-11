@@ -218,13 +218,13 @@
   --font-serif: 'Source Serif 4', 'Source Serif 4 Fallback';
   /* computed shadow variables below - do not modify */
   --shadow-2xs: var(--shadow-x) var(--shadow-y) color-mix(in srgb, var(--shadow-color) calc(var(--shadow-opacity) * 100%), transparent);
-  --shadow-xs: var(--shadow-x) var(--shadow-y) var(--shadow-blur) var(--shadow-spread) color-mix(in srgb, var(--shadow-color) calc(var(--shadow-opacity) * 100%), transparent);
-  --shadow-sm: var(--shadow-x) var(--shadow-y) calc(var(--shadow-blur) * 1.5) var(--shadow-spread) color-mix(in srgb, var(--shadow-color) calc(var(--shadow-opacity) * 100%), transparent);
-  --shadow-md: calc(var(--shadow-x) * 2) calc(var(--shadow-y) * 2) calc(var(--shadow-blur) * 3) calc(var(--shadow-spread) - 1px) color-mix(in srgb, var(--shadow-color) calc(var(--shadow-opacity) * 100%), transparent);
-  --shadow-lg: calc(var(--shadow-x) * 4) calc(var(--shadow-y) * 4) calc(var(--shadow-blur) * 5) calc(var(--shadow-spread) - 3px) color-mix(in srgb, var(--shadow-color) calc(var(--shadow-opacity) * 100%), transparent);
+  --: var(--shadow-x) var(--shadow-y) var(--shadow-blur) var(--shadow-spread) color-mix(in srgb, var(--shadow-color) calc(var(--shadow-opacity) * 100%), transparent);
+  --: var(--shadow-x) var(--shadow-y) calc(var(--shadow-blur) * 1.5) var(--shadow-spread) color-mix(in srgb, var(--shadow-color) calc(var(--shadow-opacity) * 100%), transparent);
+  --: calc(var(--shadow-x) * 2) calc(var(--shadow-y) * 2) calc(var(--shadow-blur) * 3) calc(var(--shadow-spread) - 1px) color-mix(in srgb, var(--shadow-color) calc(var(--shadow-opacity) * 100%), transparent);
+  --: calc(var(--shadow-x) * 4) calc(var(--shadow-y) * 4) calc(var(--shadow-blur) * 5) calc(var(--shadow-spread) - 3px) color-mix(in srgb, var(--shadow-color) calc(var(--shadow-opacity) * 100%), transparent);
   --shadow-xl: calc(var(--shadow-x) * 6) calc(var(--shadow-y) * 6) calc(var(--shadow-blur) * 7) calc(var(--shadow-spread) - 5px) color-mix(in srgb, var(--shadow-color) calc(var(--shadow-opacity) * 100%), transparent);
   --shadow-2xl: calc(var(--shadow-x) * 8) calc(var(--shadow-y) * 8) calc(max(0px, var(--shadow-blur) * 9 - 8px)) calc(var(--shadow-spread) - 12px) color-mix(in srgb, var(--shadow-color) calc(var(--shadow-opacity) * 250%), transparent);
-  --shadow: var(--shadow-md);
+  --shadow: var(--);
   --color-shadow-color: var(--shadow-color);
   --shadow-opacity: var(--shadow-opacity);
   --shadow-spread: var(--shadow-spread);
@@ -300,7 +300,7 @@
 }
 /* Circular logo style */
 .card-header-top {
-  @apply bg-white rounded-b-2xl mx-2 mt-2 shadow-md;
+  @apply bg-white rounded-b-2xl mx-2 mt-2 ;
 }
 
 .template-header-logo {
@@ -322,7 +322,7 @@
   @apply text-gray-600 mt-2;
 }
 .template-header {
-  @apply w-full  bg-white p-6 text-center mt-2 mx-0 shadow-md ;
+  @apply w-full  bg-white p-6 text-center mt-2 mx-0  ;
 }
 
 
@@ -334,7 +334,7 @@
   @apply text-gray-500 text-sm mt-1;
 }
 .card-header-specification {
-  @apply bg-white shadow-lg rounded-2xl p-4 flex flex-col mb-2 mx-2 mt-2 ;
+  @apply bg-white  rounded-2xl p-4 flex flex-col mb-2 mx-2 mt-2 ;
 }
 .core-header-title{
   @apply  text-2xl md:text-2xl text-center font-bold text-gray-900 leading-tight mb-4
@@ -345,4 +345,16 @@
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+.bg-pexifly {
+  background-color: #7b5cf9;
+}
+
+.bg-pexifly-dark {
+  background-color: #5134b9 !important;
+}
+
+.text-pexifly {
+  color: #7b5cf9;
 }

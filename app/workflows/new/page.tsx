@@ -1,11 +1,11 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/dashboard/layout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
@@ -14,33 +14,121 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Zap, Mail, MessageSquare, UserPlus, Bell, ArrowRight, Trash2, Save } from 'lucide-react'
+import { Plus, Save, ArrowLeft, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { StepEditor } from "@/components/workflows/StepEditor"
+import { automationsApi } from "@/lib/api/automation"
+import { showToast } from "@/lib/showToast"
+import type { AutomationStep } from "@/lib/types/workflow"
 
-const triggers = [
-  { value: "qr_scan", label: "QR Code Scanned", icon: Zap },
-  { value: "new_lead", label: "New Lead Created", icon: UserPlus },
-  { value: "event_attend", label: "Event Attended", icon: Bell },
-  { value: "form_submit", label: "Form Submitted", icon: MessageSquare },
-]
-
-const actions = [
-  { value: "send_email", label: "Send Email", icon: Mail },
-  { value: "send_sms", label: "Send SMS", icon: MessageSquare },
-  { value: "add_tag", label: "Add Tag", icon: Plus },
-  { value: "update_score", label: "Update Lead Score", icon: Zap },
-  { value: "notify_team", label: "Notify Team", icon: Bell },
+// Available trigger events (from Laravel backend)
+const TRIGGER_EVENTS = [
+  { value: "lead.form_submitted", label: "Lead Form Submitted" },
+  { value: "lead.created", label: "New Lead Created" },
+  { value: "qr.scanned", label: "QR Code Scanned" },
+  { value: "event.attended", label: "Event Attended" },
 ]
 
 export default function CreateWorkflowPage() {
-  const [workflowActions, setWorkflowActions] = React.useState<string[]>([])
+  const router = useRouter()
+  const [loading, setLoading] = React.useState(false)
+  const [name, setName] = React.useState("")
+  const [triggerEvent, setTriggerEvent] = React.useState("")
+  const [steps, setSteps] = React.useState<AutomationStep[]>([
+    {
+      order: 0,
+      type: "condition",
+      config: { condition_type: "email_exists" },
+    },
+  ])
 
-  const addAction = () => {
-    setWorkflowActions([...workflowActions, ""])
+  const handleAddStep = () => {
+    const newStep: AutomationStep = {
+      order: steps.length,
+      type: "action",
+      config: { action_type: "send_email" },
+    }
+    setSteps([...steps, newStep])
   }
 
-  const removeAction = (index: number) => {
-    setWorkflowActions(workflowActions.filter((_, i) => i !== index))
+  const handleUpdateStep = (index: number, updatedStep: AutomationStep) => {
+    const newSteps = [...steps]
+    newSteps[index] = { ...updatedStep, order: index }
+    setSteps(newSteps)
+  }
+
+  const handleDeleteStep = (index: number) => {
+    const newSteps = steps.filter((_, i) => i !== index)
+    // Reorder remaining steps
+    const reorderedSteps = newSteps.map((step, i) => ({
+      ...step,
+      order: i,
+    }))
+    setSteps(reorderedSteps)
+  }
+
+  const handleMoveStep = (index: number, direction: "up" | "down") => {
+    if (
+      (direction === "up" && index === 0) ||
+      (direction === "down" && index === steps.length - 1)
+    ) {
+      return
+    }
+
+    const newSteps = [...steps]
+    const targetIndex = direction === "up" ? index - 1 : index + 1
+    ;[newSteps[index], newSteps[targetIndex]] = [
+      newSteps[targetIndex],
+      newSteps[index],
+    ]
+
+    // Reorder
+    const reorderedSteps = newSteps.map((step, i) => ({
+      ...step,
+      order: i,
+    }))
+    setSteps(reorderedSteps)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!name.trim()) {
+      showToast("Workflow name is required", "error")
+      return
+    }
+
+    if (!triggerEvent) {
+      showToast("Trigger event is required", "error")
+      return
+    }
+
+    if (steps.length === 0) {
+      showToast("At least one step is required", "error")
+      return
+    }
+
+    try {
+      setLoading(true)
+      await automationsApi.create({
+        name: name.trim(),
+        trigger_event: triggerEvent,
+        steps: steps.map((step) => ({
+          order: step.order,
+          type: step.type,
+          config: step.config,
+        })),
+      })
+      showToast("Workflow created successfully", "success")
+      router.push("/workflows")
+    } catch (error: any) {
+      showToast(
+        error.response?.data?.detail || "Failed to create workflow",
+        "error"
+      )
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -48,149 +136,140 @@ export default function CreateWorkflowPage() {
       <div className="space-y-6 max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Create Workflow</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Build automated engagement workflows
-            </p>
+          <div className="flex items-center gap-4">
+            <Link href="/workflows">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Create Workflow</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Build automated engagement workflows
+              </p>
+            </div>
           </div>
           <div className="flex gap-2">
             <Link href="/workflows">
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline" disabled={loading}>
+                Cancel
+              </Button>
             </Link>
-            <Button className="gap-2">
-              <Save className="h-4 w-4" />
-              Save Workflow
+            <Button onClick={handleSubmit} disabled={loading} className="gap-2">
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  Save Workflow
+                </>
+              )}
             </Button>
           </div>
         </div>
 
-        {/* Basic Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-            <CardDescription>Name and describe your workflow</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Workflow Name</Label>
-              <Input id="name" placeholder="e.g., Post-Event Follow-up" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Describe what this workflow does..."
-                rows={3}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Trigger */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Trigger</CardTitle>
-            <CardDescription>What starts this workflow?</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Select Trigger</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose a trigger..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {triggers.map((trigger) => (
-                    <SelectItem key={trigger.value} value={trigger.value}>
-                      <div className="flex items-center gap-2">
-                        <trigger.icon className="h-4 w-4" />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Basic Information</CardTitle>
+              <CardDescription>Name and configure your workflow</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Workflow Name</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g., Welcome Sequence"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="trigger">Trigger Event</Label>
+                <Select value={triggerEvent} onValueChange={setTriggerEvent} required>
+                  <SelectTrigger id="trigger">
+                    <SelectValue placeholder="Select a trigger event..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TRIGGER_EVENTS.map((trigger) => (
+                      <SelectItem key={trigger.value} value={trigger.value}>
                         {trigger.label}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Actions</CardTitle>
-            <CardDescription>What should happen when triggered?</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {workflowActions.map((action, index) => (
-              <div key={index} className="flex items-start gap-4">
-                <div className="flex items-center justify-center h-10 w-10 rounded-full bg-purple-100 text-purple-700 font-semibold text-sm flex-shrink-0">
-                  {index + 1}
-                </div>
-                <div className="flex-1 space-y-2">
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select an action..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {actions.map((act) => (
-                        <SelectItem key={act.value} value={act.value}>
-                          <div className="flex items-center gap-2">
-                            <act.icon className="h-4 w-4" />
-                            {act.label}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeAction(index)}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  This event will trigger the workflow execution
+                </p>
               </div>
-            ))}
+            </CardContent>
+          </Card>
 
-            <Button variant="outline" className="w-full gap-2" onClick={addAction}>
-              <Plus className="h-4 w-4" />
-              Add Action
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Visual Flow */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Workflow Flow</CardTitle>
-            <CardDescription>Visual representation of your automation</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="rounded-lg bg-blue-100 px-4 py-3 text-blue-700 font-medium">
-                <Zap className="h-4 w-4 inline mr-2" />
-                Trigger
+          {/* Steps Builder */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Workflow Steps</CardTitle>
+                  <CardDescription>
+                    Define the sequence of conditions, actions, and delays
+                  </CardDescription>
+                </div>
               </div>
-              {workflowActions.length > 0 && (
-                <>
-                  <ArrowRight className="h-5 w-5 text-muted-foreground" />
-                  {workflowActions.map((_, index) => (
-                    <React.Fragment key={index}>
-                      <div className="rounded-lg bg-purple-100 px-4 py-3 text-purple-700 font-medium">
-                        Action {index + 1}
-                      </div>
-                      {index < workflowActions.length - 1 && (
-                        <ArrowRight className="h-5 w-5 text-muted-foreground" />
-                      )}
-                    </React.Fragment>
-                  ))}
-                </>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {steps.map((step, index) => (
+                <StepEditor
+                  key={index}
+                  step={step}
+                  index={index}
+                  onUpdate={(updatedStep) => handleUpdateStep(index, updatedStep)}
+                  onDelete={() => handleDeleteStep(index)}
+                  onMoveUp={index > 0 ? () => handleMoveStep(index, "up") : undefined}
+                  onMoveDown={
+                    index < steps.length - 1
+                      ? () => handleMoveStep(index, "down")
+                      : undefined
+                  }
+                  canMoveUp={index > 0}
+                  canMoveDown={index < steps.length - 1}
+                />
+              ))}
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full gap-2"
+                onClick={handleAddStep}
+              >
+                <Plus className="h-4 w-4" />
+                Add Step
+              </Button>
+
+              {steps.length === 0 && (
+                <div className="rounded-lg border-2 border-dashed border-border p-8 text-center">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    No steps added yet
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleAddStep}
+                    className="gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add First Step
+                  </Button>
+                </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </form>
       </div>
     </DashboardLayout>
   )
