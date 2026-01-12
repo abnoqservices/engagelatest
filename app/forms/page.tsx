@@ -169,46 +169,28 @@ export default function FormsPage() {
               {forms.filter(f => f.is_active).length} active
             </p>
           </div>
-<<<<<<< Updated upstream
-          {/* Other stat cards remain the same */}
-          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-=======
 
           <div className="rounded-xl border border-border bg-card p-6 ">
->>>>>>> Stashed changes
             <p className="text-sm font-medium text-muted-foreground">Total Submissions</p>
             <p className="text-3xl font-bold text-foreground mt-2">—</p>
             <p className="text-xs text-muted-foreground mt-1">Coming soon</p>
           </div>
-<<<<<<< Updated upstream
-          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-=======
 
           <div className="rounded-xl border border-border bg-card p-6 ">
->>>>>>> Stashed changes
             <p className="text-sm font-medium text-muted-foreground">Total Views</p>
             <p className="text-3xl font-bold text-foreground mt-2">—</p>
             <p className="text-xs text-muted-foreground mt-1">Coming soon</p>
           </div>
-<<<<<<< Updated upstream
-          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-=======
 
           <div className="rounded-xl border border-border bg-card p-6 ">
->>>>>>> Stashed changes
             <p className="text-sm font-medium text-muted-foreground">Avg Conversion</p>
             <p className="text-3xl font-bold text-foreground mt-2">—</p>
             <p className="text-xs text-muted-foreground mt-1">Coming soon</p>
           </div>
         </div>
 
-<<<<<<< Updated upstream
-        {/* Filters */}
-        <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-=======
         {/* Filters Bar */}
         <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4  sm:flex-row sm:items-center sm:justify-between">
->>>>>>> Stashed changes
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -232,13 +214,8 @@ export default function FormsPage() {
           </div>
         </div>
 
-<<<<<<< Updated upstream
-        {/* Forms Table with Description */}
-        <div className="rounded-xl border border-border bg-card shadow-sm overflow-x-auto">
-=======
         {/* Forms Table */}
         <div className="rounded-xl border border-border bg-card ">
->>>>>>> Stashed changes
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">

@@ -28,6 +28,9 @@ interface LoginResponse {
   success: boolean;
   user?: any;
   token?: string;
+  departments?: Array<{ id: number; name: string; description?: string }>;
+  departmentSelectionRequired?: boolean;
+  selectedDepartmentId?: number | null;
   error?: string;
 }
 
@@ -48,13 +51,15 @@ export default function SignInPage() {
       const response = await axiosClient.post("/auth/login", {
         email,
         password,
-        organization_id,
       });
 
       return {
         success: true,
         user: response.data.data.user,
         token: response.data.data.access_token,
+        departments: response.data.data.departments || [],
+        departmentSelectionRequired: response.data.data.departmentSelectionRequired || false,
+        selectedDepartmentId: response.data.data.selectedDepartmentId || null,
       };
     } catch (error: any) {
       if (error.response) {
@@ -87,7 +92,27 @@ export default function SignInPage() {
       if (result.success && result.user && result.token) {
         localStorage.setItem("user", JSON.stringify(result.user));
         localStorage.setItem("token", result.token);
-        router.push("/dashboard");
+        
+        // Handle department selection
+        if (result.departmentSelectionRequired && result.departments && result.departments.length > 1) {
+          // Store departments for selection page
+          localStorage.setItem("loginData", JSON.stringify({
+            departments: result.departments,
+            selectedDepartmentId: result.selectedDepartmentId,
+          }));
+          router.push("/select-department");
+        } else if (result.selectedDepartmentId) {
+          // Single department already selected, store it
+          localStorage.setItem("selectedDepartmentId", result.selectedDepartmentId.toString());
+          const dept = result.departments?.find(d => d.id === result.selectedDepartmentId);
+          if (dept) {
+            localStorage.setItem("selectedDepartmentName", dept.name);
+          }
+          router.push("/dashboard");
+        } else {
+          // No department selected, go to dashboard anyway
+          router.push("/dashboard");
+        }
       } else {
         setError(result.error || "Login failed");
       }
