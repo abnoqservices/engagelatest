@@ -145,13 +145,8 @@ export default function EventsPage() {
           </Link>
         </div>
 
-<<<<<<< Updated upstream
         {/* Filters */}
         <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-=======
-        {/* Filters Bar */}
-        <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-card p-4  sm:flex-row sm:items-center sm:justify-between">
->>>>>>> Stashed changes
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -174,13 +169,8 @@ export default function EventsPage() {
           </Select>
         </div>
 
-<<<<<<< Updated upstream
         {/* Table */}
         <div className="rounded-xl border border-slate-200 bg-card shadow-sm overflow-hidden p-4">
-=======
-        {/* Events Table */}
-        <div className="rounded-xl border border-slate-200 bg-card ">
->>>>>>> Stashed changes
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
