@@ -15,7 +15,7 @@ export default function AuthWrapper({
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    const publicRoutes = ["/signin", "/signup", "/forgot-password",];
+    const publicRoutes = ["/signin", "/signup", "/forgot-password", "/select-department"];
 
     // Not logged in → block protected routes
     if (!token && !publicRoutes.includes(pathname)) {
@@ -23,8 +23,8 @@ export default function AuthWrapper({
       return;
     }
 
-    // Logged in → block auth pages
-    if (token && publicRoutes.includes(pathname)) {
+    // Logged in → block auth pages (but allow select-department)
+    if (token && pathname === "/signin" || (token && pathname === "/signup")) {
       router.replace("/dashboard"); //  no history stack
       return;
     }

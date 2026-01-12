@@ -53,13 +53,8 @@ export default function SignUpPage() {
     },
   });
 
-<<<<<<< Updated upstream
-  const generateSlug = (name: string) => {
-    return name
-=======
   const generateSlug = (name: string) =>
     name
->>>>>>> Stashed changes
       .toLowerCase()
       .trim()
       .replace(/[^\w\s-]/g, "")
@@ -67,7 +62,6 @@ export default function SignUpPage() {
       .replace(/^-+|-+$/g, "");
 
   const handleOrganizationNameChange = (name: string) => {
-<<<<<<< Updated upstream
     setFormData((prev) => {
       const previousGenerated = generateSlug(prev.organization.name);
       const isCurrentlyDefault =
@@ -83,16 +77,6 @@ export default function SignUpPage() {
           slug: newSlug,
         },
       };
-=======
-    const slug = generateSlug(name);
-    setFormData({
-      ...formData,
-      organization: {
-        ...formData.organization,
-        name,
-        slug: formData.organization.slug || slug,
-      },
->>>>>>> Stashed changes
     });
   };
 
@@ -132,7 +116,7 @@ export default function SignUpPage() {
       setError("Organization name is required.");
       return false;
     }
-<<<<<<< Updated upstream
+    const organization = formData.organization;
 
     if (organization.name.length > 255) {
       setError("Organization name must be less than 255 characters.");
@@ -177,23 +161,10 @@ export default function SignUpPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
-    if (!validateStep2()) {
-      return;
-    }
-=======
-    return true;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
     if (!validateStep2()) return;
->>>>>>> Stashed changes
 
     setLoading(true);
     try {
-<<<<<<< Updated upstream
       const { name, email, password, password_confirmation, organization } = formData;
 
       const orgData: any = {
@@ -207,9 +178,6 @@ export default function SignUpPage() {
       if (organization.description?.trim()) {
         orgData.description = organization.description.trim();
       }
-
-=======
->>>>>>> Stashed changes
       const res = await axiosClient.post("/auth/register", {
         name: formData.name,
         email: formData.email,
@@ -226,7 +194,6 @@ export default function SignUpPage() {
         localStorage.setItem("user", JSON.stringify(res.data.data.user));
       }
 
-<<<<<<< Updated upstream
       setSignupSuccess(true);
       setMessage({
         text: "Account created successfully! Please check your email to verify your account.",
@@ -264,17 +231,10 @@ export default function SignUpPage() {
       } else {
         setMessage({ text: "Something went wrong. Please try again.", type: "error" });
       }
-=======
-      alert("Signup successful! Please verify your email.");
-      router.push("/signin");
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Something went wrong.");
->>>>>>> Stashed changes
     } finally {
       setLoading(false);
     }
   };
-<<<<<<< Updated upstream
 
   const handleResendVerification = async () => {
     setResendMessage({ text: "", type: null });
@@ -302,13 +262,6 @@ export default function SignUpPage() {
       setResending(false);
     }
   };
-
-  const handleSocialSignup = (provider: string) => {
-    console.log(`[v0] Sign up with ${provider}`);
-    router.push("/dashboard");
-  };
-=======
->>>>>>> Stashed changes
 
   const autoSlug = generateSlug(formData.organization.name);
   const slugIsCustom =
@@ -376,92 +329,9 @@ export default function SignUpPage() {
   }
 
   return (
-<<<<<<< Updated upstream
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-            <QrCode className="h-6 w-6 text-blue-600" />
-          </div>
-          <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
-          <CardDescription>
-            Get started with EngageIQ today — no credit card required
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          {/* Progress */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
-              <span className={currentStep >= 1 ? "font-medium text-blue-600" : ""}>
-                Step 1: Your Details
-              </span>
-              <span className={currentStep >= 2 ? "font-medium text-blue-600" : ""}>
-                Step 2: Organization
-              </span>
-            </div>
-            <Progress value={(currentStep / 2) * 100} className="h-2" />
-          </div>
-
-          {error && (
-            <div className="rounded-md bg-red-50 p-3">
-              <p className="text-red-600 text-sm">{error}</p>
-            </div>
-          )}
-
-          {/* Step 1 */}
-          {currentStep === 1 && (
-            <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  placeholder="John Doe"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    required
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-                <p className="text-xs text-muted-foreground">Must be at least 8 characters long</p>
-              </div>
-=======
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
-
-        {/* LEFT — EXISTING FORM (UNCHANGED) */}
+        {/* LEFT — FORM */}
         <div className="flex items-center justify-center p-4">
           <Card className="w-full max-w-md">
             <CardHeader className="space-y-1 text-center">
@@ -470,13 +340,14 @@ export default function SignUpPage() {
               </div>
               <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
               <CardDescription>
-                Get started with EngageIQ today - no credit card required
+                Get started with EngageIQ today — no credit card required
               </CardDescription>
             </CardHeader>
 
             <CardContent className="space-y-4">
+              {/* Progress */}
               <div className="space-y-2">
-                <div className="flex justify-between text-sm text-muted-foreground">
+                <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
                   <span className={currentStep >= 1 ? "font-medium text-blue-600" : ""}>
                     Step 1: Your Details
                   </span>
@@ -489,200 +360,179 @@ export default function SignUpPage() {
 
               {error && (
                 <div className="rounded-md bg-red-50 p-3">
-                  <p className="text-sm text-red-600">{error}</p>
+                  <p className="text-red-600 text-sm">{error}</p>
                 </div>
               )}
->>>>>>> Stashed changes
 
-              {/* STEP 1 */}
+              {/* Step 1 */}
               {currentStep === 1 && (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (validateStep1()) setCurrentStep(2);
-                  }}
-                  className="space-y-4"
-                >
-                  <Input
-                    placeholder="Full Name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  />
-                  <Input
-                    type="email"
-                    placeholder="Email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  />
-
-                  <div className="relative">
+                <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Full Name</Label>
                     <Input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Password"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="pr-10"
+                      id="name"
+                      placeholder="John Doe"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2"
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
                   </div>
 
-                  <Input
-                    type="password"
-                    placeholder="Confirm Password"
-                    value={formData.password_confirmation}
-                    onChange={(e) =>
-                      setFormData({ ...formData, password_confirmation: e.target.value })
-                    }
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      required
+                    />
+                  </div>
 
-<<<<<<< Updated upstream
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="terms"
-                  checked={formData.agreeToTerms}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, agreeToTerms: checked as boolean })
-                  }
-                />
-                <label htmlFor="terms" className="text-sm leading-none">
-                  I agree to the{" "}
-                  <Link href="/terms" className="text-blue-600 hover:underline">
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link href="/privacy" className="text-blue-600 hover:underline">
-                    Privacy Policy
-                  </Link>
-                </label>
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        required
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Must be at least 8 characters long</p>
+                  </div>
 
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-                Next: Organization Details <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </form>
-          )}
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm_password">Confirm Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="confirm_password"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={formData.password_confirmation}
+                        onChange={(e) => setFormData({ ...formData, password_confirmation: e.target.value })}
+                        required
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                      >
+                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                  </div>
 
-          {/* Step 2 */}
-          {currentStep === 2 && (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="org_name">Organization Name *</Label>
-                <Input
-                  id="org_name"
-                  placeholder="Acme Corporation"
-                  value={formData.organization.name}
-                  onChange={(e) => handleOrganizationNameChange(e.target.value)}
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  This will appear across the app
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="org_slug">Organization Slug</Label>
-                <Input
-                  id="org_slug"
-                  placeholder="acme-corp"
-                  value={formData.organization.slug}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      organization: {
-                        ...formData.organization,
-                        slug: e.target.value.toLowerCase().trim(),
-                      },
-                    })
-                  }
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {slugIsCustom ? (
-                    <>Custom slug set — won't change when name is edited</>
-                  ) : formData.organization.name.trim() ? (
-                    <>
-                      Auto-generated:{" "}
-                      <span className="font-medium">app.engageiq.com/{autoSlug}</span>
-                    </>
-                  ) : (
-                    <>Will be auto-generated from organization name</>
-                  )}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="org_description">Description (optional)</Label>
-                <Textarea
-                  id="org_description"
-                  placeholder="A leading technology company building the future of engagement analytics"
-                  value={formData.organization.description}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      organization: {
-                        ...formData.organization,
-                        description: e.target.value,
-                      },
-                    })
-                  }
-                  rows={3}
-                />
-              </div>
-=======
                   <div className="flex items-center space-x-2">
                     <Checkbox
+                      id="terms"
                       checked={formData.agreeToTerms}
-                      onCheckedChange={(v) =>
-                        setFormData({ ...formData, agreeToTerms: v as boolean })
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, agreeToTerms: checked as boolean })
                       }
                     />
-                    <span className="text-sm">
+                    <label htmlFor="terms" className="text-sm leading-none">
                       I agree to the{" "}
-                      <Link href="/terms" className="text-blue-600">
-                        Terms
+                      <Link href="/terms" className="text-blue-600 hover:underline">
+                        Terms of Service
+                      </Link>{" "}
+                      and{" "}
+                      <Link href="/privacy" className="text-blue-600 hover:underline">
+                        Privacy Policy
                       </Link>
-                    </span>
+                    </label>
                   </div>
 
-                  <Button className="w-full">
-                    Next <ArrowRight className="ml-2 h-4 w-4" />
+                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
+                    Next: Organization Details <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </form>
               )}
 
-              {/* STEP 2 */}
+              {/* Step 2 */}
               {currentStep === 2 && (
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <Input
-                    placeholder="Organization Name"
-                    value={formData.organization.name}
-                    onChange={(e) => handleOrganizationNameChange(e.target.value)}
-                  />
-                  <Textarea
-                    placeholder="Organization Description"
-                    value={formData.organization.description}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        organization: {
-                          ...formData.organization,
-                          description: e.target.value,
-                        },
-                      })
-                    }
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="org_name">Organization Name *</Label>
+                    <Input
+                      id="org_name"
+                      placeholder="Acme Corporation"
+                      value={formData.organization.name}
+                      onChange={(e) => handleOrganizationNameChange(e.target.value)}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      This will appear across the app
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="org_slug">Organization Slug</Label>
+                    <Input
+                      id="org_slug"
+                      placeholder="acme-corp"
+                      value={formData.organization.slug}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          organization: {
+                            ...formData.organization,
+                            slug: e.target.value.toLowerCase().trim(),
+                          },
+                        })
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {slugIsCustom ? (
+                        <>Custom slug set — won't change when name is edited</>
+                      ) : formData.organization.name.trim() ? (
+                        <>
+                          Auto-generated:{" "}
+                          <span className="font-medium">app.engageiq.com/{autoSlug}</span>
+                        </>
+                      ) : (
+                        <>Will be auto-generated from organization name</>
+                      )}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="org_description">Description (optional)</Label>
+                    <Textarea
+                      id="org_description"
+                      placeholder="A leading technology company building the future of engagement analytics"
+                      value={formData.organization.description}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          organization: {
+                            ...formData.organization,
+                            description: e.target.value,
+                          },
+                        })
+                      }
+                      rows={3}
+                    />
+                  </div>
 
                   <div className="flex gap-2">
-                    <Button type="button" variant="outline" onClick={() => setCurrentStep(1)}>
+                    <Button type="button" variant="outline" onClick={handleBack}>
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Back
                     </Button>
-                    <Button type="submit" disabled={loading}>
+                    <Button type="submit" disabled={loading} className="flex-1">
                       {loading ? "Creating Account..." : "Create Account"}
                     </Button>
                   </div>
@@ -693,14 +543,13 @@ export default function SignUpPage() {
             <CardFooter className="justify-center">
               <p className="text-sm text-muted-foreground">
                 Already have an account?{" "}
-                <Link href="/signin" className="text-blue-600">
+                <Link href="/signin" className="text-blue-600 hover:underline">
                   Sign in
                 </Link>
               </p>
             </CardFooter>
           </Card>
         </div>
->>>>>>> Stashed changes
 
         {/* RIGHT — INFO / TESTIMONIALS */}
         <div className="hidden lg:flex flex-col justify-center bg-gradient-to-br from-blue-600 to-purple-600 p-12 text-white">
@@ -721,14 +570,13 @@ export default function SignUpPage() {
 
           <div className="rounded-lg bg-white/10 p-6 backdrop-blur">
             <p className="italic">
-              “EngageIQ completely changed how we understand user behavior.”
+              "EngageIQ completely changed how we understand user behavior."
             </p>
             <p className="mt-3 text-sm font-medium">
               — Jamie Lee, Growth Lead
             </p>
           </div>
         </div>
-
       </div>
     </div>
   );

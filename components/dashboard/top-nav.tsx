@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Bell, Search, Moon, Sun, ChevronDown, User, Settings, LogOut, Mail, Phone, Calendar, Shield, Edit2, X, Check, Upload } from 'lucide-react'
+import { Bell, Search, Moon, Sun, ChevronDown, User, Settings, LogOut, Mail, Phone, Calendar, Shield, Edit2, X, Check, Upload, Building2, Loader2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -30,9 +30,21 @@ interface TopNavProps {
   onMenuClick: () => void
 }
 
+interface Department {
+  id: number;
+  name: string;
+  description?: string;
+}
+
 export function TopNav({ onMenuClick }: TopNavProps) {
   const [theme, setTheme] = React.useState<"light" | "dark">("light")
   const [userdetail, setUserdetail] = React.useState<any>({})
+  const [selectedDepartmentName, setSelectedDepartmentName] = React.useState<string | null>(null)
+  const [selectedDepartmentId, setSelectedDepartmentId] = React.useState<number | null>(null)
+  const [availableDepartments, setAvailableDepartments] = React.useState<Department[]>([])
+  const [isDepartmentDropdownOpen, setIsDepartmentDropdownOpen] = React.useState(false)
+  const [isSwitchingDepartment, setIsSwitchingDepartment] = React.useState(false)
+  const [switchingToDepartmentId, setSwitchingToDepartmentId] = React.useState<number | null>(null)
   const [isProfileOpen, setIsProfileOpen] = React.useState(false)
   const [isEditing, setIsEditing] = React.useState(false)
   const [editedName, setEditedName] = React.useState("")
@@ -64,11 +76,104 @@ export function TopNav({ onMenuClick }: TopNavProps) {
     }
   }
 
+  const fetchAvailableDepartments = async () => {
+    try {
+      // Try to get departments from /auth/me first
+      const res = await axiosClient.get("/auth/me")
+      if (res.data?.data?.departments && Array.isArray(res.data.data.departments)) {
+        setAvailableDepartments(res.data.data.departments)
+        return
+      }
+      
+      // Fallback: try to get from departments endpoint
+      const deptRes = await axiosClient.get("/departments")
+      if (deptRes.data?.success && deptRes.data?.data) {
+        setAvailableDepartments(deptRes.data.data)
+      }
+    } catch (error: any) {
+      console.error("Failed to fetch departments:", error)
+      // Try to get from localStorage as last resort
+      const loginData = localStorage.getItem("loginData")
+      if (loginData) {
+        try {
+          const data = JSON.parse(loginData)
+          if (data.departments && Array.isArray(data.departments)) {
+            setAvailableDepartments(data.departments)
+          }
+        } catch (e) {
+          console.error("Error parsing login data:", e)
+        }
+      }
+    }
+  }
+
+  const handleSwitchDepartment = async (departmentId: number) => {
+    if (isSwitchingDepartment || departmentId === selectedDepartmentId) {
+      setIsDepartmentDropdownOpen(false)
+      return
+    }
+
+    setIsSwitchingDepartment(true)
+    setSwitchingToDepartmentId(departmentId)
+    try {
+      const response = await axiosClient.post("/auth/select-department", {
+        department_id: departmentId,
+      })
+
+      if (response.data.success) {
+        // Update token
+        const newToken = response.data.data.access_token
+        localStorage.setItem("token", newToken)
+        
+        // Update department info
+        const dept = availableDepartments.find(d => d.id === departmentId)
+        if (dept) {
+          localStorage.setItem("selectedDepartmentId", departmentId.toString())
+          localStorage.setItem("selectedDepartmentName", dept.name)
+          setSelectedDepartmentId(departmentId)
+          setSelectedDepartmentName(dept.name)
+        }
+        
+        showToast("Department switched successfully", "success")
+        setIsDepartmentDropdownOpen(false)
+        
+        // Reload the page to refresh all data with new department context
+        window.location.reload()
+      }
+    } catch (error: any) {
+      console.error("Failed to switch department:", error)
+      showToast(
+        error.response?.data?.message || "Failed to switch department",
+        "error"
+      )
+      setSwitchingToDepartmentId(null)
+    } finally {
+      setIsSwitchingDepartment(false)
+    }
+  }
+
   const getUser = async () => {
     try {
       const res = await axiosClient.get("/auth/me")
       if (res.data?.data) {
         setUserdetail(res.data.data)
+        // Get department name from response or localStorage
+        if (res.data.data.department?.name) {
+          setSelectedDepartmentName(res.data.data.department.name)
+          localStorage.setItem("selectedDepartmentName", res.data.data.department.name)
+        } else {
+          // Fallback to localStorage
+          const deptName = localStorage.getItem("selectedDepartmentName")
+          if (deptName) {
+            setSelectedDepartmentName(deptName)
+          }
+        }
+        
+        // Get selected department ID
+        const deptId = localStorage.getItem("selectedDepartmentId")
+        if (deptId) {
+          setSelectedDepartmentId(parseInt(deptId))
+        }
       }
     } catch (error: any) {
       if (error.response?.status === 401) {
@@ -81,6 +186,16 @@ export function TopNav({ onMenuClick }: TopNavProps) {
   React.useEffect(() => {
     document.documentElement.classList.remove("dark")
     getUser()
+    fetchAvailableDepartments()
+    // Also check localStorage for department name
+    const deptName = localStorage.getItem("selectedDepartmentName")
+    if (deptName) {
+      setSelectedDepartmentName(deptName)
+    }
+    const deptId = localStorage.getItem("selectedDepartmentId")
+    if (deptId) {
+      setSelectedDepartmentId(parseInt(deptId))
+    }
   }, [])
 
   // Start editing
@@ -167,6 +282,52 @@ export function TopNav({ onMenuClick }: TopNavProps) {
         </div>
 
         <div className="flex items-center gap-3">
+          {selectedDepartmentName && availableDepartments.length > 0 && (
+            <DropdownMenu open={isDepartmentDropdownOpen} onOpenChange={setIsDepartmentDropdownOpen}>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-md border border-blue-200 hover:bg-blue-100 transition-colors cursor-pointer"
+                  disabled={isSwitchingDepartment}
+                >
+                  <Building2 className="h-4 w-4" />
+                  <span className="text-sm font-medium">{selectedDepartmentName}</span>
+                  <ChevronDown className="h-3 w-3" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Switch Department</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {availableDepartments.map((dept) => (
+                  <DropdownMenuItem
+                    key={dept.id}
+                    onClick={() => handleSwitchDepartment(dept.id)}
+                    disabled={isSwitchingDepartment || dept.id === selectedDepartmentId}
+                    className={dept.id === selectedDepartmentId ? "bg-blue-50" : ""}
+                  >
+                    <Building2 className="mr-2 h-4 w-4" />
+                    <div className="flex-1">
+                      <div className="font-medium">{dept.name}</div>
+                      {dept.description && (
+                        <div className="text-xs text-muted-foreground">{dept.description}</div>
+                      )}
+                    </div>
+                    {dept.id === selectedDepartmentId && (
+                      <Check className="ml-2 h-4 w-4 text-blue-600" />
+                    )}
+                    {switchingToDepartmentId === dept.id && (
+                      <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          {selectedDepartmentName && availableDepartments.length === 0 && (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-md border border-blue-200">
+              <Building2 className="h-4 w-4" />
+              <span className="text-sm font-medium">{selectedDepartmentName}</span>
+            </div>
+          )}
           <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9 rounded-full">
             {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
           </Button>

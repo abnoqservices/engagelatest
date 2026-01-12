@@ -198,7 +198,6 @@ export default function NewProductPage(): React.ReactElement {
   };
 
   React.useEffect(() => {
-  
     loadCategories();
   }, []);
 
@@ -364,7 +363,7 @@ export default function NewProductPage(): React.ReactElement {
     try {
       const selectedCatId = parseInt(formData.category);
 
-      const payload = {
+      const payload: any = {
         name: formData.name.trim(),
         sku: formData.sku || generateSafeSku(formData.name),
         category_id: selectedCatId,
