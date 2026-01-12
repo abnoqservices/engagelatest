@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import axiosClient from "@/lib/axiosClient"
 import { showToast } from "@/lib/showToast"
@@ -117,7 +118,7 @@ export default function CustomersPage() {
   const [perPage, setPerPage] = useState(15)
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
-
+  const router = useRouter();
   const fetchContacts = async () => {
     setLoading(true)
     try {
@@ -199,10 +200,12 @@ export default function CustomersPage() {
             </p>
           </div>
           <div className="flex gap-3">
-            <Button className="gap-2">
+         
+            <Button className="gap-2"  onClick={() => router.push("/customers/create")}>
               <Plus className="h-4 w-4" />
               Add Contact
             </Button>
+           
             <Button variant="outline" className="gap-2">
               <Download className="h-4 w-4" />
               Export
@@ -217,13 +220,8 @@ export default function CustomersPage() {
           </TabsList> */}
 
           <TabsContent value="list" className="space-y-6">
-<<<<<<< Updated upstream
             {/* Filters */}
             <div className="flex flex-col gap-4 rounded-xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
-=======
-            {/* Filters Bar */}
-            <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4  sm:flex-row sm:items-center sm:justify-between">
->>>>>>> Stashed changes
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -265,7 +263,6 @@ export default function CustomersPage() {
               </div>
             </div>
 
-<<<<<<< Updated upstream
             {/* Table */}
             <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
               {loading ? (
@@ -357,79 +354,6 @@ export default function CustomersPage() {
                       ))}
                     </TableBody>
                   </Table>
-=======
-            {/* Customers Table */}
-            <div className="rounded-xl border border-border bg-card ">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead>Name</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>City</TableHead>
-                    <TableHead>Persona</TableHead>
-                    <TableHead>Lead Score</TableHead>
-                    <TableHead>Last Active</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {customers.map((customer) => (
-                    <TableRow
-                      key={customer.id}
-                      className="cursor-pointer"
-                      onClick={() => setSelectedCustomer(customer)}
-                    >
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{customer.name}</p>
-                          <div className="flex gap-1 mt-1">
-                            {customer.tags.map((tag) => (
-                              <Badge key={tag} variant="secondary" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-sm">
-                            <Mail className="h-3 w-3 text-muted-foreground" />
-                            <span>{customer.email}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <Phone className="h-3 w-3 text-muted-foreground" />
-                            <span>{customer.phone}</span>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-3 w-3 text-muted-foreground" />
-                          <span>{customer.city}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{customer.persona}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 max-w-[100px] h-2 bg-secondary rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary"
-                              style={{ width: `${customer.leadScore}%` }}
-                            />
-                          </div>
-                          <span className="text-sm font-medium">{customer.leadScore}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {customer.lastActive}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
->>>>>>> Stashed changes
 
                   {/* Pagination */}
                   <div className="flex items-center justify-between border-t px-6 py-4 text-sm text-muted-foreground">
@@ -461,45 +385,8 @@ export default function CustomersPage() {
             </div>
           </TabsContent>
 
-<<<<<<< Updated upstream
           <TabsContent value="personas" className="py-12 text-center text-muted-foreground">
             Personas / segmentation view coming soon...
-=======
-          {/* Personas Tab */}
-          <TabsContent value="personas" className="space-y-6">
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {personas.map((persona) => (
-                <div
-                  key={persona.name}
-                  className="rounded-xl border border-border bg-card p-6  hover: transition-shadow"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <Badge className={persona.color}>{persona.name}</Badge>
-                    <TrendingUp className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <p className="text-3xl font-bold text-foreground">{persona.count}</p>
-                  <p className="text-sm text-muted-foreground mt-1">Total Customers</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="rounded-xl border border-border bg-card p-6 ">
-              <h3 className="text-lg font-semibold mb-4">Persona Scoring Rules</h3>
-              <div className="space-y-4">
-                {personas.map((persona) => (
-                  <div key={persona.name} className="rounded-lg border border-border p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="font-medium">{persona.name}</p>
-                      <Button variant="outline" size="sm">Edit Rules</Button>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Based on: Product interactions, engagement frequency, purchase history
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
->>>>>>> Stashed changes
           </TabsContent>
         </Tabs>
 
