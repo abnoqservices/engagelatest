@@ -17,10 +17,15 @@ import {
   GripVertical,
   Loader2,
   Trash2,
+  Eye,
+  EyeOff,
+  Plus,
+  Check,
+  ChevronsUpDown,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import axiosClient from "@/lib/axiosClient";
-import { showToast } from "@/lib/showToast"; 
+import { showToast } from "@/lib/showToast";
 
 import {
   DndContext,
@@ -62,10 +67,17 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Eye, EyeOff ,Plus ,Check, ChevronsUpDown} from "lucide-react";
+import { useDebouncedCallback } from "use-debounce";
 
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+} from "@/components/ui/command";
 
-import { Command, CommandInput ,CommandList,CommandEmpty ,CommandGroup,CommandItem} from "@/components/ui/command";
 const Perview = dynamic(() => import("@/app/preview/dummuypreview/page"), { ssr: false });
 
 type GlobalSection = {
@@ -86,19 +98,20 @@ type ActiveSection = {
   saving?: boolean;
 };
 
-export default function LandingPageBuilder({productId: productId}: {productId?: number}) {
-
-
+export default function LandingPageBuilder({ productId }: { productId?: number }) {
   const [isLoading, setIsLoading] = React.useState(true);
-  const [previewVisible, setPreviewVisible] =  React.useState(true);
+  const [previewVisible, setPreviewVisible] = React.useState(true);
   const [globalSections, setGlobalSections] = React.useState<GlobalSection[]>([]);
-  const [groupedGlobals, setGroupedGlobals] = React.useState<Record<string, Record<string | "null", GlobalSection[]>>>({});
+  const [groupedGlobals, setGroupedGlobals] = React.useState<
+    Record<string, Record<string | "null", GlobalSection[]>>
+  >({});
   const [activeSections, setActiveSections] = React.useState<ActiveSection[]>([]);
   const [reordering, setReordering] = React.useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const [open, setOpen] = React.useState(false);
   const [selectedValue, setSelectedValue] = React.useState("");
+
   React.useEffect(() => {
     const fetchData = async () => {
       try {
@@ -141,7 +154,7 @@ export default function LandingPageBuilder({productId: productId}: {productId?: 
   }, [productId]);
 
   const handleAddSection = async (sectionKey: string) => {
-    if (!productId || !sectionKey || activeSections.some(s => s.sectionKey === sectionKey)) return;
+    if (!productId || !sectionKey || activeSections.some((s) => s.sectionKey === sectionKey)) return;
 
     try {
       const res = await axiosClient.post(`/products/${productId}/landing-page/sections`, {
@@ -150,14 +163,17 @@ export default function LandingPageBuilder({productId: productId}: {productId?: 
 
       if (res.data.success) {
         const newSec = res.data.data;
-        setActiveSections(prev => [...prev, {
-          sectionId: newSec.id,
-          sectionKey: newSec.global_section.key,
-          label: newSec.global_section.name,
-          enabled: newSec.is_published,
-          content: newSec.content || {},
-          schema: newSec.global_section.schema,
-        }]);
+        setActiveSections((prev) => [
+          ...prev,
+          {
+            sectionId: newSec.id,
+            sectionKey: newSec.global_section.key,
+            label: newSec.global_section.name,
+            enabled: newSec.is_published,
+            content: newSec.content || {},
+            schema: newSec.global_section.schema,
+          },
+        ]);
         showToast("Section added successfully", "success");
       }
     } catch (error) {
@@ -169,7 +185,9 @@ export default function LandingPageBuilder({productId: productId}: {productId?: 
     if (!productId || !sec.sectionId) return;
 
     const newEnabled = !sec.enabled;
-    setActiveSections(prev => prev.map(s => s.sectionId === sec.sectionId ? { ...s, enabled: newEnabled } : s));
+    setActiveSections((prev) =>
+      prev.map((s) => (s.sectionId === sec.sectionId ? { ...s, enabled: newEnabled } : s))
+    );
 
     try {
       await axiosClient.patch(`/products/${productId}/landing-page/sections/${sec.sectionId}/publish`, {
@@ -177,7 +195,9 @@ export default function LandingPageBuilder({productId: productId}: {productId?: 
       });
       showToast(newEnabled ? "Section published" : "Section unpublished", "success");
     } catch (error) {
-      setActiveSections(prev => prev.map(s => s.sectionId === sec.sectionId ? { ...s, enabled: !newEnabled } : s));
+      setActiveSections((prev) =>
+        prev.map((s) => (s.sectionId === sec.sectionId ? { ...s, enabled: !newEnabled } : s))
+      );
       showToast("Failed to update publish status", "error");
     }
   };
@@ -185,49 +205,21 @@ export default function LandingPageBuilder({productId: productId}: {productId?: 
   const removeSection = async (sec: ActiveSection) => {
     if (!productId || !sec.sectionId) return;
 
-    setActiveSections(prev => prev.filter(s => s.sectionId !== sec.sectionId));
+    setActiveSections((prev) => prev.filter((s) => s.sectionId !== sec.sectionId));
 
     try {
       await axiosClient.delete(`/products/${productId}/landing-page/sections/${sec.sectionId}`);
       showToast("Section removed", "success");
     } catch (error) {
       showToast("Failed to remove section", "error");
-
     }
   };
-
-  const debouncedUpdateContent = React.useCallback((sec: ActiveSection, newContent: Record<string, any>) => {
-    if (!productId || !sec.sectionId) return;
-
-    setActiveSections(prev => prev.map(s =>
-      s.sectionId === sec.sectionId ? { ...s, content: newContent, saving: true } : s
-    ));
-
-    axiosClient.put(`/products/${productId}/landing-page/sections/${sec.sectionId}`, { content: newContent })
-      .then(() => {
-        setActiveSections(prev => prev.map(s =>
-          s.sectionId === sec.sectionId ? { ...s, saving: false } : s
-        ));
-      })
-      .catch(() => {
-        showToast("Failed to save content", "error");
-        setActiveSections(prev => prev.map(s =>
-          s.sectionId === sec.sectionId ? { ...s, saving: false } : s
-        ));
-      });
-  }, [productId]);
-
-  const updateContentOptimistic = React.useCallback((sec: ActiveSection, newContent: Record<string, any>) => {
-    setActiveSections(prev => prev.map(s => s.sectionId === sec.sectionId ? { ...s, content: newContent } : s));
-    const timeout = setTimeout(() => debouncedUpdateContent(sec, newContent), 800);
-    return () => clearTimeout(timeout);
-  }, [debouncedUpdateContent]);
 
   const onDragEnd = async ({ active, over }: any) => {
     if (!over || active.id === over.id || !productId) return;
 
-    const oldIndex = activeSections.findIndex(s => s.sectionId === active.id);
-    const newIndex = activeSections.findIndex(s => s.sectionId === over.id);
+    const oldIndex = activeSections.findIndex((s) => s.sectionId === active.id);
+    const newIndex = activeSections.findIndex((s) => s.sectionId === over.id);
     const newOrder = arrayMove(activeSections, oldIndex, newIndex);
 
     setActiveSections(newOrder);
@@ -251,7 +243,7 @@ export default function LandingPageBuilder({productId: productId}: {productId?: 
 
   const previewPayload = {
     templateName: "modern",
-    sections: activeSections.filter(s => s.enabled).map(s => ({ section: s.sectionKey, content: s.content })),
+    sections: activeSections.filter((s) => s.enabled).map((s) => ({ section: s.sectionKey, content: s.content })),
     styles: {
       primaryColor: "#ecedf4ff",
       backgroundColor: "#000000",
@@ -282,88 +274,86 @@ export default function LandingPageBuilder({productId: productId}: {productId?: 
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Controls */}
           <div className="space-y-6">
-          {productId && (
-  <Card className="border-border ">
-    <CardHeader className="pb-4">
-      <div className="flex items-center gap-2">
-        <div className="p-2 bg-primary/10 rounded-lg">
-          <Plus className="h-5 w-5 text-primary" />
-        </div>
-        <CardTitle className="text-lg">Add a New Section</CardTitle>
-      </div>
-      <CardDescription>
-        Search and select a section to add to your product.
-      </CardDescription>
-    </CardHeader>
-    <CardContent>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            className="w-full justify-between font-normal"
-          >
-            <span className="truncate">
-              {selectedValue
-                ? globalSections.find((s) => s.key === selectedValue)?.name
-                : "Search or select a section..."}
-            </span>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-full p-0" align="start">
-          <Command>
-            <CommandInput placeholder="Search sections..." className="h-9" />
-            <CommandList>
-              <CommandEmpty>No sections found.</CommandEmpty>
+            {productId && (
+              <Card className="border-border">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Plus className="h-5 w-5 text-primary" />
+                    </div>
+                    <CardTitle className="text-lg">Add a New Section</CardTitle>
+                  </div>
+                  <CardDescription>Search and select a section to add to your product.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between font-normal"
+                      >
+                        <span className="truncate">
+                          {selectedValue
+                            ? globalSections.find((s) => s.key === selectedValue)?.name
+                            : "Search or select a section..."}
+                        </span>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search sections..." className="h-9" />
+                        <CommandList>
+                          <CommandEmpty>No sections found.</CommandEmpty>
 
-              {Object.entries(groupedGlobals).map(([group, subGroups]) => (
-                <CommandGroup
-                  key={group}
-                  heading={group.charAt(0).toUpperCase() + group.slice(1)}
-                >
-                  {Object.entries(subGroups).map(([subGroup, secs]) => (
-                    <React.Fragment key={subGroup}>
-                      {subGroup !== "null" && (
-                        <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                          {subGroup}
-                        </div>
-                      )}
-                      {secs
-                        .filter((s) => !activeSections.some((a) => a.sectionKey === s.key))
-                        .map((s) => (
-                          <CommandItem
-                            key={s.key}
-                            value={s.key}
-                            onSelect={(currentValue) => {
-                              handleAddSection(currentValue);
-                              setSelectedValue(currentValue);
-                              
-                            }}
-                          >
-                            <Check
-                              className={`mr-2 h-4 w-4 ${
-                                selectedValue === s.key ? "opacity-100" : "opacity-0"
-                              }`}
-                            />
-                            {s.name}
-                          </CommandItem>
-                        ))}
-                    </React.Fragment>
-                  ))}
-                </CommandGroup>
-              ))}
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+                          {Object.entries(groupedGlobals).map(([group, subGroups]) => (
+                            <CommandGroup
+                              key={group}
+                              heading={group.charAt(0).toUpperCase() + group.slice(1)}
+                            >
+                              {Object.entries(subGroups).map(([subGroup, secs]) => (
+                                <React.Fragment key={subGroup}>
+                                  {subGroup !== "null" && (
+                                    <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                      {subGroup}
+                                    </div>
+                                  )}
+                                  {secs
+                                    .filter((s) => !activeSections.some((a) => a.sectionKey === s.key))
+                                    .map((s) => (
+                                      <CommandItem
+                                        key={s.key}
+                                        value={s.key}
+                                        onSelect={(currentValue) => {
+                                          handleAddSection(currentValue);
+                                          setSelectedValue(currentValue);
+                                        }}
+                                      >
+                                        <Check
+                                          className={`mr-2 h-4 w-4 ${
+                                            selectedValue === s.key ? "opacity-100" : "opacity-0"
+                                          }`}
+                                        />
+                                        {s.name}
+                                      </CommandItem>
+                                    ))}
+                                </React.Fragment>
+                              ))}
+                            </CommandGroup>
+                          ))}
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
 
-      <p className="mt-3 text-xs text-muted-foreground">
-        Already added sections are hidden from this list.
-      </p>
-    </CardContent>
-  </Card>
-)}
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Already added sections are hidden from this list.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle>Sections</CardTitle>
@@ -371,16 +361,30 @@ export default function LandingPageBuilder({productId: productId}: {productId?: 
               </CardHeader>
               <CardContent>
                 {activeSections.length > 0 ? (
-                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-                    <SortableContext items={activeSections.map(s => s.sectionId!)} strategy={verticalListSortingStrategy}>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={onDragEnd}
+                  >
+                    <SortableContext
+                      items={activeSections.map((s) => s.sectionId!)}
+                      strategy={verticalListSortingStrategy}
+                    >
                       <Accordion type="multiple" className="space-y-4">
                         {activeSections.map((item) => (
                           <SortableSectionItem
+                            productId={productId}
                             key={item.sectionId}
                             item={item}
                             onTogglePublish={() => togglePublish(item)}
                             onRemove={() => removeSection(item)}
-                            onContentChange={(content) => updateContentOptimistic(item, content)}
+                            onContentChange={(content) =>
+                              setActiveSections((prev) =>
+                                prev.map((s) =>
+                                  s.sectionId === item.sectionId ? { ...s, content } : s
+                                )
+                              )
+                            }
                             disabled={reordering}
                           />
                         ))}
@@ -389,89 +393,82 @@ export default function LandingPageBuilder({productId: productId}: {productId?: 
                   </DndContext>
                 ) : (
                   <p className="text-center py-8 text-muted-foreground">
-                    {productId ? "No sections added yet. Use the dropdown above." : "Global mode – no sections available."}
+                    {productId
+                      ? "No sections added yet. Use the dropdown above."
+                      : "Global mode – no sections available."}
                   </p>
                 )}
               </CardContent>
             </Card>
           </div>
 
- 
+          {productId && (
+            <div className="w-full lg:fixed lg:inset-y-0 lg:right-0 lg:w-1/2 lg:flex lg:items-center lg:justify-center lg:pointer-events-none lg:z-10">
+              <div className="w-full h-[80%] lg:max-w-lg lg:pointer-events-auto">
+                {previewVisible && (
+                  <Card className="shadow-xl lg:shadow-2xl mx-auto lg:mx-0 transition-all duration-300">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <div>
+                        <CardTitle className="text-lg lg:text-xl">Mobile Preview</CardTitle>
+                        <CardDescription className="text-xs lg:text-sm">
+                          Live view on mobile device
+                        </CardDescription>
+                      </div>
 
-{productId && (
-  <div className="w-full lg:fixed lg:inset-y-0 lg:right-0 lg:w-1/2 lg:flex lg:items-center lg:justify-center lg:pointer-events-none lg:z-10">
-    <div className="w-full h-[80%] lg:max-w-lg lg:pointer-events-auto">
-    
-      {previewVisible && (
-        <Card className="shadow-xl lg:shadow-2xl mx-auto lg:mx-0 transition-all duration-300">
-         
-          <CardHeader className="flex flex-row items-center justify-between ">
-            <div>
-              <CardTitle className="text-lg lg:text-xl">Mobile Preview</CardTitle>
-              <CardDescription className="text-xs lg:text-sm">
-                Live view on mobile device
-              </CardDescription>
-            </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-full hover:bg-gray-100"
+                        onClick={() => setPreviewVisible(false)}
+                      >
+                        <EyeOff className="h-5 w-5" />
+                      </Button>
+                    </CardHeader>
 
-         
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full hover:bg-gray-100"
-              onClick={() => setPreviewVisible(false)}
-            >
-              <EyeOff className="h-5 w-5" />
-            </Button>
-          </CardHeader>
+                    <CardContent className="flex justify-center">
+                      <div
+                        className="h-[700px] relative shadow-2xl w-full max-w-[360px] 
+                        aspect-[9/19.5] border-[14px] border-black rounded-[45px] bg-black overflow-hidden"
+                      >
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-full h-full rounded-[31px] overflow-hidden bg-white shadow-inner">
+                            {/* Notch */}
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-6 bg-black rounded-b-3xl z-20" />
 
-    
-          <CardContent className="flex justify-center ">
-            <div className="h-[700px]
-              relative shadow-2xl
-              w-full max-w-[360px] 
-              aspect-[9/19.5] 
-              border-[14px] border-black rounded-[45px] bg-black overflow-hidden
-            ">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-full h-full rounded-[31px] overflow-hidden bg-white shadow-inner">
-                  {/* Notch */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-6 bg-black rounded-b-3xl z-20" />
-                  
-                  {/* Content */}
-                  <div className="w-full h-full overflow-y-auto scrollbar-hide pt-8">
-                    <Perview data={previewPayload} productId={productId} />
+                            {/* Content */}
+                            <div className="w-full h-full overflow-y-auto scrollbar-hide pt-8">
+                              <Perview data={previewPayload} productId={productId} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {!previewVisible && (
+                  <div className="fixed bottom-6 right-6 z-50 lg:bottom-8 lg:right-8">
+                    <Button
+                      size="lg"
+                      className="shadow-2xl rounded-full px-6 py-3 flex items-center gap-2 font-medium"
+                      onClick={() => setPreviewVisible(true)}
+                    >
+                      <Eye className="h-5 w-5" />
+                      Show Preview
+                    </Button>
                   </div>
-                </div>
+                )}
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-     
-      {!previewVisible && (
-        <div className="fixed bottom-6 right-6 z-50 lg:bottom-8 lg:right-8">
-          <Button
-            size="lg"
-            className="shadow-2xl rounded-full px-6 py-3 flex items-center gap-2 font-medium"
-            onClick={() => setPreviewVisible(true)}
-          >
-            <Eye className="h-5 w-5" />
-            Show Preview
-          </Button>
-        </div>
-      )}
-    </div>
-  </div>
-)}
+          )}
         </div>
       </div>
     </DashboardLayout>
   );
 }
 
-
 function SortableSectionItem({
+  productId,
   item,
   onTogglePublish,
   onRemove,
@@ -495,59 +492,72 @@ function SortableSectionItem({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  // ── Debounce the save to backend ───────────────────────────────
+  const debouncedSave = useDebouncedCallback(
+    (newContent: Record<string, any>) => {
+      if (!item.sectionId) return;
+    
+      // Show saving indicator
+      // You can also pass saving state up if you want to show it in parent
+      axiosClient.put(`/products/${productId}/landing-page/sections/${item.sectionId}`, {
+          content: newContent,
+        })
+        .then(() => {
+          // Optional: success toast / remove loading
+        })
+        .catch(() => {
+          showToast("Failed to save section content", "error");
+        });
+    },
+    600 // 600ms - good balance between responsiveness and request count
+  );
+
   const handleFieldChange = (key: string, value: any) => {
-    onContentChange({ ...item.content, [key]: value });
+    const newContent = { ...item.content, [key]: value };
+
+    // 1. Immediate local update (no lag in UI)
+    onContentChange(newContent);
+
+    // 2. Debounced backend save
+    debouncedSave(newContent);
   };
 
   return (
-    <AccordionItem value={item.sectionKey} className="border rounded-lg bg-white " ref={setNodeRef} style={style}>
-     <AccordionItem
-  value={item.sectionKey}
-  className="border rounded-lg bg-white "
-  ref={setNodeRef}
-  style={style}
->
+    <AccordionItem value={item.sectionKey} className="border rounded-lg bg-white" ref={setNodeRef} style={style}>
+      <div className="flex items-center justify-between px-4 py-3">
+        <AccordionTrigger className="flex items-center gap-3 flex-1 hover:no-underline text-left">
+          <GripVertical
+            className="h-5 w-5 text-gray-400 cursor-grab"
+            {...attributes}
+            {...listeners}
+          />
 
-  <div className="flex items-center justify-between px-4 py-3">
-  
-    <AccordionTrigger className="flex items-center gap-3 flex-1 hover:no-underline text-left">
-      <GripVertical
-        className="h-5 w-5 text-gray-400 cursor-grab"
-        {...attributes}
-        {...listeners}
-      />
+          <span className="font-medium">{item.label}</span>
 
-      <span className="font-medium">{item.label}</span>
+          {/* You can add saving indicator here if you track it */}
+        </AccordionTrigger>
 
-      {item.saving && (
-        <Loader2 className="h-4 w-4 animate-spin ml-2" />
-      )}
-    </AccordionTrigger>
+        <div className="flex items-center gap-4 ml-4">
+          <Switch
+            checked={item.enabled}
+            onCheckedChange={onTogglePublish}
+            onClick={(e) => e.stopPropagation()}
+          />
 
-  
-    <div className="flex items-center gap-4 ml-4">
-      <Switch
-        checked={item.enabled}
-        onCheckedChange={onTogglePublish}
-        onClick={(e) => e.stopPropagation()}
-      />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove();
+            }}
+          >
+            <Trash2 className="h-4 w-4 text-red-600" />
+          </Button>
+        </div>
+      </div>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={(e) => {
-          e.stopPropagation()
-          onRemove()
-        }}
-      >
-        <Trash2 className="h-4 w-4 text-red-600" />
-      </Button>
-    </div>
-  </div>
-</AccordionItem>
-
-
-<AccordionContent className="px-6 pb-6 space-y-6 pt-5 bg-gray-100">
+      <AccordionContent className="px-6 pb-6 space-y-6 pt-5 bg-gray-100">
   {item.schema?.fields?.length > 0 ? (
     item.schema.fields.map((field: any) => (
       <div key={field.key} className="space-y-2">
@@ -636,9 +646,7 @@ function SortableSectionItem({
         {/* IMAGE - URL input + preview */}
         {field.type === "image" && (
   <div className="space-y-3">
-    <Label htmlFor={field.key}>
-      {field.label} {field.required && <span className="text-red-500">*</span>}
-    </Label>
+   
 
     <div className="flex items-center gap-4">
       {/* Thumbnail Preview */}
