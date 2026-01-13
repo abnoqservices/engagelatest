@@ -50,16 +50,5 @@ import axiosClient from "@/lib/axiosClient";
 
 export default async function LandingPage({ params }) {
   const { slug } = await params;
-  const productId = Number(slug);
-
-  // Optional: early invalid ID handling (you can also let client handle it)
-  if (isNaN(productId)) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-xl text-red-600">Invalid Product ID</p>
-      </div>
-    );
-  }
-
-  return <LandingPageClient slug={productId} />;
+return <LandingPageClient slug={slug} />;
 }
