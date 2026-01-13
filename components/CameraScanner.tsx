@@ -280,7 +280,7 @@ const CameraScanner = ({ onCardScanned }: CameraScannerProps) => {
 
       const { data } = await axiosClient.post('/api/send-whatsapp', {
         phoneNumbers,
-        personName: personName || 'there'
+        personName: personName || 'there'    
       });
 
       toast({

@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,13 +16,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { QrCode, Mail } from "lucide-react";
-import Logo from "@/public/pexifly_logo.png"
+import { Mail } from "lucide-react";
+import Logo from "@/public/pexifly_logo.png";
 import Image from "next/image";
 import TestimonialsCarousel from "@/components/Signin/TestimonialsCarousel";
 import MiddleContent from "@/components/Signin/MiddleContent";
 import TrustedByMarquee from "@/components/Signin/TrustedByMarquee";
-
 
 interface LoginResponse {
   success: boolean;
@@ -36,12 +35,35 @@ interface LoginResponse {
 
 export default function SignInPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const [organization_id] = useState<number>(1);
+  const [checkingAuth, setCheckingAuth] = useState<boolean>(true);
+
+  // Check if user is already logged in → redirect
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      // You can add optional token validation here if you want
+      // e.g. call a /me or /validate-token endpoint
+
+      const redirectPath =
+        searchParams.get("redirect") ||
+        localStorage.getItem("redirectAfterLogin") ||
+        "/dashboard";
+
+      // Clean up
+      localStorage.removeItem("redirectAfterLogin");
+
+      router.replace(redirectPath);
+    } else {
+      setCheckingAuth(false);
+    }
+  }, [router, searchParams]);
 
   const loginUser = async (
     email: string,
@@ -58,7 +80,8 @@ export default function SignInPage() {
         user: response.data.data.user,
         token: response.data.data.access_token,
         departments: response.data.data.departments || [],
-        departmentSelectionRequired: response.data.data.departmentSelectionRequired || false,
+        departmentSelectionRequired:
+          response.data.data.departmentSelectionRequired || false,
         selectedDepartmentId: response.data.data.selectedDepartmentId || null,
       };
     } catch (error: any) {
@@ -68,7 +91,6 @@ export default function SignInPage() {
           error: error.response.data.message || "Login failed",
         };
       }
-
       return {
         success: false,
         error: "Network error. Please try again.",
@@ -92,26 +114,50 @@ export default function SignInPage() {
       if (result.success && result.user && result.token) {
         localStorage.setItem("user", JSON.stringify(result.user));
         localStorage.setItem("token", result.token);
-        
-        // Handle department selection
-        if (result.departmentSelectionRequired && result.departments && result.departments.length > 1) {
-          // Store departments for selection page
-          localStorage.setItem("loginData", JSON.stringify({
-            departments: result.departments,
-            selectedDepartmentId: result.selectedDepartmentId,
-          }));
+
+        // Handle department selection logic
+        if (
+          result.departmentSelectionRequired &&
+          result.departments &&
+          result.departments.length > 1
+        ) {
+          localStorage.setItem(
+            "loginData",
+            JSON.stringify({
+              departments: result.departments,
+              selectedDepartmentId: result.selectedDepartmentId,
+            })
+          );
           router.push("/select-department");
         } else if (result.selectedDepartmentId) {
-          // Single department already selected, store it
-          localStorage.setItem("selectedDepartmentId", result.selectedDepartmentId.toString());
-          const dept = result.departments?.find(d => d.id === result.selectedDepartmentId);
+          localStorage.setItem(
+            "selectedDepartmentId",
+            result.selectedDepartmentId.toString()
+          );
+          const dept = result.departments?.find(
+            (d) => d.id === result.selectedDepartmentId
+          );
           if (dept) {
             localStorage.setItem("selectedDepartmentName", dept.name);
           }
-          router.push("/dashboard");
+
+          // Final redirect after department handling
+          const redirectPath =
+            searchParams.get("redirect") ||
+            localStorage.getItem("redirectAfterLogin") ||
+            "/dashboard";
+
+          localStorage.removeItem("redirectAfterLogin");
+          router.push(redirectPath);
         } else {
-          // No department selected, go to dashboard anyway
-          router.push("/dashboard");
+          // No department selection needed
+          const redirectPath =
+            searchParams.get("redirect") ||
+            localStorage.getItem("redirectAfterLogin") ||
+            "/dashboard";
+
+          localStorage.removeItem("redirectAfterLogin");
+          router.push(redirectPath);
         }
       } else {
         setError(result.error || "Login failed");
@@ -128,16 +174,19 @@ export default function SignInPage() {
     router.push("/dashboard");
   };
 
-  const handleSocialLogin = (provider: string) => {
-    console.log(`Login with ${provider}`);
-    router.push("/dashboard");
-  };
+  // Show loading state while checking auth
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <div className="text-lg">Checking authentication...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="grid min-h-screen grid-cols-1 lg:grid-cols-7">
-
-        {/* LEFT — EXISTING LOGIN FORM (UNCHANGED) */}
+        {/* LEFT — LOGIN FORM */}
         <div className="flex items-center justify-center p-4 col-span-3">
           <div className="text-card-foreground flex flex-col gap-6 rounded-xl py-6 w-full max-w-md">
             <CardHeader className="space-y-1 text-center">
@@ -151,24 +200,6 @@ export default function SignInPage() {
             </CardHeader>
 
             <CardContent className="space-y-4">
-              {/* <div className="grid gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => handleSocialLogin("google")}
-                  className="w-full"
-                >
-                  Continue with Google
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={() => handleSocialLogin("linkedin")}
-                  className="w-full"
-                >
-                  Continue with LinkedIn
-                </Button>
-              </div> */}
-
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <Separator />
@@ -236,7 +267,7 @@ export default function SignInPage() {
               <Button
                 variant="outline"
                 onClick={handleDemoLogin}
-                className="w-full border-purple-200  !shadow-none cursor-pointer text-purple-700 hover:bg-purple-50"
+                className="w-full border-purple-200 !shadow-none cursor-pointer text-purple-700 hover:bg-purple-50"
               >
                 <Mail className="mr-2 h-4 w-4" />
                 Try Demo Account
@@ -257,35 +288,16 @@ export default function SignInPage() {
           </div>
         </div>
 
-        {/* RIGHT — INFO / TRUST / TESTIMONIALS */}
+        {/* RIGHT — INFO / TESTIMONIALS */}
         <div className="hidden col-span-4 relative lg:flex flex-col justify-between p-12 bg-pexifly overflow-hidden">
-          {/* Background image */}
-          {/* <img
-            src="https://images.pexels.com/photos/7289721/pexels-photo-7289721.jpeg"
-            alt="Pexifly"
-            className="absolute inset-0 w-full h-full object-cover"
-          /> */}
-
-          {/* Overlay */}
           <div className="absolute inset-0 bg-purple-800/80" />
 
-          {/* Content wrapper */}
           <div className="relative z-10 flex h-full flex-col">
-
-            {/* TOP: Testimonials carousel */}
             <TestimonialsCarousel />
-
-            {/* MIDDLE: Static content */}
             <MiddleContent />
-
-            {/* BOTTOM: Trusted by logos */}
             <TrustedByMarquee />
-
           </div>
         </div>
-
-
-
       </div>
     </div>
   );
