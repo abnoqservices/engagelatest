@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
+import Image from "next/image"
 import CameraScanner from "@/components/CameraScanner";
 import AdminDashboard from "@/components/AdminDashboard";
 import { ScanLine, Database, LogOut, Loader2, Sparkles, Zap, Shield } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-
+import whiteLogo from "@/public/white_logo.png"
 // Assuming these come from your auth context/provider
 // import { useAuth } from "@/context/AuthContext";  ← uncomment/adjust as needed
 // or from firebase/next-auth/etc
@@ -79,7 +79,7 @@ const Index = () => {
         <header className="flex items-center justify-between mb-8 md:mb-12 animate-fade-in">
           <div className="flex items-center gap-3">
             <div>
-              <img src="http://localhost:3000/_next/static/media/white_logo_full.4fb535bc.png" alt="Pexifly" width="20%" />
+            <Image src={whiteLogo} alt="Pexifly" width={110} height={40} />
             </div>
           </div>
 
@@ -112,14 +112,14 @@ const Index = () => {
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8 md:mb-10 p-1.5 h-14 glass rounded-2xl border border-border/50">
               <TabsTrigger
                 value="scan"
-                className="flex items-center gap-2 text-sm md:text-base rounded-xl data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300"
+                className="flex items-center gap-2 text-sm md:text-base rounded-xl data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300 "
               >
                 <ScanLine className="w-4 h-4" />
                 <span>Scan Card</span>
               </TabsTrigger>
               <TabsTrigger
                 value="dashboard"
-                className="flex items-center gap-2 text-sm md:text-base rounded-xl data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300"
+                className="flex items-center gap-2 text-sm md:text-base rounded-xl data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300 "
               >
                 <Database className="w-4 h-4" />
                 <span>Dashboard</span>
