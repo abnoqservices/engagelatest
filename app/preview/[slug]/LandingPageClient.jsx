@@ -114,5 +114,5 @@ export default function LandingPageClient({ slug }) {
   }
 
 
-  return <Preview data={payload} productId={productId} />;
+  return <Preview data={payload} productId={productId}  />;
 }
