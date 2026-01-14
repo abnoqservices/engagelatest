@@ -17,9 +17,9 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
-  verticalListSortingStrategy,
-  type UniqueIdentifier,
+  verticalListSortingStrategy
 } from "@dnd-kit/sortable"
+import type { UniqueIdentifier } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities"
 
 import { DashboardLayout } from "@/components/dashboard/layout"
