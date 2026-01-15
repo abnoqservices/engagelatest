@@ -68,13 +68,38 @@ export function TopNav({ onMenuClick }: TopNavProps) {
 
   const handleLogout = async () => {
     try {
-      await axiosClient.post("/auth/logout")
-      localStorage.clear()
-      router.push("/signin")
+      // Try to call logout endpoint (even if it fails, we still want to log out locally)
+      await axiosClient.post("/auth/logout").catch(() => {
+        // silently ignore server logout failure
+      });
+  
+      // Clear both storages completely
+      localStorage.clear();
+      sessionStorage.clear();
+  
+      // Very important: Remove Authorization header from axios
+      // Prevents old token from being sent in future requests
+      delete axiosClient.defaults.headers.common["Authorization"];
+  
+      showToast("Logged out successfully", "success");
+  
+      // Use replace instead of push → prevents going back to protected page
+      router.replace("/signin");
+      
+      // Optional: force hard refresh (helps in some stubborn cases)
+      // setTimeout(() => window.location.href = "/signin", 100);
     } catch (error) {
-      showToast("Logout failed", "error")
+      console.error("Logout error:", error);
+  
+      // Even when something fails → still clean everything
+      localStorage.clear();
+      sessionStorage.clear();
+      delete axiosClient.defaults.headers.common["Authorization"];
+  
+      showToast("Logged out (with some issues)", "warning");
+      router.replace("/signin");
     }
-  }
+  };
 
   const fetchAvailableDepartments = async () => {
     try {
