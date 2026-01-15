@@ -290,28 +290,6 @@ class LandingPageTracker {
         return utmParams;
     }
     
-    // getSessionId() {
-    //     // Most reliable way - read from cookie
-    //     const match = document.cookie.match(/_session_id=([^;]+)/);
-    //     return match ? match[1] : null;
-    //   }
-    
-      // Optional: fallback - generate our own if server didn't set it (rare)
-    //   ensureSessionId() {
-    //     let sid = this.getSessionId();
-    //     if (!sid) {
-    //       sid = crypto.randomUUID?.() || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-    //         const r = Math.random() * 16 | 0;
-    //         return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-    //       });
-    //       document.cookie = `_session_id=${sid}; path=/; max-age=${60*60*24*30}; SameSite=Lax`;
-    //     }
-    //     return sid;
-    //   }
-
-    /**
-     * Get session ID from cookie
-     */
     getSessionId() {
         // 1. Try to read existing session id
         const cookies = document.cookie.split(';');

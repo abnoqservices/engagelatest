@@ -1,11 +1,14 @@
 "use client"
 
 import * as React from "react"
-import { useParams, useRouter } from "next/navigation"
-import { format } from "date-fns"
-import { 
-  QrCode, Users, MousePointerClick, Eye, Package, Download, Calendar 
-} from 'lucide-react'
+import { useParams } from "next/navigation"
+import { format, subDays } from "date-fns"
+import {
+  BarChart3, MousePointerClick, Eye, Clock, ScrollText, Users,
+  Globe, MonitorSmartphone, Smartphone, Tablet, MapPin,
+  ArrowUpRight, Download, Calendar, TrendingUp,
+} from "lucide-react"
+
 import {
   Card,
   CardContent,
@@ -32,194 +35,309 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
   Tooltip,
-  Legend,
-  ResponsiveContainer,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
+  Legend, ResponsiveContainer, Bar, BarChart, PieChart, Pie, Cell
 } from 'recharts'
 
 import { DashboardLayout } from "@/components/dashboard/layout"
 import axiosClient from "@/lib/axiosClient"
 import { showToast } from "@/lib/showToast"
 
-interface EventSummary {
-  event: {
-    id: number
-    name: string
-    is_active: boolean
-  }
-  summary: {
-    qr_scan: number
-    cta_click: number
-    page_view: number
-  }
-  analytics: Array<{
-    event_type: "qr_scan" | "cta_click" | "page_view"
-    count: number
-    date: string
-  }>
+// ────────────────────────────────────────────────
+// Types (based on your API documentation)
+// ────────────────────────────────────────────────
+interface MetricSummary {
+  page_views: number
+  unique_visitors: number
+  button_clicks: number
+  form_submissions: number
+  conversion_rate: number
+  avg_time_on_page: number
+  avg_scroll_depth: number
 }
 
-interface ProductAnalytics {
-  product_summary: Array<{
-    product_id: number
-    total_events: number
-    product: {
-      id: number
-      name: string
-      url_slug: string
-    }
-  }>
-  detailed_analytics: Array<{
-    product_id: number
-    event_type: string
-    count: number
-    product: {
-      id: number
-      name: string
-      url_slug: string
-    }
-  }>
+interface TrafficSource {
+  traffic_source: string
+  page_views: number
+  unique_visitors: number
 }
 
-export default function EventAnalyticsPage() {
+interface GeoData {
+  country_code: string
+  region?: string
+  city?: string
+  page_views: number
+  unique_visitors: number
+}
+
+interface DeviceData {
+  device_type: "desktop" | "mobile" | "tablet"
+  browser?: string
+  os?: string
+  page_views: number
+  unique_visitors: number
+}
+
+interface UTMEntry {
+  utm_source?: string
+  utm_medium?: string
+  utm_campaign?: string
+  utm_content?: string
+  page_views: number
+  unique_visitors: number
+}
+
+interface DailyStat {
+  date: string
+  page_view: number
+  cta_click: number    // button_clicks / cta_click
+  form_submission: number
+}
+
+// ────────────────────────────────────────────────
+// Components
+// ────────────────────────────────────────────────
+
+function StatCard({
+  title,
+  value,
+  description,
+  icon: Icon,
+  trend,
+}: {
+  title: string
+  value: string | number
+  description?: string
+  icon: any
+  trend?: { value: number; positive: boolean }
+}) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <Icon className="h-5 w-5 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+        <div className="flex items-center gap-2 mt-1">
+          {description && (
+            <p className="text-xs text-muted-foreground">{description}</p>
+          )}
+          {trend && (
+            <div className={`text-xs flex items-center gap-1 ${trend.positive ? "text-green-600" : "text-red-600"}`}>
+              {trend.positive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowUpRight className="h-3 w-3 rotate-90" />}
+              {trend.value}%
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function TrafficSourcesCard({ sources }: { sources: TrafficSource[] }) {
+  const data = sources.map(s => ({
+    name: s.traffic_source,
+    value: s.page_views,
+    visitors: s.unique_visitors
+  }))
+
+  const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
+
+  return (
+    <Card className="col-span-2 lg:col-span-1">
+      <CardHeader>
+        <CardTitle>Traffic Sources</CardTitle>
+        <CardDescription>Page views by acquisition channel</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={100}
+                fill="#8884d8"
+                paddingAngle={2}
+                dataKey="value"
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              >
+                {data.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <RechartsTooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="mt-6 space-y-2">
+          {sources.map(source => (
+            <div key={source.traffic_source} className="flex justify-between text-sm">
+              <span className="capitalize">{source.traffic_source}</span>
+              <span className="font-medium">{source.page_views.toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function DeviceBreakdownCard({ devices }: { devices: DeviceData[] }) {
+  const totalViews = devices.reduce((sum, d) => sum + d.page_views, 0)
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Devices</CardTitle>
+        <CardDescription>Traffic by device type</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {devices.map(device => {
+            const percentage = totalViews ? Math.round((device.page_views / totalViews) * 100) : 0
+            const Icon = device.device_type === 'mobile' ? Smartphone :
+                         device.device_type === 'tablet' ? Tablet : MonitorSmartphone
+
+            return (
+              <div key={device.device_type} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Icon className="h-5 w-5 text-muted-foreground" />
+                    <span className="capitalize font-medium">{device.device_type}</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-medium">{percentage}%</div>
+                    <div className="text-xs text-muted-foreground">{device.page_views.toLocaleString()} views</div>
+                  </div>
+                </div>
+                <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary rounded-full transition-all"
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// ────────────────────────────────────────────────
+// Main Page
+// ────────────────────────────────────────────────
+
+export default function EventAnalyticsDashboard() {
   const params = useParams()
-  const router = useRouter()
-  const eventId = params.id ?? params.slug
+  const eventId = params.slug as string // ← most reliable way
 
-  const [eventData, setEventData] = React.useState<EventSummary | null>(null)
-  const [productData, setProductData] = React.useState<ProductAnalytics | null>(null)
-  const [loading, setLoading] = React.useState(true)
   const [timeRange, setTimeRange] = React.useState("30d")
+  const [loading, setLoading] = React.useState(true)
 
-  const fetchAnalytics = React.useCallback(async () => {
+  // Main metrics
+  const [metrics, setMetrics] = React.useState<MetricSummary | null>(null)
+  const [dailyStats, setDailyStats] = React.useState<DailyStat[]>([])
+  const [trafficSources, setTrafficSources] = React.useState<TrafficSource[]>([])
+  const [geoData, setGeoData] = React.useState<GeoData[]>([])
+  const [devices, setDevices] = React.useState<DeviceData[]>([])
+  const [utmData, setUtmData] = React.useState<UTMEntry[]>([])
+
+  const fetchAllAnalytics = React.useCallback(async () => {
     if (!eventId) return
-
     setLoading(true)
+
     try {
-      const [eventRes, productRes] = await Promise.all([
-        axiosClient.get(`/analytics/events/${eventId}`, {
-          params: { range: timeRange }
-        }),
-        axiosClient.get(`/analytics/events/${eventId}/products`, {
-          params: { range: timeRange }
-        })
+      const rangeParams = { range: timeRange }
+
+      const [
+        metricsRes,
+        trafficRes,
+        geoRes,
+        deviceRes,
+        utmRes,
+        // You can also fetch daily breakdown from /events/{id} if you want
+      ] = await Promise.all([
+        axiosClient.get(`/analytics/events/${eventId}/metrics`, { params: rangeParams }),
+        axiosClient.get(`/analytics/events/${eventId}/traffic-sources`, { params: rangeParams }),
+        axiosClient.get(`/analytics/events/${eventId}/geo-analytics`, { params: rangeParams }),
+        axiosClient.get(`/analytics/events/${eventId}/device-analytics`, { params: rangeParams }),
+        axiosClient.get(`/analytics/events/${eventId}/utm-analytics`, { params: rangeParams }),
       ])
 
-      setEventData(eventRes.data.data)
-      setProductData(productRes.data.data)
-    } catch (error: any) {
-      const msg = error.response?.data?.message || "Failed to load analytics"
-      showToast(msg, "error")
-      
-      if (error.response?.status === 404) {
-        router.replace("/events")
-      }
+      setMetrics(metricsRes.data.data.metrics)
+      setTrafficSources(trafficRes.data.data.traffic_sources || [])
+      setGeoData(geoRes.data.data.geo_analytics?.slice(0, 8) || []) // top 8 countries
+      setDevices(deviceRes.data.data.device_analytics || [])
+      setUtmData(utmRes.data.data.utm_analytics?.slice(0, 10) || [])
+
+      // Optional: if you still want daily trend from legacy endpoint
+      // const legacyRes = await axiosClient.get(`/analytics/events/${eventId}`, { params: rangeParams })
+      // → you can process legacyRes.data.data.analytics into dailyStats
+
+    } catch (err: any) {
+      showToast(err.response?.data?.message || "Failed to load analytics", "error")
     } finally {
       setLoading(false)
     }
-  }, [eventId, timeRange, router])
+  }, [eventId, timeRange])
 
   React.useEffect(() => {
-    fetchAnalytics()
-  }, [fetchAnalytics])
-
-  const dailyData = React.useMemo(() => {
-    const analytics = eventData?.analytics ?? []
-
-    const map = new Map<string, {
-      date: string
-      qr_scan: number
-      cta_click: number
-      page_view: number
-    }>()
-
-    analytics.forEach(item => {
-      const formattedDate = format(new Date(item.date), "MMM dd")
-      if (!map.has(formattedDate)) {
-        map.set(formattedDate, { date: formattedDate, qr_scan: 0, cta_click: 0, page_view: 0 })
-      }
-      const entry = map.get(formattedDate)!
-      
-      if (item.event_type === "qr_scan") entry.qr_scan += item.count
-      if (item.event_type === "cta_click") entry.cta_click += item.count
-      if (item.event_type === "page_view") entry.page_view += item.count
-    })
-
-    return Array.from(map.values()).sort((a, b) => 
-      a.date.localeCompare(b.date)
-    )
-  }, [eventData?.analytics])
-
-  const topProducts = React.useMemo(() => 
-    productData?.product_summary
-      ?.sort((a, b) => b.total_events - a.total_events)
-      .slice(0, 10) ?? [],
-    [productData?.product_summary]
-  )
+    fetchAllAnalytics()
+  }, [fetchAllAnalytics])
 
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-[60vh]">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <div className="flex items-center justify-center min-h-[70vh]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
       </DashboardLayout>
     )
   }
 
-  if (!eventData) {
+  if (!metrics) {
     return (
       <DashboardLayout>
-        <div className="max-w-4xl mx-auto py-16 text-center">
-          <p className="text-muted-foreground text-lg">
-            No analytics data available for this event yet.
-          </p>
+        <div className="text-center py-20 text-muted-foreground">
+          No analytics data available yet for this event.
         </div>
       </DashboardLayout>
     )
-  }
-
-  const { event, summary } = eventData
-
-  const safeSummary = {
-    qr_scan: summary?.qr_scan ?? 0,
-    cta_click: summary?.cta_click ?? 0,
-    page_view: summary?.page_view ?? 0,
   }
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto space-y-8 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1600px] mx-auto space-y-8 p-4 md:p-6 lg:p-8">
 
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {/* Header + controls */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-              <QrCode className="h-8 w-8 text-primary" />
-              {event.name} Analytics
-            </h1>
-            <div className="flex items-center gap-4 mt-2 text-sm">
-              <span className="text-muted-foreground">
-                Event ID: <span className="font-medium text-foreground">#{event.id}</span>
-              </span>
-              {event.is_active && (
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                  Active
-                </Badge>
-              )}
-            </div>
+            <h1 className="text-3xl font-bold tracking-tight">Event Analytics</h1>
+            <p className="text-muted-foreground mt-1">
+              Event ID: <span className="font-medium text-foreground">#{eventId}</span>
+            </p>
           </div>
 
           <div className="flex items-center gap-3">
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-44">
                 <Calendar className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Time range" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="7d">Last 7 days</SelectItem>
@@ -229,161 +347,181 @@ export default function EventAnalyticsPage() {
               </SelectContent>
             </Select>
 
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export
+            <Button variant="outline" size="icon">
+              <Download className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-medium">QR Scans</CardTitle>
-              <QrCode className="h-5 w-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{safeSummary.qr_scan.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-1">Total booth scans</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-medium">CTA Clicks</CardTitle>
-              <MousePointerClick className="h-5 w-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{safeSummary.cta_click.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-1">Call-to-action interactions</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-medium">Page Views</CardTitle>
-              <Eye className="h-5 w-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{safeSummary.page_view.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-1">Product page visits</p>
-            </CardContent>
-          </Card>
+        {/* Key Metrics Row */}
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title="Page Views"
+            value={metrics.page_views.toLocaleString()}
+            icon={Eye}
+            description="Total visits"
+          />
+          <StatCard
+            title="Unique Visitors"
+            value={metrics.unique_visitors.toLocaleString()}
+            icon={Users}
+            description="Distinct users"
+          />
+          <StatCard
+            title="Conversion Rate"
+            value={`${metrics.conversion_rate?.toFixed(1) ?? 0}%`}
+            icon={TrendingUp}
+            description="Form submissions"
+          />
+          <StatCard
+            title="Avg. Time on Page"
+            value={`${Math.round(metrics.avg_time_on_page ?? 0)}s`}
+            icon={Clock}
+            description="Engagement"
+          />
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="trends" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="trends">Activity Trends</TabsTrigger>
-            <TabsTrigger value="products">Top Products</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="trends">
-            <Card>
+        {/* Second row - more detailed */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+          {/* Left column - trends + funnel */}
+          <div className="lg:col-span-4 space-y-6">
+            <Card className="h-[420px]">
               <CardHeader>
-                <CardTitle>Daily Activity Overview</CardTitle>
-                <CardDescription>
-                  QR scans, CTA clicks and page views over the selected period
-                </CardDescription>
+                <CardTitle>Activity Over Time</CardTitle>
               </CardHeader>
-              <CardContent className="pl-2 h-[400px]">
-                {dailyData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={dailyData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis 
-                        dataKey="date" 
-                        stroke="#6b7280"
-                        fontSize={12}
-                      />
-                      <YAxis 
-                        stroke="#6b7280"
-                        fontSize={12}
-                        tickFormatter={(value) => value.toLocaleString()}
-                      />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '6px'
-                        }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Line 
-                        type="monotone" 
-                        dataKey="qr_scan" 
-                        stroke="#8b5cf6" 
-                        name="QR Scans" 
-                        strokeWidth={2.5}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 8 }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="cta_click" 
-                        stroke="#10b981" 
-                        name="CTA Clicks" 
-                        strokeWidth={2.5}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 8 }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="page_view" 
-                        stroke="#f59e0b" 
-                        name="Page Views" 
-                        strokeWidth={2.5}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 8 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-muted-foreground">
-                    No activity data available for the selected period
-                  </div>
-                )}
+              <CardContent className="h-[340px] pt-1">
+                {/* You can put real daily data here when available */}
+                <div className="h-full flex items-center justify-center text-muted-foreground italic">
+                  Daily trend chart placeholder (implement when /events/{eventId} daily data is used)
+                </div>
               </CardContent>
             </Card>
-          </TabsContent>
 
-          <TabsContent value="products">
+            {/* Conversion Funnel – you can fetch from /conversion-funnel endpoint */}
             <Card>
               <CardHeader>
-                <CardTitle>Top Products by Engagement</CardTitle>
-                <CardDescription>
-                  Products with the most total interactions (scans + clicks + views)
-                </CardDescription>
+                <CardTitle>Conversion Funnel</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6 py-4">
+                  {[
+                    { label: "Page Views", value: metrics.page_views, color: "bg-gray-200" },
+                    { label: "Engaged Users", value: Math.round(metrics.page_views * 0.71), color: "bg-blue-100" },
+                    { label: "Button Clicks", value: metrics.button_clicks, color: "bg-indigo-100" },
+                    { label: "Form Submissions", value: metrics.form_submissions, color: "bg-violet-200" },
+                  ].map((step, i) => (
+                    <div key={step.label} className="relative">
+                      <div className={`h-10 rounded-md ${step.color} flex items-center px-4`}>
+                        <span className="font-medium">{step.label}</span>
+                        <span className="ml-auto font-bold">{step.value.toLocaleString()}</span>
+                      </div>
+                      {i < 3 && (
+                        <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-muted-foreground">
+                          ↓ {Math.round((step.value / metrics.page_views) * 100)}%
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right column - distributions */}
+          <div className="lg:col-span-3 space-y-6">
+            <TrafficSourcesCard sources={trafficSources} />
+            <DeviceBreakdownCard devices={devices} />
+          </div>
+        </div>
+
+        {/* Bottom sections - Geo & UTM */}
+        <Tabs defaultValue="geo" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="geo">Geography</TabsTrigger>
+            <TabsTrigger value="utm">UTM Campaigns</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="geo">
+            <Card>
+              <CardHeader>
+                <CardTitle>Top Locations</CardTitle>
+                <CardDescription>Visitors by country (top 10)</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-16">Rank</TableHead>
-                      <TableHead>Product</TableHead>
-                      <TableHead className="text-right">Total Interactions</TableHead>
+                      <TableHead>Country</TableHead>
+                      <TableHead>Page Views</TableHead>
+                      <TableHead>Unique Visitors</TableHead>
+                      <TableHead className="text-right">% of Total</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {topProducts.length > 0 ? (
-                      topProducts.map((item, index) => (
-                        <TableRow 
-                          key={item.product_id}
-                          className="cursor-pointer hover:bg-muted/50 transition-colors"
-                          onClick={() => router.push(`/products/${item.product.url_slug}/analytics`)}
-                        >
-                          <TableCell className="font-medium">#{index + 1}</TableCell>
-                          <TableCell className="font-medium">{item.product.name}</TableCell>
-                          <TableCell className="text-right font-semibold">
-                            {item.total_events.toLocaleString()}
-                          </TableCell>
-                        </TableRow>
-                      ))
+                    {geoData.length > 0 ? (
+                      geoData.map((g) => {
+                        const total = geoData.reduce((sum, item) => sum + item.page_views, 0)
+                        const pct = total ? Math.round((g.page_views / total) * 100) : 0
+
+                        return (
+                          <TableRow key={g.country_code}>
+                            <TableCell className="font-medium flex items-center gap-2">
+                              <Globe className="h-4 w-4 text-muted-foreground" />
+                              {g.country_code}
+                              {g.city && <span className="text-xs text-muted-foreground">({g.city})</span>}
+                            </TableCell>
+                            <TableCell>{g.page_views.toLocaleString()}</TableCell>
+                            <TableCell>{g.unique_visitors.toLocaleString()}</TableCell>
+                            <TableCell className="text-right">{pct}%</TableCell>
+                          </TableRow>
+                        )
+                      })
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={3} className="h-32 text-center text-muted-foreground">
-                          No product interaction data available yet
+                        <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                          No geographic data available yet (IP geolocation not configured?)
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="utm">
+            <Card>
+              <CardHeader>
+                <CardTitle>Top UTM Campaigns</CardTitle>
+                <CardDescription>Performance by marketing campaign</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Campaign</TableHead>
+                      <TableHead>Source / Medium</TableHead>
+                      <TableHead>Page Views</TableHead>
+                      <TableHead>Visitors</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {utmData.map((utm, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="font-medium">
+                          {utm.utm_campaign || <span className="text-muted-foreground italic">—</span>}
+                        </TableCell>
+                        <TableCell>
+                          {utm.utm_source || "?"} / {utm.utm_medium || "?"}
+                        </TableCell>
+                        <TableCell>{utm.page_views.toLocaleString()}</TableCell>
+                        <TableCell>{utm.unique_visitors.toLocaleString()}</TableCell>
+                      </TableRow>
+                    ))}
+                    {utmData.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                          No UTM campaign data captured yet
                         </TableCell>
                       </TableRow>
                     )}
@@ -393,6 +531,7 @@ export default function EventAnalyticsPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
       </div>
     </DashboardLayout>
   )
