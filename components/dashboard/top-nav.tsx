@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Bell, Search, Moon, Sun, ChevronDown, User, Settings, LogOut, Mail, Phone, Calendar, Shield, Edit2, X, Check, Upload, Building2, Loader2 } from 'lucide-react'
+import { Bell, Search, Moon, Sun, ChevronDown, User, Settings, LogOut, Mail, Phone, Calendar, Shield, Edit2, X, Check, Upload, Building2, Loader2, Building } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -391,6 +391,11 @@ export function TopNav({ onMenuClick }: TopNavProps) {
                 <User className="mr-2 h-4 w-4" /> Profile
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
+                <Link href="/departments" className="flex items-center">
+                  <Building className="mr-2 h-4 w-4" />Create department
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link href="/settings" className="flex items-center">
                   <Settings className="mr-2 h-4 w-4" /> Settings
                 </Link>
@@ -403,7 +408,7 @@ export function TopNav({ onMenuClick }: TopNavProps) {
           </DropdownMenu>
         </div>
       </header>
-
+      
       {/* Sliding Profile Sheet with Inline Editor */}
       <Sheet open={isProfileOpen} onOpenChange={setIsProfileOpen}>
         <SheetContent side="right" className="w-96 overflow-y-auto">

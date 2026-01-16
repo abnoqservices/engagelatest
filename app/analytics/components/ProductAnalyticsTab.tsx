@@ -1,5 +1,5 @@
 "use client"
-
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useState, useEffect,useCallback } from "react"
 import axiosClient from "@/lib/axiosClient"
 import { showToast } from "@/lib/showToast"
@@ -189,11 +189,12 @@ export default function ProductAnalyticsTab() {
   return (
     <div className="space-y-6 p-4 md:p-6">
       {/* Filters at the top */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <Card>
+      <div className="card flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <h2 className="text-2xl font-bold tracking-tight">Product Analytics</h2>
         <ProductFilters onFilterChange={handleFilterChange} />
       </div>
-
+      </Card>
       {isLoading ? (
         <div className="flex h-64 items-center justify-center">
           <div className="flex items-center gap-3 text-muted-foreground">
@@ -213,20 +214,16 @@ export default function ProductAnalyticsTab() {
           <ConversionFunnel funnelData={safeData.funnelData} />
           <ProductEngagement timeData={safeData.timeData} />
 
-          {/* Components that respect filters */}
-          <UtmAnalytics
-            productId={filters.productId}
-            dateRange={filters.dateRange}
-            eventId={filters.eventId}
-          />
+       
+          <UtmAnalytics productId={filters.productId} dateRange={filters.dateRange} eventId={filters.eventId} />
 
-          {/* Event-specific dashboards */}
+        
          
           
           <div className="mt-8">
-        {/* Conditional rendering of the analytics dashboard */}
+      
         {filters.eventId !== "all" ? (
-          // When event is selected (not "all")
+        
           filters.productId !== "all" ? (
             // Both event and specific product are selected
             <EventProductAnalyticsDashboard 
