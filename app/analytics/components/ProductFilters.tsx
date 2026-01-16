@@ -3,6 +3,16 @@
 import { useState, useEffect } from "react"
 import axiosClient from "@/lib/axiosClient"
 import { showToast } from "@/lib/showToast"
+
+import { Button } from "@/components/ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command"
 import {
   Select,
   SelectContent,
@@ -10,7 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Loader2 } from "lucide-react"
+
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react"
+import { cn } from "@/lib/utils"
+
+/* ────────────────────────────────────────────── */
+/* Types */
+/* ────────────────────────────────────────────── */
 
 interface Event {
   id: number
@@ -35,23 +51,30 @@ interface ProductFiltersProps {
   }) => void
 }
 
+/* ────────────────────────────────────────────── */
+/* Component */
+/* ────────────────────────────────────────────── */
+
 export default function ProductFilters({ onFilterChange }: ProductFiltersProps) {
   const [products, setProducts] = useState<Product[]>([])
   const [events, setEvents] = useState<Event[]>([])
 
   const [productId, setProductId] = useState("all")
-  const [dateRange, setDateRange] = useState("today")
   const [eventId, setEventId] = useState("all")
+  const [dateRange, setDateRange] = useState("today")
 
   const [loadingProducts, setLoadingProducts] = useState(true)
   const [loadingEvents, setLoadingEvents] = useState(true)
 
-  // Fetch products (published + active)
+  /* ────────────────────────────────────────────── */
+  /* Fetch Products */
+  /* ────────────────────────────────────────────── */
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoadingProducts(true)
-        const response = await axiosClient.get("/products", {
+        const res = await axiosClient.get("/products", {
           params: {
             per_page: 100,
             status: "published",
@@ -59,11 +82,11 @@ export default function ProductFilters({ onFilterChange }: ProductFiltersProps) 
           },
         })
 
-        if (response.data.success) {
-          setProducts(response.data.data.data || [])
+        if (res.data.success) {
+          setProducts(res.data.data.data || [])
         }
-      } catch (error) {
-        console.error("Error fetching products:", error)
+      } catch (err) {
+        console.error(err)
         showToast("Failed to load products", "error")
       } finally {
         setLoadingProducts(false)
@@ -73,25 +96,27 @@ export default function ProductFilters({ onFilterChange }: ProductFiltersProps) 
     fetchProducts()
   }, [])
 
-  // Fetch ALL events (active + inactive)
+  /* ────────────────────────────────────────────── */
+  /* Fetch Events */
+  /* ────────────────────────────────────────────── */
+
   useEffect(() => {
     const fetchEvents = async () => {
       try {
         setLoadingEvents(true)
-        const response = await axiosClient.get("/events")
+        const res = await axiosClient.get("/events")
 
-        if (response.data.success) {
-          const allEvents = response.data.data || []
+        if (res.data.success) {
+          const allEvents = res.data.data || []
           setEvents(allEvents)
 
-          // Auto-select first active event if exists
           const firstActive = allEvents.find((e: Event) => e.is_active)
           if (firstActive) {
             setEventId(firstActive.id.toString())
           }
         }
-      } catch (error) {
-        console.error("Error fetching events:", error)
+      } catch (err) {
+        console.error(err)
         showToast("Failed to load events", "error")
       } finally {
         setLoadingEvents(false)
@@ -101,9 +126,11 @@ export default function ProductFilters({ onFilterChange }: ProductFiltersProps) 
     fetchEvents()
   }, [])
 
-  // Notify parent component when filters actually change
+  /* ────────────────────────────────────────────── */
+  /* Notify Parent */
+  /* ────────────────────────────────────────────── */
+
   useEffect(() => {
-    // Prevent calling before data is ready
     if (loadingProducts || loadingEvents) return
 
     onFilterChange({
@@ -113,36 +140,78 @@ export default function ProductFilters({ onFilterChange }: ProductFiltersProps) 
     })
   }, [productId, dateRange, eventId, loadingProducts, loadingEvents, onFilterChange])
 
+  /* ────────────────────────────────────────────── */
+  /* UI */
+  /* ────────────────────────────────────────────── */
+
   return (
     <div className="flex flex-wrap gap-4">
-      {/* Product Select */}
-      <Select value={productId} onValueChange={setProductId}>
-        <SelectTrigger className="w-[240px]">
-          <SelectValue placeholder="Select product" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Products</SelectItem>
+      {/* ───────────── Product Filter ───────────── */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            className="w-[260px] justify-between"
+          >
+            {productId === "all"
+              ? "All Products"
+              : products.find(p => p.id.toString() === productId)?.name}
 
-          {loadingProducts ? (
-            <div className="px-2 py-1.5 text-sm text-muted-foreground flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading products...
-            </div>
-          ) : products.length === 0 ? (
-            <div className="px-2 py-1.5 text-sm text-muted-foreground">
-              No products found
-            </div>
-          ) : (
-            products.map((product) => (
-              <SelectItem key={product.id} value={product.id.toString()}>
-                {product.name} {product.sku && `(${product.sku})`}
-              </SelectItem>
-            ))
-          )}
-        </SelectContent>
-      </Select>
+            <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+          </Button>
+        </PopoverTrigger>
 
-      {/* Date Range Select */}
+        <PopoverContent className="w-[260px] p-0">
+          <Command>
+            <CommandInput placeholder="Search product..." />
+            <CommandEmpty>No product found.</CommandEmpty>
+
+            <CommandGroup>
+              <CommandItem onSelect={() => setProductId("all")}>
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    productId === "all" ? "opacity-100" : "opacity-0"
+                  )}
+                />
+                All Products
+              </CommandItem>
+
+              {loadingProducts ? (
+                <div className="px-3 py-2 text-sm flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading products...
+                </div>
+              ) : (
+                products.map(product => (
+                  <CommandItem
+                    key={product.id}
+                    onSelect={() => setProductId(product.id.toString())}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        productId === product.id.toString()
+                          ? "opacity-100"
+                          : "opacity-0"
+                      )}
+                    />
+                    {product.name}
+                    {product.sku && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        ({product.sku})
+                      </span>
+                    )}
+                  </CommandItem>
+                ))
+              )}
+            </CommandGroup>
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      {/* ───────────── Date Filter ───────────── */}
       <Select value={dateRange} onValueChange={setDateRange}>
         <SelectTrigger className="w-[160px]">
           <SelectValue placeholder="Date range" />
@@ -155,40 +224,77 @@ export default function ProductFilters({ onFilterChange }: ProductFiltersProps) 
         </SelectContent>
       </Select>
 
-      {/* Event Select - all events, default first active */}
-      <Select value={eventId} onValueChange={setEventId}>
-        <SelectTrigger className="w-[260px]">
-          <SelectValue placeholder="Select event" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Events</SelectItem>
+      {/* ───────────── Event Filter ───────────── */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            className="w-[300px] justify-between"
+          >
+            {eventId === "all"
+              ? "All Events"
+              : events.find(e => e.id.toString() === eventId)?.name}
 
-          {loadingEvents ? (
-            <div className="px-2 py-1.5 text-sm text-muted-foreground flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading events...
-            </div>
-          ) : events.length === 0 ? (
-            <div className="px-2 py-1.5 text-sm text-muted-foreground">
-              No events found
-            </div>
-          ) : (
-            events.map((event) => (
-              <SelectItem
-                key={event.id}
-                value={event.id.toString()}
-                className={event.is_active ? "" : "text-muted-foreground italic"}
-              >
-                {event.name}
-                <span className="text-xs text-muted-foreground ml-1.5">
-                  ({event.location})
-                  {!event.is_active && " • Inactive"}
-                </span>
-              </SelectItem>
-            ))
-          )}
-        </SelectContent>
-      </Select>
+            <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+
+        <PopoverContent className="w-[300px] p-0">
+          <Command>
+            <CommandInput placeholder="Search event..." />
+            <CommandEmpty>No event found.</CommandEmpty>
+
+            <CommandGroup>
+              <CommandItem onSelect={() => setEventId("all")}>
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    eventId === "all" ? "opacity-100" : "opacity-0"
+                  )}
+                />
+                All Events
+              </CommandItem>
+
+              {loadingEvents ? (
+                <div className="px-3 py-2 text-sm flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading events...
+                </div>
+              ) : (
+                events.map(event => (
+                  <CommandItem
+                    key={event.id}
+                    onSelect={() => setEventId(event.id.toString())}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        eventId === event.id.toString()
+                          ? "opacity-100"
+                          : "opacity-0"
+                      )}
+                    />
+                    <div className="flex flex-col">
+                      <span>
+                        {event.name}
+                        {!event.is_active && (
+                          <span className="ml-1 text-xs italic text-muted-foreground">
+                            (Inactive)
+                          </span>
+                        )}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {event.location}
+                      </span>
+                    </div>
+                  </CommandItem>
+                ))
+              )}
+            </CommandGroup>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   )
 }
