@@ -47,7 +47,7 @@ export default function SliderThree({ productId }: SliderThreeProps) {
         setError(null);
 
         // Fetch product name and price
-        const productRes = await axiosClient.get(`/products/${productId}`);
+        const productRes = await axiosClient.get(`public/products/${productId}`);
 
         if (!productRes.data?.success && !productRes.data?.name) {
           // Some APIs return data directly, others wrap in { success, data }
@@ -62,15 +62,13 @@ export default function SliderThree({ productId }: SliderThreeProps) {
         });
 
         // Fetch gallery images (same as original Slider)
-        const imagesRes = await axiosClient.get("/product-images", {
-          params: { product_id: productId },
-        });
+        const imagesRes = await axiosClient.get(`public/products/${productId}`);
 
         if (!imagesRes.data?.success) {
           throw new Error(imagesRes.data?.message || "API returned success: false");
         }
 
-        const galleryImages = (imagesRes.data.data || [])
+        const galleryImages = (imagesRes.data.data?.images || [])
           .filter((item: any) => item.type === "gallery" && item.url?.trim())
           .map((item: any) => ({
             id: item.id,
