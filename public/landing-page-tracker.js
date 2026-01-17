@@ -195,6 +195,11 @@ class LandingPageTracker {
      * Send engagement update (time on page, scroll depth)
      */
     sendEngagementUpdate() {
+        // Only track if we have a valid product_id
+        if (!this.productId || this.productId === 'null' || this.productId === null) {
+            return; // Silently skip tracking if no product_id
+        }
+        
         const timeOnPage = Math.floor((Date.now() - this.sessionStartTime) / 1000);
         
         fetch(`${this.apiBaseUrl}/public/analytics/track-engagement`, {
@@ -252,6 +257,11 @@ class LandingPageTracker {
      * Track custom event
      */
     track(eventType, data = {}) {
+        // Only track if we have a valid product_id
+        if (!this.productId || this.productId === 'null' || this.productId === null) {
+            return; // Silently skip tracking if no product_id
+        }
+        
         const payload = {
             product_id: this.productId,
             event_id: this.eventId,

@@ -65,8 +65,10 @@ export default function LandingPageClient({ slug }) {
           });
         }
       } catch (error) {
-        console.error("Error fetching landing page data:", error);
-
+        // Only log non-404 errors (404 is expected if product doesn't exist)
+        if (error?.response?.status !== 404) {
+          console.error("Error fetching landing page data:", error);
+        }
 
         setPayload({
           templateName: "modern",
@@ -74,8 +76,12 @@ export default function LandingPageClient({ slug }) {
             {
               section: "hero",
               content: {
-                title: "Error Loading Preview",
-                subtitle: "Something went wrong. Please try again later.",
+                title: error?.response?.status === 404 
+                  ? "Product Not Found" 
+                  : "Error Loading Preview",
+                subtitle: error?.response?.status === 404
+                  ? `The product "${slug}" was not found or is not published.`
+                  : "Something went wrong. Please try again later.",
               },
             },
           ],

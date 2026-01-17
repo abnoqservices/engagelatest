@@ -33,15 +33,18 @@ export default async function PreviewLayout({
       eventId = data.event_id ?? null;
       boothId = data.booth_id ?? null;
     }
-  } catch (err) {
-    console.error("[PreviewLayout] Failed to fetch tracking information:", err);
+  } catch (err: any) {
+    // Silently handle 404 - product might not exist or not be published yet
+    if (err?.response?.status !== 404) {
+      console.error("[PreviewLayout] Failed to fetch tracking information:", err);
+    }
     // Continue with fallback values
   }
 
   // Final values with fallback
-  const finalProductId = productId;
-  const finalEventId = eventId ?? 5;
-  const finalBoothId = boothId ?? 13;
+  const finalProductId = productId ?? null;
+  const finalEventId = eventId ?? null;
+  const finalBoothId = boothId ?? null;
 
   // Optional: log for debugging (remove in production)
   console.log("Analytics tracking values:", {
@@ -75,9 +78,9 @@ export default async function PreviewLayout({
                     if (typeof LandingPageTracker !== 'undefined') {
                       window.tracker = new LandingPageTracker({
                         slug: "${slug}",
-                        productId: ${finalProductId},
-                        eventId: ${finalEventId},
-                        boothId: ${finalBoothId},
+                        productId: ${finalProductId !== null ? finalProductId : 'null'},
+                        eventId: ${finalEventId !== null ? finalEventId : 'null'},
+                        boothId: ${finalBoothId !== null ? finalBoothId : 'null'},
                         apiBaseUrl: "http://127.0.0.1:8000/api" // ← Change to production URL later
                       });
 

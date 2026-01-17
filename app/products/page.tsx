@@ -733,7 +733,7 @@ export default function ProductsPage() {
                   </p>
                   {selectedProductForQR.url_slug && (
                     <p className="text-xs text-muted-foreground break-all">
-                      URL: /q/{selectedProductForQR.url_slug}
+                      URL: /preview/{selectedProductForQR.url_slug}
                     </p>
                   )}
                 </div>
