@@ -392,73 +392,47 @@ export default function NewProductPage(): React.ReactElement {
   };
 
  
-  const toAbsoluteUrl = (path: string) => {
-    if (path.startsWith("http")) return path;
-    const encodedPath = path.split("/").map(encodeURIComponent).join("/");
-    return `${window.location.origin}${encodedPath}`;
-  };
-
-  const uploadFile = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const res = await fetch("/api/upload-images", {
-      method: "POST",
-      body: formData,
-    });
-
-    const json = await res.json();
-
-    if (!res.ok || !json?.success) {
-      throw new Error(json?.message || "Upload API failed");
+  const handleSaveMedia = async () => {
+    if (!productId) {
+      showToast("Product ID is required","error");
+      return;
     }
 
-    return json.data;
-  };
-
-  const handleSaveMedia = async () => {
     setIsSavingMedia(true);
 
     try {
-      for (const [index, img] of selectedImages.entries()) {
-        if (!img.file) continue;
-
-        const uploaded = await uploadFile(img.file);
-
-        await axiosClient.post("/product-images", {
-          product_id: productId,
-          url: toAbsoluteUrl(uploaded.url),
-          s3_key: uploaded.s3_key,
-          folder: "product-images",
-          type: "gallery",
-          name: uploaded.name || img.file.name,
-          size: img.file.size,
-          mime_type: img.file.type,
-          position: index + 1,
-        });
+      // Prepare FormData with files and other data
+      const uploadFormData = new FormData();
+      
+      // Add video_url if provided
+      if (formData.videoUrl) {
+        uploadFormData.append("video_url", formData.videoUrl);
       }
 
-      for (const pdf of pdfFiles) {
-        if (!pdf.file) continue;
+      // Add image files
+      selectedImages.forEach((img) => {
+        if (img.file) {
+          uploadFormData.append("images[]", img.file);
+        }
+      });
 
-        const uploaded = await uploadFile(pdf.file);
+      // Add PDF files
+      pdfFiles.forEach((pdf) => {
+        if (pdf.file) {
+          uploadFormData.append("pdfs[]", pdf.file);
+        }
+      });
 
-        await axiosClient.post("/product-documents", {
-          product_id: productId,
-          url: toAbsoluteUrl(uploaded.url),
-          s3_key: uploaded.s3_key,
-          folder: "product-documents",
-          name: uploaded.name || pdf.file.name,
-          size: pdf.file.size,
-          mime_type: pdf.file.type,
-        });
-      }
+      // Send to backend update endpoint
+      // Use POST with _method=PUT for file uploads (Laravel handles this via method spoofing)
+      uploadFormData.append("_method", "PUT");
+      await axiosClient.post(`/products/${productId}`, uploadFormData);
 
       setActiveTab("seo");
       showToast("All media uploaded and linked successfully!","success");
     } catch (error: any) {
       console.error("Media upload failed:", error);
-      showToast(error?.message || "Something went wrong while uploading media","error");
+      showToast(error?.response?.data?.message || error?.message || "Something went wrong while uploading media","error");
     } finally {
       setIsSavingMedia(false);
     }

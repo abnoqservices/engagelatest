@@ -199,11 +199,6 @@ export default function ProductPage(): React.ReactElement {
       </React.Fragment>
     ));
   };
-  const toAbsoluteUrl = (path: string) => {
-    if (path.startsWith("http")) return path;
-    const encodedPath = path.split("/").map(encodeURIComponent).join("/");
-    return `${window.location.origin}${encodedPath}`;
-  };
   // === Load Product (Edit Mode) ===
   const loadProduct = async () => {
     if (!isEditMode || !productId) return;
@@ -329,15 +324,6 @@ export default function ProductPage(): React.ReactElement {
     setPdfFiles((prev) => prev.filter((p) => p.id !== id));
   };
 
-  const uploadFile = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/upload-images", { method: "POST", body: formData });
-    const json = await res.json();
-    if (!res.ok || !json?.success) throw new Error(json?.message || "Upload failed");
-    return json.data;
-  };
-
   // === Save Basic ===
   const handleSaveBasic = async () => {
     if (!formData.name.trim()) return showToast("Product name is required", "error");
@@ -378,46 +364,108 @@ export default function ProductPage(): React.ReactElement {
 
   // === Save Media ===
   const handleSaveMedia = async () => {
-    if (!productId) return;
+    if (!productId) {
+      showToast("Product ID is required", "error");
+      return;
+    }
 
     setSavingMedia(true);
     try {
-      // Upload new images
-      for (const [index, img] of selectedImages.entries()) {
-        if (!img.file) continue;
-        const uploaded = await uploadFile(img.file);
-        await axiosClient.post("/product-images", {
-          product_id: productId,
-          url: toAbsoluteUrl(uploaded.url),
-          s3_key: uploaded.s3_key,
-          folder: "product-images",
-          type: "gallery",
-          name: uploaded.name || img.file.name,
-          size: img.file.size,
-          mime_type: img.file.type,
-          position: index + 1,
-        });
+      // Prepare FormData with files and other data
+      const uploadFormData = new FormData();
+      
+      // Add video_url if provided
+      if (formData.videoUrl) {
+        uploadFormData.append("video_url", formData.videoUrl);
       }
 
-      // Upload new PDFs
-      for (const pdf of pdfFiles) {
-        if (!pdf.file) continue;
-        const uploaded = await uploadFile(pdf.file);
-        await axiosClient.post("/product-documents", {
-          product_id: productId,
-          url: toAbsoluteUrl(uploaded.url),
-          s3_key: uploaded.s3_key,
-          folder: "product-documents",
-          name: uploaded.name || pdf.file.name,
-          size: pdf.file.size,
-          mime_type: pdf.file.type,
-        });
+      // Add only new image files (those with .file property)
+      let imageCount = 0;
+      selectedImages.forEach((img) => {
+        if (img.file) {
+          uploadFormData.append("images[]", img.file);
+          imageCount++;
+          console.log("Adding image file:", img.file.name, img.file.type, img.file.size);
+        }
+      });
+
+      // Add only new PDF files (those with .file property)
+      let pdfCount = 0;
+      pdfFiles.forEach((pdf) => {
+        if (pdf.file) {
+          uploadFormData.append("pdfs[]", pdf.file);
+          pdfCount++;
+          console.log("Adding PDF file:", pdf.file.name, pdf.file.type, pdf.file.size);
+        }
+      });
+
+      console.log(`Uploading ${imageCount} images and ${pdfCount} PDFs to product ${productId}`);
+      
+      // Log FormData contents for debugging
+      for (const pair of uploadFormData.entries()) {
+        if (pair[1] instanceof File) {
+          console.log(`FormData entry: ${pair[0]} = File(${pair[1].name}, ${pair[1].size} bytes)`);
+        } else {
+          console.log(`FormData entry: ${pair[0]} = ${pair[1]}`);
+        }
       }
+
+      // Send to backend update endpoint
+      // Use POST with _method=PUT for file uploads (Laravel handles this via method spoofing)
+      uploadFormData.append("_method", "PUT");
+      const response = await axiosClient.post(`/products/${productId}`, uploadFormData);
+
+      // Update state to clear file objects and keep only uploaded files
+      // Convert files to URLs for already uploaded items
+      setSelectedImages((prev) => 
+        prev.map((img) => {
+          if (img.file) {
+            // Find the uploaded image from response
+            const uploadedImage = response.data?.data?.images?.find((uploaded: any) => 
+              uploaded.name === img.file?.name || img.id.toString().includes(uploaded.id.toString())
+            );
+            if (uploadedImage) {
+              return {
+                id: uploadedImage.id.toString(),
+                dbId: uploadedImage.id,
+                url: uploadedImage.url,
+                s3_key: uploadedImage.s3_key,
+                position: uploadedImage.position,
+              };
+            }
+          }
+          return img;
+        }).filter((img) => img.file || img.url) // Keep files or existing URLs
+      );
+
+      setPdfFiles((prev) =>
+        prev.map((pdf) => {
+          if (pdf.file) {
+            // Find the uploaded PDF from response
+            const uploadedPdf = response.data?.data?.documents?.find((uploaded: any) =>
+              uploaded.name === pdf.file?.name || pdf.id.toString().includes(uploaded.id.toString())
+            );
+            if (uploadedPdf) {
+              return {
+                id: uploadedPdf.id.toString(),
+                dbId: uploadedPdf.id,
+                name: uploadedPdf.name,
+                url: uploadedPdf.url,
+                s3_key: uploadedPdf.s3_key,
+              };
+            }
+          }
+          return pdf;
+        }).filter((pdf) => pdf.file || pdf.url) // Keep files or existing URLs
+      );
+
+      // Reload product data to ensure we have the latest from server
+      await loadProduct();
 
       showToast("Media uploaded and saved successfully!", "success");
       setActiveTab("seo");
     } catch (err: any) {
-      showToast(err.message || "Media upload failed", "error");
+      showToast(err?.response?.data?.message || err?.message || "Media upload failed", "error");
     } finally {
       setSavingMedia(false);
     }
