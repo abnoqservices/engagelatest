@@ -298,9 +298,11 @@ export default function FormsPage() {
                             <Copy className="mr-2 h-4 w-4" />
                             Duplicate
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <BarChart3 className="mr-2 h-4 w-4" />
-                            Analytics
+                          <DropdownMenuItem asChild>
+                            <Link href={`/forms/${form.id}/submissions`} className="flex items-center">
+                              <BarChart3 className="mr-2 h-4 w-4" />
+                              View Submissions
+                            </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => toggleFormStatus(form)}>
                             <Power className="mr-2 h-4 w-4" />
