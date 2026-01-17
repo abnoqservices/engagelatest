@@ -18,125 +18,124 @@ interface GalleryImage {
 
 interface SliderProps {
   productId: number;
-  product_gallery?: boolean; // Made optional and default to true
+  product_gallery?: boolean;
 }
 
-export default function Slider({ productId, product_gallery = true }: SliderProps) {
+export default function ProductImageSlider({ 
+  productId, 
+  product_gallery = true 
+}: SliderProps) {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // All hooks are called unconditionally — this is REQUIRED
-
   useEffect(() => {
-    const fetchImages = async () => {
-      if (!productId) {
-        setImages([{ id: 0, url: DEFAULT_IMAGE, position: 1 }]);
-        setLoading(false);
-        return;
-      }
+    if (!product_gallery) {
+      setImages([]);
+      setLoading(false);
+      return;
+    }
 
+    if (!productId) {
+      setImages([{ id: 0, url: DEFAULT_IMAGE, position: 0 }]);
+      setLoading(false);
+      return;
+    }
+
+    const fetchImages = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const res = await axiosClient.get("/product-images", {
-          params: { product_id: productId },
-        });
+        const res = await axiosClient.get(`public/products/${productId}`);
+    
 
         if (!res.data?.success) {
           throw new Error(res.data?.message || "API returned success: false");
         }
 
-        const galleryImages = (res.data.data || [])
+        const galleryImages = (res.data.data?.images || [])
           .filter((item: any) => item.type === "gallery" && item.url?.trim())
           .map((item: any) => ({
             id: item.id,
             url: item.url.trim(),
-            position: item.position ?? 999,
+            position: Number(item.position ?? 999),
           }))
-          .sort((a: any, b: any) => a.position - b.position);
+          .sort((a, b) => a.position - b.position);
 
         setImages(
           galleryImages.length > 0
             ? galleryImages
-            : [{ id: 0, url: DEFAULT_IMAGE, position: 1 }]
+            : [{ id: 0, url: DEFAULT_IMAGE, position: 0 }]
         );
       } catch (err: any) {
-        console.error("Error fetching images:", err);
+        console.error("Failed to load product images:", err);
         const message =
           err.response?.data?.message ||
           err.message ||
           "Failed to load product images";
         setError(message);
-        setImages([{ id: 0, url: DEFAULT_IMAGE, position: 1 }]);
+        setImages([{ id: 0, url: DEFAULT_IMAGE, position: 0 }]);
       } finally {
         setLoading(false);
       }
     };
 
-    // Only fetch if gallery is enabled
-    if (product_gallery) {
-      fetchImages();
-    } else {
-      setImages([]);
-      setLoading(false);
-    }
+    fetchImages();
   }, [productId, product_gallery]);
 
-  // Now safely hide the slider if product_gallery is false
-  if (!product_gallery) {
-    return null;
-  }
+  if (!product_gallery) return null;
 
-  // Show loading
   if (loading) {
     return (
-      <div className="w-full max-w-[1200px] mx-auto aspect-square flex items-center justify-center bg-muted rounded-xl">
-        <p className="text-muted-foreground">Loading images...</p>
+      <div className="w-full aspect-[4/5] md:aspect-square bg-muted/40 rounded-xl flex items-center justify-center">
+        <p className="text-muted-foreground animate-pulse">Loading gallery...</p>
       </div>
     );
   }
 
-  // Show error
   if (error) {
     return (
-      <div className="w-full max-w-[1200px] mx-auto aspect-square flex items-center justify-center bg-destructive/10 rounded-xl">
-        <p className="text-destructive">Error: {error}</p>
+      <div className="w-full aspect-[4/5] md:aspect-square bg-destructive/10 rounded-xl flex items-center justify-center p-4 text-center">
+        <p className="text-destructive text-sm">{error}</p>
       </div>
     );
   }
 
-  // No images fallback
-  if (images.length === 0) {
-    return null; // or show a placeholder if you want
-  }
-//max-w-[400px]
+  if (images.length === 0) return null;
+
   return (
-    <div className="card-header-slider">
+    <div className="product-gallery-slider w-full">
       <Swiper
         modules={[Pagination, Autoplay]}
         loop={images.length > 1}
         autoplay={{
-          delay: 3000,
+          delay: 3500,
           disableOnInteraction: false,
+          pauseOnMouseEnter: true,
         }}
-        pagination={{ clickable: true }}
-        spaceBetween={20}
-        className="pb-10"
+        pagination={{ 
+          clickable: true,
+          dynamicBullets: true,
+        }}
+        spaceBetween={12}
+        className="!pb-12 md:!pb-14"
       >
         {images.map((img) => (
           <SwiperSlide key={img.id}>
-            <div className="relative w-full  mx-auto aspect-square">
-              <img
-                src={img.url}
-                alt="Product gallery image"
-                className="w-full h-full object-cover rounded-xl "
-                loading="lazy"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = DEFAULT_IMAGE;
-                }}
-              />
+            <div className="relative w-full overflow-hidden rounded-xl bg-black/5">
+              <div className="relative pb-[100%] md:pb-[100%]"> {/* square */}
+                <img
+                  src={img.url}
+                  alt="Product gallery"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  loading="lazy"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = DEFAULT_IMAGE;
+                    (e.target as HTMLImageElement).classList.add("opacity-70");
+                  }}
+                />
+              </div>
             </div>
           </SwiperSlide>
         ))}

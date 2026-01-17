@@ -38,15 +38,12 @@ export default function SliderTwo({ productId }: SliderTwoProps) {
         setLoading(true);
         setError(null);
 
-        const res = await axiosClient.get("/product-images", {
-          params: { product_id: productId },
-        });
-
+        const res = await axiosClient.get(`public/products/${productId}`);
         if (!res.data?.success) {
           throw new Error(res.data?.message || "API returned success: false");
         }
 
-        const galleryImages = (res.data.data || [])
+        const galleryImages = (res.data.data?.images || [])
           .filter((item: any) => item.type === "gallery" && item.url?.trim())
           .map((item: any) => ({
             id: item.id,
