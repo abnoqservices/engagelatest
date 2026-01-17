@@ -66,8 +66,8 @@ export default function Form({ productId, form_title, form_id }: FormProps) {
         setLoading(true);
         setSubmitError(null);
         
-        // The backend should handle both ID and slug in the same endpoint
-        const response = await axiosClient.get(`/forms/${encodeURIComponent(form_id)}`);
+        // Use public endpoint for forms (no authentication required)
+        const response = await axiosClient.get(`/public/forms/${encodeURIComponent(form_id)}`);
         
         if (response.data.success) {
           setFormData(response.data.data);
@@ -189,7 +189,7 @@ export default function Form({ productId, form_title, form_id }: FormProps) {
         payload.product_id = productId;
       }
 
-      const response = await axiosClient.post(`/forms/${encodeURIComponent(form_id)}/submit`, payload);
+      const response = await axiosClient.post(`/public/forms/${encodeURIComponent(form_id)}/submit`, payload);
 
       if (response.data.success) {
         setSubmitSuccess(true);
