@@ -78,9 +78,9 @@ export default function EventProductAnalyticsDashboard({
 
   useEffect(() => {
     if (!eventId) {
-      setError("Event ID is required")
+    
       setLoading(false)
-      showToast("Event ID is required", "error")
+   
       return
     }
 
@@ -130,7 +130,7 @@ export default function EventProductAnalyticsDashboard({
             setTopProducts(products.slice(0, 8))
           }
         } catch (productsErr) {
-          console.warn("Products analytics failed:", productsErr)
+      
           // Don't block whole dashboard - just skip products section
         }
 
@@ -167,7 +167,7 @@ export default function EventProductAnalyticsDashboard({
         console.error("Analytics loading error:", err)
         const message = err.response?.data?.message || "Failed to load analytics data"
         setError(message)
-        showToast(message, "error")
+     
       } finally {
         setLoading(false)
       }

@@ -118,7 +118,7 @@ const useAnalyticsData = (filters: Filters) => {
       // Optional: notify developer
       if (process.env.NODE_ENV === 'development') {
         console.log("[DEV] Using static fallback analytics data");
-        showToast("Static demo data is active", "info");
+ 
       }
       return;
     }
@@ -144,7 +144,7 @@ const useAnalyticsData = (filters: Filters) => {
           setData({ /* parsed data */ });
         } else {
           setData(FALLBACK_DATA);
-          showToast("Showing demo data (API response invalid)", "warning");
+        
         }
       } catch (err: any) {
         // ... error handling ...
@@ -204,60 +204,60 @@ export default function ProductAnalyticsTab() {
         </div>
       ) : (
         <div className="space-y-8">
-          <KeyMetricsCards metrics={safeData.metrics} />
+           {filters.eventId !== "all" ? (
+        
+        filters.productId !== "all" ? (
+          // Both event and specific product are selected
+          <EventProductAnalyticsDashboard 
+            eventId={filters.eventId}
+            defaultProductId={filters.productId}
+          />
+        ) : (
+          // Only event is selected (product = all)
+          <EventProductAnalyticsDashboard 
+            eventId={filters.eventId}
+          />
+        )
+      ) : (
+        // No specific event selected → show placeholder/message
+        <div className="min-h-[400px] flex flex-col items-center justify-center text-center p-8 border border-dashed rounded-lg bg-muted/30">
+          <h3 className="text-xl font-medium mb-2">Select an event to view analytics</h3>
+          <p className="text-muted-foreground max-w-md">
+            Choose a specific event from the dropdown above to see detailed analytics, 
+            including page views, CTA clicks, top products, and trends.
+          </p>
+        </div>
+      )}
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <ProductPerformanceChart productData={safeData.productData} />
-            <EngagementHeatmap timeData={safeData.timeData} />
+          <ProductPerformanceChart productId={filters.productId} />
+
+          <ProductPerformanceChart productId={filters.productId} eventId={filters.eventId} />
+         
           </div>
+          <ConversionFunnel eventId={filters.eventId} />
+        
+        
 
-          <ConversionFunnel funnelData={safeData.funnelData} />
-          <ProductEngagement timeData={safeData.timeData} />
-
-       
-          <UtmAnalytics productId={filters.productId} dateRange={filters.dateRange} eventId={filters.eventId} />
+          <ProductEngagement productId={filters.productId} />
+<ProductEngagement productId={filters.productId} eventId={filters.eventId} />
+        
 
         
          
           
-          <div className="mt-8">
-      
-        {filters.eventId !== "all" ? (
-        
-          filters.productId !== "all" ? (
-            // Both event and specific product are selected
-            <EventProductAnalyticsDashboard 
-              eventId={filters.eventId}
-              defaultProductId={filters.productId}
-            />
-          ) : (
-            // Only event is selected (product = all)
-            <EventProductAnalyticsDashboard 
-              eventId={filters.eventId}
-            />
-          )
-        ) : (
-          // No specific event selected → show placeholder/message
-          <div className="min-h-[400px] flex flex-col items-center justify-center text-center p-8 border border-dashed rounded-lg bg-muted/30">
-            <h3 className="text-xl font-medium mb-2">Select an event to view analytics</h3>
-            <p className="text-muted-foreground max-w-md">
-              Choose a specific event from the dropdown above to see detailed analytics, 
-              including page views, CTA clicks, top products, and trends.
-            </p>
-          </div>
-        )}
-      </div>
-          
+         
 
-          <FormSubmission />
-
+         
           {/* Traffic & Geo - currently hardcoded event */}
           <TrafficSourceAnalytics eventId={filters.eventId}/>
           <div className="grid gap-6 md:grid-cols-2">
             <GeoAnalytics eventId={filters.eventId} />
             <DeviceAnalytics eventId={filters.eventId} />
           </div>
+          <UtmAnalytics productId={filters.productId} dateRange={filters.dateRange} eventId={filters.eventId} />
         </div>
+        
       )}
     </div>
   )

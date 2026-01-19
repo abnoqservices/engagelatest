@@ -15,13 +15,16 @@ import {
   Check,
   Tag,
   MessageSquare,
-  ExternalLink
+  ExternalLink,
+  Save
 } from "lucide-react";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import axiosClient from "@/lib/axiosClient";
 
 interface CardData {
   company_name: string | null;
@@ -52,6 +55,7 @@ interface ExtractedDataCardProps {
 
 const ExtractedDataCard = ({ data, previewImage }: ExtractedDataCardProps) => {
   const [copied, setCopied] = useState(false);
+  const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
   const copyToClipboard = () => {
@@ -63,6 +67,81 @@ const ExtractedDataCard = ({ data, previewImage }: ExtractedDataCardProps) => {
       description: "Card data has been copied to clipboard",
     });
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleSaveContact = async () => {
+    if (saving) return;
+    setSaving(true);
+
+    try {
+      // Simple name splitting (you can improve this logic later)
+      const nameParts = (data.person_name || "").trim().split(/\s+/);
+      const first_name = nameParts[0] || null;
+      const last_name = nameParts.length > 1 ? nameParts.slice(1).join(" ") : null;
+
+      const payload = {
+        first_name,
+        last_name,
+        email: data.email || null,
+        phone: data.phone_numbers?.[0] || null, // taking first number
+        company: data.company_name || null,
+        contact_type: "ai_detection",
+        contact_source: "factors_ai", // ← change this according to your actual source
+        source_metadata: {
+          designation: data.designation || null,
+          website: data.website || null,
+          full_address: data.full_address || null,
+          city: data.city || null,
+          pincode: data.pincode || null,
+          industry: data.industry_field || null,
+          remarks: data.remarks || null,
+          social_handles: data.social_handles,
+          extraction_method: "business_card_ai",
+        },
+        status: "active",
+        deduplicate: true,
+      };
+
+      const response = await axiosClient.post("/contacts", payload);
+
+      toast({
+        title: "Success",
+        description: "Contact has been successfully saved",
+        variant: "default",
+      });
+
+      console.log("Contact created:", response.data);
+    } catch (error: any) {
+      console.error("Error saving contact:", error);
+
+      let errorMessage = "Failed to save contact. Please try again later.";
+
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 422) {
+          // Laravel validation errors
+          const errors = data.errors || {};
+          errorMessage = Object.values(errors).flat().join("\n") || "Validation failed";
+        } else if (status === 409 || data?.message?.toLowerCase().includes("duplicate")) {
+          errorMessage = "Contact already exists (duplicate detected)";
+        } else if (data?.message) {
+          errorMessage = data.message;
+        } else {
+          errorMessage = `Server error (${status})`;
+        }
+      } else if (error.request) {
+        errorMessage = "No response from server. Please check your connection.";
+      }
+
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const DataRow = ({ 
@@ -137,29 +216,50 @@ const ExtractedDataCard = ({ data, previewImage }: ExtractedDataCardProps) => {
         </div>
       )}
 
-      {/* Extracted Data */}
+      {/* Main Card */}
       <Card className="shadow-elevated border-0 overflow-hidden">
         <CardHeader className="gradient-primary text-primary-foreground p-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <CardTitle className="text-2xl font-heading mb-1">Extracted Data</CardTitle>
               <p className="text-primary-foreground/70 text-sm">AI-powered extraction results</p>
             </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={copyToClipboard}
-              className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground border-0 backdrop-blur-sm"
-            >
-              {copied ? (
-                <Check className="w-4 h-4 mr-2" />
-              ) : (
-                <Copy className="w-4 h-4 mr-2" />
-              )}
-              {copied ? 'Copied!' : 'Copy JSON'}
-            </Button>
+
+            <div className="flex flex-wrap gap-3">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={copyToClipboard}
+                className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground border-0 backdrop-blur-sm"
+              >
+                {copied ? (
+                  <Check className="w-4 h-4 mr-2" />
+                ) : (
+                  <Copy className="w-4 h-4 mr-2" />
+                )}
+                {copied ? 'Copied!' : 'Copy JSON'}
+              </Button>
+
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleSaveContact}
+                disabled={saving}
+                className="min-w-[140px]"
+              >
+                {saving ? (
+                  <>Saving...</>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Contact
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </CardHeader>
+
         <CardContent className="p-6 space-y-4 gradient-card">
           <DataRow icon={Building2} label="Company" value={data.company_name} />
           <DataRow icon={User} label="Name" value={data.person_name} />
@@ -183,7 +283,6 @@ const ExtractedDataCard = ({ data, previewImage }: ExtractedDataCardProps) => {
             </div>
           )}
 
-          {/* Industry Field */}
           {data.industry_field && (
             <div className="group flex items-start gap-4 p-4 rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/30 transition-all duration-300">
               <div className="w-10 h-10 rounded-lg gradient-secondary flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
@@ -198,7 +297,6 @@ const ExtractedDataCard = ({ data, previewImage }: ExtractedDataCardProps) => {
             </div>
           )}
 
-          {/* Remarks */}
           {data.remarks && (
             <div className="group flex items-start gap-4 p-4 rounded-xl bg-gradient-to-br from-muted/50 to-muted/30 border border-border/50 transition-all duration-300">
               <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
@@ -211,7 +309,6 @@ const ExtractedDataCard = ({ data, previewImage }: ExtractedDataCardProps) => {
             </div>
           )}
 
-          {/* Social Handles */}
           {(data.social_handles?.linkedin || 
             data.social_handles?.instagram || 
             data.social_handles?.facebook || 
@@ -221,37 +318,13 @@ const ExtractedDataCard = ({ data, previewImage }: ExtractedDataCardProps) => {
             <div className="pt-6 border-t border-border">
               <p className="text-sm font-semibold mb-4 text-muted-foreground uppercase tracking-wider">Social Media</p>
               <div className="flex flex-wrap gap-3">
-                <SocialLink 
-                  icon={Linkedin} 
-                  url={data.social_handles?.linkedin} 
-                  label="LinkedIn" 
-                />
-                <SocialLink 
-                  icon={Instagram} 
-                  url={data.social_handles?.instagram} 
-                  label="Instagram" 
-                />
-                <SocialLink 
-                  icon={Facebook} 
-                  url={data.social_handles?.facebook} 
-                  label="Facebook" 
-                />
-                <SocialLink 
-                  icon={Twitter} 
-                  url={data.social_handles?.x} 
-                  label="X" 
-                />
-                <SocialLink 
-                  icon={Youtube} 
-                  url={data.social_handles?.youtube} 
-                  label="YouTube" 
-                />
+                <SocialLink icon={Linkedin} url={data.social_handles?.linkedin} label="LinkedIn" />
+                <SocialLink icon={Instagram} url={data.social_handles?.instagram} label="Instagram" />
+                <SocialLink icon={Facebook} url={data.social_handles?.facebook} label="Facebook" />
+                <SocialLink icon={Twitter} url={data.social_handles?.x} label="X" />
+                <SocialLink icon={Youtube} url={data.social_handles?.youtube} label="YouTube" />
                 {data.social_handles?.other && (
-                  <SocialLink 
-                    icon={Globe} 
-                    url={data.social_handles.other} 
-                    label="Other" 
-                  />
+                  <SocialLink icon={Globe} url={data.social_handles.other} label="Other" />
                 )}
               </div>
             </div>

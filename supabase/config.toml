@@ -1,0 +1,10 @@
+project_id = "oplqtqqtxcjctejxuoxz"
+
+[functions.scan-card]
+verify_jwt = false
+
+[functions.cards]
+verify_jwt = false
+
+[functions.send-whatsapp]
+verify_jwt = false

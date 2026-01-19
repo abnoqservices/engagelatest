@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image"
 import CameraScanner from "@/components/CameraScanner";
-import AdminDashboard from "@/components/AdminDashboard";
+
 import { ScanLine, Database, LogOut, Loader2, Sparkles, Zap, Shield } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -168,10 +168,7 @@ const Index = () => {
             </TabsContent>
 
             <TabsContent value="dashboard" className="animate-fade-in">
-              <AdminDashboard
-                refreshTrigger={refreshTrigger}
-                onCardDeleted={() => setRefreshTrigger((prev) => prev + 1)}
-              />
+           
             </TabsContent>
           </Tabs>
         </main>

@@ -1,4 +1,6 @@
-import axiosClient from "@/lib/axiosClient";
+// -------------------------------------------------------------------
+// Business Card API Client - Improved & more robust version
+// -------------------------------------------------------------------
 
 export interface CardData {
   id: string;
@@ -34,29 +36,90 @@ export interface ScanResponse {
   error?: string;
 }
 
-export interface CardsListResponse {
-  success: boolean;
-  data: CardData[];
-  total: number;
-  limit: number;
-  offset: number;
-  error?: string;
-}
+// Better error handling helper
+async function handleResponse<T>(res: Response): Promise<T> {
+  let data: any;
 
-// Scan a business card using AI
-export async function scanCard(imageData: string): Promise<ScanResponse> {
-  const response = await axiosClient.post<ScanResponse>('/api/scan-card', {
-    imageData,
-  });
-
-  if (!response.data.success) {
-    throw new Error(response.data.error || 'Failed to scan card');
+  try {
+    data = await res.json();
+  } catch (e) {
+    throw new Error(
+      `Server returned invalid JSON - Status: ${res.status} ${res.statusText}`
+    );
   }
 
-  return response.data;
+  if (!res.ok) {
+    throw new Error(
+      data?.error ||
+      data?.message ||
+      data?.errorMessage ||
+      `Request failed (${res.status} ${res.statusText})`
+    );
+  }
+
+  return data as T;
 }
 
-// Get all cards (with optional filters)
+/**
+ * Clean and normalize base64 image string
+ */
+function normalizeBase64Image(imageInput: string): string {
+  let base64 = imageInput.trim();
+
+  if (base64.startsWith('data:')) {
+    const matches = base64.match(/^data:image\/[a-z]+;base64,(.+)$/);
+    if (!matches?.[1]) throw new Error('Invalid data URL format');
+    base64 = matches[1];
+  }
+
+  base64 = base64.replace(/\s+/g, '');
+
+  if (!/^[A-Za-z0-9+/=]+$/.test(base64)) {
+    throw new Error('Base64 string contains invalid characters');
+  }
+
+  return base64;
+}
+
+export async function scanCard(imageData: string): Promise<ScanResponse> {
+  try {
+    const cleanBase64 = normalizeBase64Image(imageData);
+
+    // We ALWAYS send full data URL - most reliable way
+    const fullDataUrl = `data:image/jpeg;base64,${cleanBase64}`;
+
+    const payload = {
+      image: fullDataUrl,           // ← important: field name must be "image"
+    };
+
+    const res = await fetch('/api/scan-card', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      credentials: 'include',
+    });
+
+    const result = await handleResponse<ScanResponse>(res);
+
+    if (!result.success) {
+      throw new Error(result.error || 'Card scanning failed');
+    }
+
+    return result;
+  } catch (err: any) {
+    console.error('Scan card failed:', err);
+    throw new Error(
+      err.message?.includes('Invalid image')
+        ? 'Invalid or corrupted image. Please try another photo.'
+        : err.message || 'Failed to process business card. Try again.'
+    );
+  }
+}
+
+// Rest of your functions remain mostly the same, just using improved handleResponse
+
 export async function getAllCards(params?: {
   search?: string;
   city?: string;
@@ -64,35 +127,58 @@ export async function getAllCards(params?: {
   limit?: number;
   offset?: number;
 }): Promise<{ data: CardData[]; total: number }> {
-  const response = await axiosClient.get('/api/cards', { params });
+  const query = new URLSearchParams();
+
+  if (params?.search) query.set('search', params.search);
+  if (params?.city) query.set('city', params.city);
+  if (params?.pincode) query.set('pincode', params.pincode);
+  if (params?.limit) query.set('limit', params.limit.toString());
+  if (params?.offset) query.set('offset', params.offset.toString());
+
+  const res = await fetch(`/api/cards?${query.toString()}`, {
+    credentials: 'include',
+  });
+
+  const data = await handleResponse<CardsListResponse>(res);
 
   return {
-    data: response.data.data || [],
-    total: response.data.total || 0,
+    data: data.data || [],
+    total: data.total || 0,
   };
 }
 
-// Get a single card by ID
 export async function getCard(id: string): Promise<CardData | null> {
-  try {
-    const response = await axiosClient.get<CardData>(`/api/cards/${id}`);
-    return response.data;
-  } catch (error: any) {
-    if (error.response?.status === 404) return null;
-    throw new Error(error.response?.data?.message || 'Failed to fetch card');
-  }
+  const res = await fetch(`/api/cards/${id}`, {
+    credentials: 'include',
+  });
+
+  if (res.status === 404) return null;
+  if (!res.ok) throw await handleResponse(res); // will throw
+
+  return handleResponse<CardData>(res);
 }
 
-// Update a card
 export async function updateCard(
   id: string,
   updates: Partial<Omit<CardData, 'id' | 'created_at' | 'user_id'>>
 ): Promise<CardData> {
-  const response = await axiosClient.patch<CardData>(`/api/cards/${id}`, updates);
-  return response.data;
+  const res = await fetch(`/api/cards/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates),
+    credentials: 'include',
+  });
+
+  return handleResponse<CardData>(res);
 }
 
-// Delete a card
 export async function deleteCard(id: string): Promise<void> {
-  await axiosClient.delete(`/api/cards/${id}`);
+  const res = await fetch(`/api/cards/${id}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    await handleResponse(res); // will throw
+  }
 }

@@ -55,7 +55,7 @@ export function TrafficSourceAnalytics({ eventId }: TrafficSourceAnalyticsProps)
 
   useEffect(() => {
     if (!eventId) {
-      setError("Event ID is required")
+    
       setLoading(false)
       return
     }
@@ -89,7 +89,7 @@ export function TrafficSourceAnalytics({ eventId }: TrafficSourceAnalyticsProps)
         console.error("Error fetching traffic sources:", err)
         const message = err instanceof Error ? err.message : "Something went wrong"
         setError(message)
-        showToast("Could not load traffic sources", "error")
+      
       } finally {
         setLoading(false)
       }

@@ -1,20 +1,17 @@
 "use client"
 
 import * as React from "react"
-import { Package, Calendar, QrCode, UserCheck, Eye, TrendingUp, Download, BarChart3, Users, Megaphone, CalendarPlus, Sparkles } from 'lucide-react'
+import { 
+  Package, Calendar, FileText, QrCode, Eye, TrendingUp, 
+  Globe, Smartphone, BarChart3, Download, Filter, 
+  ArrowUpRight, ArrowDownRight 
+} from 'lucide-react'
 import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  Tooltip,
+  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  LineChart, Line
 } from "recharts"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -25,569 +22,303 @@ import {
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { DashboardLayout } from "@/components/dashboard/layout"
+// ─── Modern Color Palette ────────────────────────────────────────
+const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#6366f1']
 
-// Mock data
-const qrScanData = [
-  { date: "Jan 1", scans: 1200 },
-  { date: "Jan 8", scans: 1900 },
-  { date: "Jan 15", scans: 1600 },
-  { date: "Jan 22", scans: 2400 },
-  { date: "Jan 29", scans: 2100 },
-  { date: "Feb 5", scans: 2800 },
-  { date: "Feb 12", scans: 3200 },
+// ─── Mock Data ───────────────────────────────────────────────────
+const summaryMetrics = [
+  { title: "Total Products",    value: "384",   change: "+12.5%", isPositive: true,  icon: Package,    trend: [20,35,28,42,38,45,52] },
+  { title: "Total Events",      value: "156",   change: "+8.2%",  isPositive: true,  icon: Calendar,   trend: [30,25,35,40,38,42,48] },
+  { title: "Form Submissions",  value: "3,247", change: "+19.8%", isPositive: true,  icon: FileText,   trend: [15,25,20,30,35,40,50] },
+  { title: "Total QR Scans",    value: "45.2K", change: "+18.2%", isPositive: true,  icon: QrCode,     trend: [25,30,28,35,42,48,55] },
+  { title: "Total Page Views",  value: "124.5K",change: "+15.3%", isPositive: true,  icon: Eye,        trend: [40,55,48,62,58,70,82] },
 ]
 
-const topProductsData = [
-  { name: "iPhone 15 Pro", scans: 3240 },
-  { name: "MacBook Pro M3", scans: 2890 },
-  { name: "AirPods Pro", scans: 2340 },
-  { name: "iPad Air", scans: 1980 },
-  { name: "Apple Watch", scans: 1560 },
+const filteredMetrics = [
+  { title: "Product Page Views", value: "89.0K", change: "+14.1%", isPositive: true, icon: Eye },
+  { title: "Product QR Scans",   value: "32.4K", change: "+16.7%", isPositive: true, icon: QrCode },
+  { title: "Form Submissions",   value: "2,890", change: "+23.1%", isPositive: true, icon: FileText },
+  { title: "Direct Page Views",  value: "45.6K", change: "+11.9%", isPositive: true, icon: Eye },
 ]
 
-const funnelData = [
-  { stage: "QR Scans", count: 12500, percentage: 100 },
-  { stage: "Product Views", count: 8900, percentage: 71 },
-  { stage: "Form Opens", count: 5200, percentage: 42 },
-  { stage: "Form Submits", count: 2890, percentage: 23 },
-  { stage: "Qualified Leads", count: 890, percentage: 7 },
+const utmData = [
+  { name: 'Google',   value: 400 },
+  { name: 'Facebook', value: 300 },
+  { name: 'Direct',   value: 300 },
+  { name: 'Email',    value: 200 },
+  { name: 'Other',    value: 100 },
 ]
 
-const eventHeatmap = [
-  { booth: "A1", Mon: 45, Tue: 52, Wed: 48, Thu: 61, Fri: 58 },
-  { booth: "A2", Mon: 38, Tue: 44, Wed: 41, Thu: 49, Fri: 52 },
-  { booth: "B1", Mon: 62, Tue: 58, Wed: 65, Thu: 72, Fri: 68 },
-  { booth: "B2", Mon: 41, Tue: 47, Wed: 43, Thu: 52, Fri: 49 },
-  { booth: "C1", Mon: 55, Tue: 61, Wed: 58, Thu: 64, Fri: 71 },
+const deviceData = [
+  { name: 'Mobile',  value: 60 },
+  { name: 'Desktop', value: 30 },
+  { name: 'Tablet',  value: 10 },
 ]
 
-const engagementTrendData = [
-  { month: "Jan", scans: 1200, views: 1800, leads: 450 },
-  { month: "Feb", scans: 1900, views: 2400, leads: 680 },
-  { month: "Mar", scans: 1600, views: 2100, leads: 520 },
-  { month: "Apr", scans: 2400, views: 3200, leads: 890 },
-  { month: "May", scans: 2100, views: 2800, leads: 720 },
-  { month: "Jun", scans: 2800, views: 3600, leads: 1100 },
-  { month: "Jul", scans: 3200, views: 4200, leads: 1350 },
+const timeSeriesData = [
+  { date: 'Jan 1',  views: 4200, scans: 1800, subs: 210 },
+  { date: 'Jan 8',  views: 3800, scans: 2400, subs: 280 },
+  { date: 'Jan 15', views: 5200, scans: 3100, subs: 340 },
+  { date: 'Jan 22', views: 4800, scans: 2900, subs: 310 },
+  { date: 'Jan 29', views: 6100, scans: 3800, subs: 420 },
+  { date: 'Feb 5',  views: 6800, scans: 4500, subs: 510 },
+  { date: 'Feb 12', views: 7400, scans: 5200, subs: 580 },
 ]
 
-const metrics = [
-  {
-    title: "Total Products",
-    value: "384",
-    change: "+12.5%",
-    isPositive: true,
-    icon: Package,
-    color: "text-gray-600",
-    bgColor: "bg-gray-100",
-  },
-  {
-    title: "Live Events",
-    value: "23",
-    change: "+4",
-    isPositive: true,
-    icon: Calendar,
-    color: "text-gray-600",
-    bgColor: "bg-gray-100",
-  },
-  {
-    title: "QR Scans",
-    value: "45.2K",
-    change: "+18.2%",
-    isPositive: true,
-    icon: QrCode,
-    color: "text-gray-600",
-    bgColor: "bg-gray-100",
-  },
-  {
-    title: "Leads Generated",
-    value: "2,890",
-    change: "+23.1%",
-    isPositive: true,
-    icon: UserCheck,
-    color: "text-gray-600",
-    bgColor: "bg-gray-100",
-  },
-  {
-    title: "Page Views",
-    value: "124.5K",
-    change: "+15.3%",
-    isPositive: true,
-    icon: Eye,
-    color: "text-gray-600",
-    bgColor: "bg-gray-100",
-  },
-  {
-    title: "Form Submissions",
-    value: "3,247",
-    change: "+19.8%",
-    isPositive: true,
-    icon: TrendingUp,
-    color: "text-gray-600",
-    bgColor: "bg-gray-100",
-  },
-]
+// Simple sparkline component
+const MiniSparkline = ({ data, color = "#3b82f6" }: { data: number[], color?: string }) => (
+  <ResponsiveContainer width="100%" height={36}>
+    <AreaChart data={data.map(v => ({ v }))}>
+      <defs>
+        <linearGradient id={`spark-${color}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="5%"  stopColor={color} stopOpacity={0.35}/>
+          <stop offset="95%" stopColor={color} stopOpacity={0}/>
+        </linearGradient>
+      </defs>
+      <Area type="monotone" dataKey="v" stroke={color} strokeWidth={2} fill={`url(#spark-${color})`} />
+    </AreaChart>
+  </ResponsiveContainer>
+)
 
-const quickActions = [
-  {
-    title: "Generate QR",
-    description: "Create QR codes for products",
-    icon: QrCode,
-    href: "/products/new",
-  },
-  {
-    title: "Create Event",
-    description: "Set up a new event",
-    icon: CalendarPlus,
-    href: "/events/new",
-  },
-  {
-    title: "Send Campaign",
-    description: "Launch marketing campaign",
-    icon: Megaphone,
-    href: "/campaigns/new",
-  },
-  {
-    title: "View Leads",
-    description: "See all captured leads",
-    icon: Users,
-    href: "/customers",
-  },
-]
-
-export default function DashboardPage() {
-  const [timeRange, setTimeRange] = React.useState("7d")
+export default function AnalyticsDashboard() {
+  const [product, setProduct] = React.useState("all")
+  const [event, setEvent] = React.useState("all")
+  const [dateRange, setDateRange] = React.useState("last30")
 
   return (
     <DashboardLayout>
-      <div className="p-6 lg:p-4 space-y-6  min-h-screen">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="min-h-screen bg-gray-50/50">
+      <div className="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10 space-y-8">
+
+        {/* Header + Quick Actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
           <div>
-            <h1 className="text-[28px] font-bold text-[#1C2434] tracking-tight">Dashboard</h1>
-            <p className="text-sm text-gray-500 font-normal mt-1">Welcome back! Here's what's happening with your engagement platform.</p>
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900">Analytics Overview</h1>
+            <p className="mt-1.5 text-gray-600">Track product performance, traffic sources and user behavior</p>
           </div>
-          <Button className="bg-pexifly font-bold text-white ">
-            <Download className="w-4 h-4 mr-2" />
-            Export Report
-          </Button>
-        </div>
-
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {metrics.slice(0, 2).map((metric) => (
-            <Card key={metric.title} className="bg-white border-gray-200  hover: transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`w-11 h-11 rounded-full ${metric.bgColor} flex items-center justify-center`}>
-                    <metric.icon className={`w-5 h-5 ${metric.color}`} />
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">{metric.title}</p>
-                  <h3 className="text-[32px] font-bold text-[#1C2434] leading-none tracking-tight mb-3">{metric.value}</h3>
-                  <div className="flex items-center gap-1">
-                    <TrendingUp className={`w-4 h-4 ${metric.isPositive ? 'text-green-600' : 'text-red-600 rotate-180'}`} />
-                    <span className={`text-sm font-semibold ${metric.isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                      {metric.change}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-
-          <Card className="bg-white border-gray-200  lg:row-span-2 hover: transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-3 px-6 pt-6">
-              <div>
-                <CardTitle className="text-lg font-bold text-[#1C2434] tracking-tight">Active Campaigns</CardTitle>
-                <CardDescription className="text-sm text-gray-500 mt-1 font-normal">Running marketing campaigns</CardDescription>
-              </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-gray-100">
-                <Sparkles className="h-4 w-4 text-gray-500" />
-              </Button>
-            </CardHeader>
-            <CardContent className="pb-6 px-6 space-y-4">
-              {/* Campaign Stats */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Megaphone className="h-5 w-5 text-blue-600" />
-                    <span className="text-xs font-medium text-blue-600">Email</span>
-                  </div>
-                  <p className="text-2xl font-bold text-[#1C2434]">12</p>
-                  <p className="text-xs text-gray-500 mt-1">Active campaigns</p>
-                </div>
-                <div className="bg-purple-50 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Users className="h-5 w-5 text-purple-600" />
-                    <span className="text-xs font-medium text-purple-600">SMS</span>
-                  </div>
-                  <p className="text-2xl font-bold text-[#1C2434]">8</p>
-                  <p className="text-xs text-gray-500 mt-1">Active campaigns</p>
-                </div>
-              </div>
-
-              {/* Recent Campaigns */}
-              <div className="space-y-3 pt-2">
-                <p className="text-sm font-semibold text-gray-700">Recent Campaigns</p>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Product Launch 2024</p>
-                        <p className="text-xs text-gray-500">Email • 2,450 sent</p>
-                      </div>
-                    </div>
-                    <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Active</Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Event Reminder</p>
-                        <p className="text-xs text-gray-500">SMS • 890 sent</p>
-                      </div>
-                    </div>
-                    <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Active</Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Welcome Series</p>
-                        <p className="text-xs text-gray-500">Email • 1,230 sent</p>
-                      </div>
-                    </div>
-                    <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Scheduled</Badge>
-                  </div>
-                </div>
-              </div>
-
-              {/* Performance Summary */}
-              <div className="pt-4 border-t border-gray-100">
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1.5 font-medium">Open Rate</p>
-                    <p className="text-base font-bold text-[#1C2434] flex items-center gap-1">
-                      34.5%
-                      <TrendingUp className="h-3.5 w-3.5 text-green-600" />
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1.5 font-medium">Click Rate</p>
-                    <p className="text-base font-bold text-[#1C2434] flex items-center gap-1">
-                      12.8%
-                      <TrendingUp className="h-3.5 w-3.5 text-green-600" />
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1.5 font-medium">Conversion</p>
-                    <p className="text-base font-bold text-[#1C2434] flex items-center gap-1">
-                      5.2%
-                      <TrendingUp className="h-3.5 w-3.5 text-green-600" />
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {metrics.slice(2).map((metric) => (
-            <Card key={metric.title} className="bg-white border-gray-200  hover: transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`w-11 h-11 rounded-full ${metric.bgColor} flex items-center justify-center`}>
-                    <metric.icon className={`w-5 h-5 ${metric.color}`} />
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">{metric.title}</p>
-                  <h3 className="text-[32px] font-bold text-[#1C2434] leading-none tracking-tight mb-3">{metric.value}</h3>
-                  <div className="flex items-center gap-1">
-                    <TrendingUp className={`w-4 h-4 ${metric.isPositive ? 'text-green-600' : 'text-red-600 rotate-180'}`} />
-                    <span className={`text-sm font-semibold ${metric.isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                      {metric.change}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <Card className="bg-white border-gray-200  hover: transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-4 px-6 pt-6">
-            <div>
-              <CardTitle className="text-lg font-bold text-[#1C2434] tracking-tight">QR Scan Activity</CardTitle>
-            </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-gray-100">
-              <BarChart3 className="h-4 w-4 text-gray-500" />
+          <div className="flex flex-wrap gap-3">
+            <Button variant="outline" size="sm" className="gap-2 border-gray-300">
+              <Download className="h-4 w-4" />
+              Export
             </Button>
+          </div>
+        </div>
+
+        {/* Global Filters - Sticky possible with position: sticky in production */}
+      
+
+        {/* Top Summary Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+          {summaryMetrics.map((metric, i) => (
+            <Card 
+              key={metric.title} 
+              className="border-gray-200/70  hover:shadow transition-shadow duration-200"
+            >
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="p-2.5 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50">
+                    <metric.icon className="h-5 w-5 text-indigo-600" />
+                  </div>
+                  <Badge 
+                    variant="secondary" 
+                    className={`text-xs font-medium px-2.5 py-0.5 flex items-center gap-1 ${
+                      metric.isPositive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                    }`}
+                  >
+                    {metric.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                    {metric.change}
+                  </Badge>
+                </div>
+
+                <p className="text-sm font-medium text-gray-600 mb-1">{metric.title}</p>
+                <div className="text-2xl font-bold text-gray-900 mb-3">{metric.value}</div>
+
+                <MiniSparkline data={metric.trend} color={COLORS[i % COLORS.length]} />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Second level filtered metrics */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {filteredMetrics.map((m, i) => (
+            <Card key={m.title} className="border border-gray-200/70  hover:shadow">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <m.icon className={`h-5 w-5 ${
+                    i === 0 ? 'text-blue-600' :
+                    i === 1 ? 'text-purple-600' :
+                    i === 2 ? 'text-emerald-600' :
+                    'text-amber-600'
+                  }`} />
+                  <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded">
+                    {m.change}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 font-medium mb-1">{m.title}</p>
+                <div className="text-2xl font-bold text-gray-900">{m.value}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Main Trends Chart */}
+        <Card className="border-gray-200/70 ">
+          <CardHeader className="pb-2 border-b">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg font-semibold">Performance Over Time</CardTitle>
+                <CardDescription>Page views, QR scans & form submissions</CardDescription>
+              </div>
+              <BarChart3 className="h-5 w-5 text-gray-500" />
+            </div>
           </CardHeader>
-          <CardContent className="pb-6 px-6">
-            <ResponsiveContainer width="100%" height={320}>
-              <BarChart data={qrScanData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
-                <XAxis 
-                  dataKey="date" 
-                  stroke="#9CA3AF" 
-                  style={{ fontSize: '12px', fontWeight: 500 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis 
-                  stroke="#9CA3AF" 
-                  style={{ fontSize: '12px', fontWeight: 500 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
+          <CardContent className="pt-6">
+            <ResponsiveContainer width="100%" height={380}>
+              <LineChart data={timeSeriesData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f1f1" vertical={false} />
+                <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: 'white', 
-                    border: '1px solid #E5E7EB',
+                    backgroundColor: 'rgba(255,255,255,0.98)',
+                    border: '1px solid #e5e7eb',
                     borderRadius: '8px',
-                    fontSize: '14px'
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
                   }}
                 />
-                <Bar dataKey="scans" fill="#3C50E0" radius={[8, 8, 0, 0]} />
-              </BarChart>
+                <Legend wrapperStyle={{ paddingTop: 12 }} iconType="circle" />
+                <Line type="monotone" dataKey="views" stroke="#3b82f6" strokeWidth={2.5} dot={false} name="Page Views" />
+                <Line type="monotone" dataKey="scans" stroke="#8b5cf6" strokeWidth={2.5} dot={false} name="QR Scans" />
+                <Line type="monotone" dataKey="subs"  stroke="#10b981" strokeWidth={2.5} dot={false} name="Submissions" />
+              </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-gray-200  hover: transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-4 px-6 pt-6">
-            <div>
-              <CardTitle className="text-lg font-bold text-[#1C2434] tracking-tight">Engagement Statistics</CardTitle>
-              <CardDescription className="text-sm text-gray-500 mt-1 font-normal">QR Scans, Page Views, and Leads over time</CardDescription>
-            </div>
-            <div className="flex gap-2">
-              <Button variant={timeRange === "monthly" ? "secondary" : "ghost"} size="sm" className="h-8 text-xs font-medium hover:bg-gray-100">Monthly</Button>
-              <Button variant={timeRange === "quarterly" ? "secondary" : "ghost"} size="sm" className="h-8 text-xs font-medium hover:bg-gray-100">Quarterly</Button>
-              <Button variant={timeRange === "yearly" ? "secondary" : "ghost"} size="sm" className="h-8 text-xs font-medium bg-gray-100">Annually</Button>
-            </div>
-          </CardHeader>
-          <CardContent className="pb-6 px-6">
-            <ResponsiveContainer width="100%" height={320}>
-              <AreaChart data={engagementTrendData}>
-                <defs>
-                  <linearGradient id="colorScans" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3C50E0" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3C50E0" stopOpacity={0.05} />
-                  </linearGradient>
-                  <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#93C5FD" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#93C5FD" stopOpacity={0.05} />
-                  </linearGradient>
-                  <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#A78BFA" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#A78BFA" stopOpacity={0.05} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
-                <XAxis 
-                  dataKey="month" 
-                  stroke="#9CA3AF" 
-                  style={{ fontSize: '12px', fontWeight: 500 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis 
-                  stroke="#9CA3AF" 
-                  style={{ fontSize: '12px', fontWeight: 500 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
-                    border: '1px solid #E5E7EB',
-                    borderRadius: '8px',
-                    fontSize: '14px'
-                  }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="scans" 
-                  stroke="#3C50E0" 
-                  strokeWidth={2.5}
-                  fillOpacity={1} 
-                  fill="url(#colorScans)" 
-                  name="QR Scans"
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="views" 
-                  stroke="#93C5FD" 
-                  strokeWidth={2.5}
-                  fillOpacity={1} 
-                  fill="url(#colorViews)" 
-                  name="Page Views"
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="leads" 
-                  stroke="#A78BFA" 
-                  strokeWidth={2.5}
-                  fillOpacity={1} 
-                  fill="url(#colorLeads)" 
-                  name="Leads"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        {/* UTM + Device + Country - 3 column layout on large screens */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          <Card className="lg:col-span-2 bg-white border-gray-200  hover: transition-shadow">
-            <CardHeader className="border-b border-gray-100 pb-4 px-6 pt-6">
-              <CardTitle className="text-lg font-bold text-gray-900">QR Scans Trend</CardTitle>
-              <CardDescription className="text-sm text-gray-600">Daily scan activity over time</CardDescription>
+          {/* UTM Pie + simple list */}
+          <Card className="border-gray-200/70  lg:col-span-1">
+            <CardHeader className="pb-2 border-b">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-blue-600" />
+                UTM Sources
+              </CardTitle>
             </CardHeader>
-            <CardContent className="p-6">
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={qrScanData}>
-                  <defs>
-                    <linearGradient id="colorScans" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3C50E0" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#3C50E0" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                  <XAxis dataKey="date" stroke="#9ca3af" style={{ fontSize: '12px' }} />
-                  <YAxis stroke="#9ca3af" style={{ fontSize: '12px' }} />
+            <CardContent className="pt-6">
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie
+                    data={utmData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={90}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {utmData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
                   <Tooltip />
-                  <Area
-                    type="monotone"
-                    dataKey="scans"
-                    stroke="#3C50E0"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#colorScans)"
-                  />
-                </AreaChart>
+                </PieChart>
               </ResponsiveContainer>
+
+              <div className="mt-6 space-y-2">
+                {utmData.map((item, i) => (
+                  <div key={item.name} className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i] }} />
+                      <span>{item.name}</span>
+                    </div>
+                    <span className="font-medium">{item.value}</span>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white border-gray-200  hover: transition-shadow">
-            <CardHeader className="border-b border-gray-100 pb-4 px-6 pt-6">
-              <CardTitle className="text-lg font-bold text-gray-900">Top Products</CardTitle>
-              <CardDescription className="text-sm text-gray-600">Most scanned this month</CardDescription>
+          {/* Device Distribution */}
+          <Card className="border-gray-200/70  lg:col-span-1">
+            <CardHeader className="pb-2 border-b">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Smartphone className="h-5 w-5 text-purple-600" />
+                Devices
+              </CardTitle>
             </CardHeader>
-            <CardContent className="p-6">
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={topProductsData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                  <XAxis type="number" stroke="#9ca3af" style={{ fontSize: '12px' }} />
-                  <YAxis type="category" dataKey="name" stroke="#9ca3af" style={{ fontSize: '12px' }} width={100} />
+            <CardContent className="pt-6">
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie
+                    data={deviceData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {deviceData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
                   <Tooltip />
-                  <Bar dataKey="scans" fill="#a78bfa" radius={[0, 8, 8, 0]} />
+                </PieChart>
+              </ResponsiveContainer>
+
+              <div className="mt-6 space-y-2">
+                {deviceData.map((item, i) => (
+                  <div key={item.name} className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i] }} />
+                      <span>{item.name}</span>
+                    </div>
+                    <span className="font-medium">{item.value}%</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Country Bar Chart */}
+          <Card className="border-gray-200/70  lg:col-span-1">
+            <CardHeader className="pb-2 border-b">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Globe className="h-5 w-5 text-emerald-600" />
+                Top Countries
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={[
+                  { name: 'USA', value: 45000 },
+                  { name: 'India', value: 32000 },
+                  { name: 'UK', value: 18000 },
+                  { name: 'Germany', value: 12000 },
+                  { name: 'Canada', value: 8000 },
+                ]} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f1f1" horizontal={false} />
+                  <XAxis type="number" hide />
+                  <YAxis 
+                    type="category" 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    fontSize={13} 
+                    width={80}
+                  />
+                  <Tooltip />
+                  <Bar dataKey="value" radius={[0, 6, 6, 0]} fill="#3b82f6" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
         </div>
-
-        <Card className="bg-white border-gray-200  hover: transition-shadow">
-          <CardHeader className="border-b border-gray-100 pb-4 px-6 pt-6">
-            <CardTitle className="text-lg font-bold text-gray-900">Lead Funnel</CardTitle>
-            <CardDescription className="text-sm text-gray-600">Conversion stages breakdown</CardDescription>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              {funnelData.map((stage, index) => (
-                <div key={stage.stage} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium">{stage.stage}</span>
-                    <span className="text-muted-foreground">
-                      {stage.count.toLocaleString()} ({stage.percentage}%)
-                    </span>
-                  </div>
-                  <div className="h-8 overflow-hidden rounded-lg bg-muted">
-                    <div
-                      className="h-full bg-gradient-to-r from-blue-500 to-violet-500 transition-all"
-                      style={{ width: `${stage.percentage}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white border-gray-200  hover: transition-shadow">
-          <CardHeader className="border-b border-gray-100 pb-4 px-6 pt-6">
-            <CardTitle className="text-lg font-bold text-gray-900">Event Heatmap</CardTitle>
-            <CardDescription className="text-sm text-gray-600">Booth engagement this week</CardDescription>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-2">
-              <div className="grid grid-cols-6 gap-2 text-xs font-medium text-muted-foreground">
-                <div>Booth</div>
-                <div className="text-center">Mon</div>
-                <div className="text-center">Tue</div>
-                <div className="text-center">Wed</div>
-                <div className="text-center">Thu</div>
-                <div className="text-center">Fri</div>
-              </div>
-              {eventHeatmap.map((row) => (
-                <div key={row.booth} className="grid grid-cols-6 gap-2">
-                  <div className="flex items-center text-sm font-medium">
-                    {row.booth}
-                  </div>
-                  {["Mon", "Tue", "Wed", "Thu", "Fri"].map((day) => {
-                    const value = row[day as keyof typeof row] as number
-                    const intensity = Math.min((value / 80), 1)
-                    const rgb = `rgba(167, 139, 250, ${intensity})`
-                    return (
-                      <div
-                        key={day}
-                        className="flex h-12 items-center justify-center rounded-md text-xs font-medium"
-                        style={{
-                          backgroundColor: rgb,
-                          color: intensity > 0.5 ? "white" : "hsl(var(--foreground))",
-                        }}
-                      >
-                        {value}
-                      </div>
-                    )
-                  })}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white border-gray-200  hover: transition-shadow">
-          <CardHeader className="border-b border-gray-100 pb-4 px-6 pt-6">
-            <CardTitle className="text-lg font-bold text-gray-900">Quick Actions</CardTitle>
-            <CardDescription className="text-sm text-gray-600">Common tasks and shortcuts</CardDescription>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {quickActions.map((action) => (
-                <Button
-                  key={action.title}
-                  variant="outline"
-                  className="h-auto flex-col items-start gap-2 p-4"
-                  asChild
-                >
-                  <a href={action.href}>
-                    <action.icon className="h-6 w-6 text-primary" />
-                    <div className="text-left">
-                      <div className="font-semibold">{action.title}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {action.description}
-                      </div>
-                    </div>
-                  </a>
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
+    </div>
     </DashboardLayout>
   )
 }
