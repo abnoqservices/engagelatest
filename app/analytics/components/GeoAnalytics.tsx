@@ -46,7 +46,7 @@ export function GeoAnalytics({ eventId }: GeoAnalyticsProps) {
 
   useEffect(() => {
     if (!eventId) {
-      setError("Event ID is missing")
+  
       setLoading(false)
       return
     }
@@ -68,7 +68,7 @@ export function GeoAnalytics({ eventId }: GeoAnalyticsProps) {
         console.error("Failed to fetch geographic analytics:", err)
         const message = err instanceof Error ? err.message : "Unknown error"
         setError(message)
-        showToast("Failed to load geographic analytics", "error")
+      
       } finally {
         setLoading(false)
       }

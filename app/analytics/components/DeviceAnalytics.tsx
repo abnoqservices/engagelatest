@@ -56,7 +56,7 @@ export function DeviceAnalytics({ eventId }: DeviceAnalyticsProps) {
 
   useEffect(() => {
     if (!eventId) {
-      showToast("Event ID is missing", "error")
+    
       setLoading(false)
       return
     }
@@ -99,8 +99,7 @@ export function DeviceAnalytics({ eventId }: DeviceAnalyticsProps) {
 
         setChartData(formattedData)
       } catch (error) {
-        console.error("Failed to fetch device analytics:", error)
-        showToast("Failed to load device analytics", "error")
+       
       } finally {
         setLoading(false)
       }

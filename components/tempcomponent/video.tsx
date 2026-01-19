@@ -19,7 +19,7 @@ export default function YouTube({ productId, YouTube = true }: YouTubeProps) {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const response = await axiosClient.get(`/products/${productId}`);
+        const response = await axiosClient.get(`public/products/${productId}`);
 
         if (response.data.success) {
           const url = response.data.data.video_url?.trim() || "";

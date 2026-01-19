@@ -214,6 +214,7 @@ class LandingPageTracker {
                 session_id: this.getSessionId(),
                 time_on_page: timeOnPage,
                 scroll_depth: this.maxScroll,
+                country_code:2
             }),
         }).catch(err => {
             console.warn('Failed to track engagement:', err);

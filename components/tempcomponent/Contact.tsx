@@ -22,7 +22,7 @@ export default function Contact({ productId, Contact = true }: ContactProps) {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const response = await axiosClient.get(`/auth/me2`);
+        const response = await axiosClient.get(`/auth/me`);
 
         if (response.data.success) {
           const product = response.data.data;

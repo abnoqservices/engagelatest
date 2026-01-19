@@ -24,9 +24,10 @@ export default function Pheader({ productId, product_header = true }: PheaderPro
 
   useEffect(() => {
     const fetchProduct = async () => {
-      try {
+      try {axiosClient.get(`public/products/${productId}`);
         setLoading(true);
-        const response = await axiosClient.get(`/products/${productId}`);
+       
+        const response = await axiosClient.get(`public/products/${productId}`);
         if (response.data.success) {
           setProduct(response.data.data);
         } else {
