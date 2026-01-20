@@ -2,9 +2,9 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Camera, X, SwitchCamera, Loader2, CheckCircle, Sparkles, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { scanCard, updateCard } from "@/lib/api";
+import { scanCard } from "@/lib/api";
 import axiosClient from "@/lib/axiosClient";
-import ExtractedDataCard from "./ExtractedDataCard";
+import ExtractedDataCard from "@/components/extracted-data/ExtractedDataCard";
 import CardFieldSelection from "./CardFieldSelection";
 
 interface ExtractedCardData {
@@ -339,7 +339,7 @@ const CameraScanner = ({ onCardScanned }: CameraScannerProps) => {
     return (
       <div className="w-full max-w-4xl mx-auto space-y-6 animate-fade-in">
         <ExtractedDataCard data={cardData} previewImage={savedImageUrl || capturedImage} />
-        <CardFieldSelection onSave={handleFieldSave} onSkip={handleFieldSkip} />
+      
       </div>
     );
   }

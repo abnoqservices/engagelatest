@@ -390,6 +390,7 @@
 
 .card {
   padding: 2em;
+ 
 }
 
 .read-the-docs {
@@ -405,7 +406,7 @@ All colors MUST be HSL.
   :root {
     --background: 220 20% 97%;
     --foreground: 222 47% 11%;
-
+  
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
 
