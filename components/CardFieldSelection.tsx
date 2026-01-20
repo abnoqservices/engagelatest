@@ -36,7 +36,9 @@ const CardFieldSelection = ({ onSave, onSkip }: CardFieldSelectionProps) => {
   };
 
   return (
-    <Card className="shadow-elevated border-0 animate-slide-up">
+   
+    <div className="shadow-elevated border-0 animate-slide-up">
+     <Card>
       <CardHeader className="gradient-primary text-white">
         <CardTitle className="text-xl font-heading flex items-center gap-2">
           <Tag className="w-5 h-5" />
@@ -109,7 +111,9 @@ const CardFieldSelection = ({ onSave, onSkip }: CardFieldSelectionProps) => {
           </Button>
         </div>
       </CardContent>
-    </Card>
+      </Card>
+    </div>
+   
   );
 };
 
