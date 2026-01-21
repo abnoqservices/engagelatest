@@ -99,12 +99,8 @@ export const ProductEventMetrics = () => {
               2,194
             </h4>
           </div>
-          <Badge 
-            variant="outline" 
-            className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800"
-          >
-            <ArrowUp className="h-3.5 w-3.5 mr-1" />
-            4.2%
+          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800">
+            <ArrowUp className="h-3.5 w-3.5 mr-1" /> 4.2%
           </Badge>
         </div>
       </div>
