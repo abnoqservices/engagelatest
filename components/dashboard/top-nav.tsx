@@ -25,7 +25,12 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import axiosClient from "@/lib/axiosClient"
 import { showToast } from "@/lib/showToast"
-
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 interface TopNavProps {
   onMenuClick: () => void
 }
@@ -353,33 +358,27 @@ export function TopNav({ onMenuClick }: TopNavProps) {
               <span className="text-sm font-medium">{selectedDepartmentName}</span>
             </div>
           )}
-<Button 
-  variant="ghost" 
-  size="icon" 
-  onClick={() => window.location.href = '/scan'} 
-  className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg"
->
-<svg 
-  width="50" 
-  height="50"
-  viewBox="0 0 24 24" 
-  fill="none" 
-  stroke="currentColor" 
-  strokeWidth="2" 
-  strokeLinecap="round" 
-  strokeLinejoin="round"
->
-  {/* Business card */}
-  <rect x="3" y="7" width="18" height="10" rx="2" />
-  {/* Text lines on card */}
-  <path d="M7 11h6" />
-  <path d="M7 14h4" />
-  {/* AI sparkle/star */}
-  <circle cx="17" cy="11" r="1.5" fill="currentColor" />
-  <path d="M17 8v6M14.5 11h5" strokeWidth="1" />
-</svg>
-</Button>
+<TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push("/scan")}
+          >
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/10460/10460903.png"
+              alt="Scan visiting card"
+              className="h-16 w-16 object-contain"
+            />
+          </Button>
+        </TooltipTrigger>
 
+        <TooltipContent side="bottom">
+          <span>Scan Visiting Card</span>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-full">

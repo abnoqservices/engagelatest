@@ -238,7 +238,52 @@ export default function EventFormPage() {
   // ─── Submit ───────────────────────────────────────────────────────
   const handleSubmit = async () => {
     if (!name.trim()) return showToast("Event name is required", "error")
+    if (!location.trim()) return showToast("Location name is required", "error")
+    if (!startDate) return showToast("Start Date is required", "error")
+    if (!endDate) return showToast("End Date is required", "error")
+    if (!boothName) return showToast("Hall / Booth name  is required", "error")
+    if (!boothCode) return showToast("Booth code is required", "error")
 
+    if (location?.trim()) {
+      if (location.trim().length > 200) {
+        return showToast("Location cannot exceed 200 characters");
+      }
+    }
+    if (startDate && endDate) {
+      if (endDate < startDate) {
+        return showToast("End date must be after or equal to start date",'error');
+      }
+  
+      // Optional: prevent events in the very distant past/future
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+  
+      const oneYearFromNow = new Date();
+      oneYearFromNow.setFullYear(today.getFullYear() + 1);
+  
+      if (startDate < today) {
+        return showToast("Start date cannot be in the past",'error');
+      }
+      // if (startDate > oneYearFromNow) {
+      //   errors.push("Start date cannot be more than 1 year in the future");
+      // }
+    }
+    const wantsBooth = boothName.trim() || boothCode?.trim();
+  if (wantsBooth) {
+    if (!boothName.trim()) {
+      return showToast("Booth name is required when creating a booth",'error');
+    } else if (boothName.trim().length < 2) {
+      return showToast("Booth name must be at least 2 characters",'error');
+    }
+
+    if (boothCode?.trim() && boothCode.trim().length > 30) {
+      return showToast("Booth code cannot exceed 20 characters",'error');
+    }
+    // You can add format check e.g. alphanumeric only
+    // if (boothCode?.trim() && !/^[A-Za-z0-9-]+$/.test(boothCode.trim())) {
+    //   errors.push("Booth code can only contain letters, numbers and hyphens");
+    // }
+  }
     setLoading(true)
     try {
       let currentEventId = eventId
@@ -308,11 +353,40 @@ export default function EventFormPage() {
 
       showToast(isEditMode ? "Event updated" : "Event created", "success")
       router.push("/events")
-    } catch (err: any) {
-      showToast(err.response?.data?.message || "Save failed", "error")
-    } finally {
-      setLoading(false)
+   } catch (err: any) {
+  const response = err.response?.data;
+
+  if (response && !response.success) {
+    // 1. Try to show all field-specific validation messages
+    if (response.errors && typeof response.errors === 'object') {
+      const errorMessages: string[] = [];
+
+      Object.entries(response.errors).forEach(([field, messages]) => {
+        // messages can be string or string[]
+        const msgs = Array.isArray(messages) ? messages : [messages];
+        errorMessages.push(...msgs);
+      });
+
+      if (errorMessages.length > 0) {
+        // Show each message one by one (most user-friendly)
+        errorMessages.forEach(msg => showToast(msg, "error"));
+
+        // ─────────────── OR ───────────────
+        // Show as one combined toast (cleaner if many errors)
+        // showToast(errorMessages.join("\n• "), "error");
+        return;
+      }
     }
+
+    // 2. Fallback to general message if no errors object
+    showToast(response.message || "Save failed", "error");
+  } else {
+    // Network error / no response / unexpected format
+    showToast("Something went wrong. Please try again.", "error");
+  }
+} finally {
+  setLoading(false);
+}
   }
 
   if (pageLoading) {
@@ -365,7 +439,7 @@ export default function EventFormPage() {
             <div className="space-y-2">
               <Label>Location</Label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            
                 <Input className="pl-9" value={location} onChange={e => setLocation(e.target.value)} />
               </div>
             </div>
