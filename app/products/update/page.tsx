@@ -12,45 +12,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import {
   Upload,
   X,
-  Plus,
-  Eye,
-  FileText,
-  CheckCircle,
   Save,
-  Trash2,
+  CheckCircle,
+  ArrowLeft,
+  FileText,
+  Eye,
+  Plus
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import axiosClient from "@/lib/axiosClient";
 import { showToast } from "@/lib/showToast";
-import { useRouter, useSearchParams } from "next/navigation";
 import { DashboardLayout } from "@/components/dashboard/layout";
+import { useRouter, useSearchParams } from "next/navigation";
 
-// === Types ===
+// ── Types ────────────────────────────────────────────────────────────────
 interface Category {
   id: number;
   name: string;
-  slug?: string;
-  description?: string;
   parent_id?: number | null;
   children: Category[];
 }
@@ -59,9 +43,8 @@ interface ImageFile {
   id: string;
   url: string;
   file?: File;
-  s3_key?: string;
-  position?: number;
   dbId?: number;
+  s3_key?: string;
 }
 
 interface PdfFile {
@@ -69,8 +52,8 @@ interface PdfFile {
   name: string;
   file?: File;
   url?: string;
-  s3_key?: string;
   dbId?: number;
+  s3_key?: string;
 }
 
 interface FormDataType {
@@ -82,18 +65,23 @@ interface FormDataType {
   videoUrl: string;
   metaTitle: string;
   metaDescription: string;
-  keywords: string;
+  keywords: string[];
   urlSlug: string;
   isActive: boolean;
 }
 
-export default function ProductPage(): React.ReactElement {
+const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png"];
+const ALLOWED_DOC_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
+
+export default function EditProductPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const urlProductId = searchParams.get("id");
-
-  const isEditMode = !!urlProductId;
-  const productId = isEditMode ? Number(urlProductId) : null;
+  const productId = searchParams.get("id") ? Number(searchParams.get("id")) : null;
 
   const [formData, setFormData] = React.useState<FormDataType>({
     name: "",
@@ -104,57 +92,53 @@ export default function ProductPage(): React.ReactElement {
     videoUrl: "",
     metaTitle: "",
     metaDescription: "",
-    keywords: "",
+    keywords: [],
     urlSlug: "",
     isActive: true,
   });
+
+  const [tags, setTags] = React.useState<string[]>([]);
+  const [newTag, setNewTag] = React.useState("");
+  const [newKeyword, setNewKeyword] = React.useState("");
+
+  const [selectedImages, setSelectedImages] = React.useState<ImageFile[]>([]);
+  const [pdfFiles, setPdfFiles] = React.useState<PdfFile[]>([]);
+
+  const [deletedImages, setDeletedImages] = React.useState<number[]>([]);
+  const [deletedPdfs, setDeletedPdfs] = React.useState<number[]>([]);
+
+  const [loading, setLoading] = React.useState(true);
+  const [saving, setSaving] = React.useState(false);
+  const [publishing, setPublishing] = React.useState(false);
 
   const [flatCategories, setFlatCategories] = React.useState<Category[]>([]);
   const [treeCategories, setTreeCategories] = React.useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = React.useState(false);
 
-  const [selectedImages, setSelectedImages] = React.useState<ImageFile[]>([]);
-  const [pdfFiles, setPdfFiles] = React.useState<PdfFile[]>([]);
-  const [tags, setTags] = React.useState<string[]>([]);
-  const [newTag, setNewTag] = React.useState<string>("");
+  // ── Load Categories ───────────────────────────────────────────────────
+  React.useEffect(() => {
+    const loadCategories = async () => {
+      setLoadingCategories(true);
+      try {
+        const res = await axiosClient.get("/product-categories");
+        if (res.data.success && Array.isArray(res.data.data)) {
+          const flat = res.data.data as Category[];
+          setFlatCategories(flat);
+          setTreeCategories(buildTree(flat));
+        }
+      } catch (err: any) {
+        showToast(err.response?.data?.message || "Failed to load categories", "error");
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    loadCategories();
+  }, []);
 
-  const [activeTab, setActiveTab] = React.useState<string>("basic");
-  const [loading, setLoading] = React.useState(false);
-  const [savingBasic, setSavingBasic] = React.useState(false);
-  const [savingMedia, setSavingMedia] = React.useState(false);
-  const [publishing, setPublishing] = React.useState(false);
-
-  const [showPreview, setShowPreview] = React.useState(false);
-  const [previewLoading, setPreviewLoading] = React.useState(false);
-
-  const showAlert = (message: string, type: "success" | "error") => {
-    showToast(message, type);
-  };
-
-  const handleInputChange = <K extends keyof FormDataType>(
-    field: K,
-    value: FormDataType[K]
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const slugify = (text: string) =>
-    (text || "")
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, "-")
-      .replace(/[^\w\-]+/g, "")
-      .replace(/\-\-+/g, "-");
-
-  // === Category Tree ===
   const buildTree = (flat: Category[]): Category[] => {
     const map = new Map<number, Category>();
     const roots: Category[] = [];
-
-    flat.forEach((cat) => {
-      map.set(cat.id, { ...cat, children: [] });
-    });
-
+    flat.forEach((cat) => map.set(cat.id, { ...cat, children: [] }));
     flat.forEach((cat) => {
       if (cat.parent_id && map.has(cat.parent_id)) {
         map.get(cat.parent_id)!.children.push(map.get(cat.id)!);
@@ -162,29 +146,8 @@ export default function ProductPage(): React.ReactElement {
         roots.push(map.get(cat.id)!);
       }
     });
-
     return roots;
   };
-
-  const loadCategories = async () => {
-    try {
-      setLoadingCategories(true);
-      const res = await axiosClient.get("/product-categories");
-      if (res.data.success && Array.isArray(res.data.data)) {
-        const flat = res.data.data as Category[];
-        setFlatCategories(flat);
-        setTreeCategories(buildTree(flat));
-      }
-    } catch (err: any) {
-      showToast(err.response?.data?.message || "Failed to load categories", "error");
-    } finally {
-      setLoadingCategories(false);
-    }
-  };
-
-  React.useEffect(() => {
-    loadCategories();
-  }, []);
 
   const renderCategoryTree = (items: Category[], level = 0): React.ReactNode => {
     return items.map((cat) => (
@@ -195,344 +158,350 @@ export default function ProductPage(): React.ReactElement {
             {cat.name}
           </span>
         </SelectItem>
-        {cat.children && cat.children.length > 0 && renderCategoryTree(cat.children, level + 1)}
+        {cat.children?.length > 0 && renderCategoryTree(cat.children, level + 1)}
       </React.Fragment>
     ));
   };
-  // === Load Product (Edit Mode) ===
-  const loadProduct = async () => {
-    if (!isEditMode || !productId) return;
-    setLoading(true);
-    try {
-      const [productRes, imagesRes, docsRes] = await Promise.all([
-        axiosClient.get(`/products/${productId}`),
-        axiosClient.get(`/product-images?product_id=${productId}`),
-        axiosClient.get(`/product-documents?product_id=${productId}`),
-      ]);
 
-      const product = productRes.data.data;
-
-      setFormData({
-        name: product.name || "",
-        sku: product.sku || "",
-        category: product.category_id?.toString() || "",
-        price: product.price?.toString() || "",
-        description: product.description || "",
-        videoUrl: product.video_url || "",
-        metaTitle: product.meta_title || "",
-        metaDescription: product.meta_description || "",
-        keywords: product.keywords || "",
-        urlSlug: product.url_slug || "",
-        isActive: product.is_active ?? true,
-      });
-
-      setTags(product.tags || []);
-
-      const images = imagesRes.data.data || [];
-      setSelectedImages(
-        images.map((img: any) => ({
-          id: img.id.toString(),
-          dbId: img.id,
-          url: img.url,
-          s3_key: img.s3_key,
-          position: img.position,
-        }))
-      );
-
-      const docs = docsRes.data.data || [];
-      setPdfFiles(
-        docs.map((doc: any) => ({
-          id: doc.id.toString(),
-          dbId: doc.id,
-          name: doc.name,
-          url: doc.url,
-          s3_key: doc.s3_key,
-        }))
-      );
-
-      showToast("Product loaded successfully", "success");
-    } catch (err: any) {
-      showToast(err.response?.data?.message || "Failed to load product", "error");
-      router.push("/products/new");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // ── Load existing product ─────────────────────────────────────────────
   React.useEffect(() => {
-    if (isEditMode && productId) {
-      loadProduct();
-    }
-  }, [isEditMode, productId]);
+    if (!productId) return;
 
-  // === File Uploads ===
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    const newImages: ImageFile[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const url = URL.createObjectURL(file);
-      newImages.push({
-        id: `temp-${Date.now()}-${i}`,
-        url,
-        file,
-      });
-    }
-    setSelectedImages((prev) => [...prev, ...newImages]);
-    e.currentTarget.value = "";
+    const loadProduct = async () => {
+      setLoading(true);
+      try {
+        const [prodRes, imgRes, docRes] = await Promise.all([
+          axiosClient.get(`/products/${productId}`),
+          axiosClient.get(`/product-images?product_id=${productId}`),
+          axiosClient.get(`/product-documents?product_id=${productId}`),
+        ]);
+
+        const p = prodRes.data.data;
+
+        setFormData({
+          name: p.name || "",
+          sku: p.sku || "",
+          category: p.category_id?.toString() || "",
+          price: p.price?.toString() || "",
+          description: p.description || "",
+          videoUrl: p.video_url || "",
+          metaTitle: p.meta_title || "",
+          metaDescription: p.meta_description || "",
+          keywords: p.keywords ? p.keywords.split(", ").filter(Boolean) : [],
+          urlSlug: p.url_slug || "",
+          isActive: p.is_active ?? true,
+        });
+
+        setTags(p.tags || []);
+
+        setSelectedImages(
+          (imgRes.data.data || []).map((img: any) => ({
+            id: img.id.toString(),
+            dbId: img.id,
+            url: img.url,
+            s3_key: img.s3_key,
+          }))
+        );
+
+        setPdfFiles(
+          (docRes.data.data || []).map((doc: any) => ({
+            id: doc.id.toString(),
+            dbId: doc.id,
+            name: doc.name,
+            url: doc.url,
+            s3_key: doc.s3_key,
+          }))
+        );
+      } catch (err: any) {
+        showToast(err.response?.data?.message || "Failed to load product", "error");
+        router.push("/products");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProduct();
+  }, [productId, router]);
+
+  // ── Auto-fill SEO when name/description changes ───────────────────────
+  React.useEffect(() => {
+    if (!formData.name.trim()) return;
+
+    const name = formData.name.trim();
+
+    setFormData((prev) => {
+      const updates: Partial<FormDataType> = {};
+
+      if (!prev.metaTitle) updates.metaTitle = name;
+      if (!prev.urlSlug) updates.urlSlug = slugify(name);
+
+      if (!prev.metaDescription) {
+        if (prev.description?.trim()) {
+          const desc = prev.description.trim();
+          updates.metaDescription = desc.length > 160 ? desc.slice(0, 157) + "..." : desc;
+        } else {
+          updates.metaDescription = `Buy ${name} online - Best price and quality.`;
+        }
+      }
+
+      return { ...prev, ...updates };
+    });
+  }, [formData.name, formData.description]);
+
+  // ── Helpers ────────────────────────────────────────────────────────────
+  const slugify = (text: string) =>
+    text
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/[^\w\-]+/g, "")
+      .replace(/\-\-+/g, "-");
+
+  const countWords = (text: string) => text.trim().split(/\s+/).filter(Boolean).length;
+  const countCharacters = (text: string) => text.length;
+
+  // ── Tags & Keywords handlers ──────────────────────────────────────────
+  const addTag = () => {
+    const trimmed = newTag.trim();
+    if (trimmed && !tags.includes(trimmed)) setTags((prev) => [...prev, trimmed]);
+    setNewTag("");
   };
 
-  const removeImage = async (id: string) => {
-    const img = selectedImages.find((i) => i.id === id);
-    if (img?.dbId) {
-      try {
-        await axiosClient.delete(`/product-images/${img.dbId}`);
-        showToast("Image deleted", "success");
-      } catch {
-        showToast("Failed to delete image", "error");
-        return;
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      addTag();
+    }
+    if (e.key === "Backspace" && newTag === "" && tags.length > 0) {
+      setTags((prev) => prev.slice(0, -1));
+    }
+  };
+
+  const addKeyword = () => {
+    const trimmed = newKeyword.trim();
+    if (trimmed && !formData.keywords.includes(trimmed)) {
+      setFormData((prev) => ({
+        ...prev,
+        keywords: [...prev.keywords, trimmed],
+      }));
+    }
+    setNewKeyword("");
+  };
+
+  const handleKeywordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      addKeyword();
+    }
+    if (e.key === "Backspace" && newKeyword === "" && formData.keywords.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        keywords: prev.keywords.slice(0, -1),
+      }));
+    }
+  };
+
+  // ── File handlers ──────────────────────────────────────────────────────
+  const validateImage = async (file: File): Promise<boolean> => {
+    // Type check
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      showToast("Only JPG, JPEG, PNG allowed", "error");
+      return false;
+    }
+  
+    // Size check (1MB)
+    if (file.size > MAX_FILE_SIZE) {
+      showToast(`Image "${file.name}" must be ≤ 1MB`, "error");
+      return false;
+    }
+  
+    // Dimension check (square image)
+    const isSquare = await new Promise<boolean>((resolve) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+  
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(img.width === img.height);
+      };
+  
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(false);
+      };
+  
+      img.src = objectUrl;
+    });
+  
+    if (!isSquare) {
+      showToast("Image must be square (1:1 ratio)", "error");
+      return false;
+    }
+  
+    return true;
+  };
+  
+  const validateDocument = (file: File) => {
+    if (!ALLOWED_DOC_TYPES.includes(file.type)) {
+      showToast("Only PDF, DOC, DOCX allowed", "error");
+      return false;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showToast(`File "${file.name}" > 1MB`, "error");
+      return false;
+    }
+    return true;
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+    const validFiles: File[] = [];
+    for (const file of files) {
+      if (await validateImage(file)) {
+        validFiles.push(file);
       }
     }
-    if (img?.file) URL.revokeObjectURL(img.url);
-    setSelectedImages((prev) => prev.filter((i) => i.id !== id));
+    const newImgs = validFiles.map((file, i) => ({
+      id: `new-${Date.now()}-${i}`,
+      url: URL.createObjectURL(file),
+      file,
+    }));
+    setSelectedImages((prev) => [...prev, ...newImgs]);
+    e.target.value = "";
+  };
+
+  const removeImage = (id: string) => {
+    setSelectedImages((prev) => {
+      const found = prev.find((i) => i.id === id);
+      if (found) {
+        if (found.file) {
+          URL.revokeObjectURL(found.url);
+        }
+        if (found.dbId) {
+          setDeletedImages((del) => [...del, found.dbId!]);
+        }
+      }
+      return prev.filter((i) => i.id !== id);
+    });
   };
 
   const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    const newPdfs: PdfFile[] = Array.from(files).map((file, idx) => ({
-      id: `temp-pdf-${Date.now()}-${idx}`,
+    if (!e.target.files) return;
+    const valid = Array.from(e.target.files).filter(validateDocument);
+    const newDocs = valid.map((file, i) => ({
+      id: `doc-${Date.now()}-${i}`,
       name: file.name,
       file,
     }));
-    setPdfFiles((prev) => [...prev, ...newPdfs]);
-    e.currentTarget.value = "";
+    setPdfFiles((prev) => [...prev, ...newDocs]);
+    e.target.value = "";
   };
 
-  const removePdf = async (id: string) => {
-    const pdf = pdfFiles.find((p) => p.id === id);
-    if (pdf?.dbId) {
-      try {
-        await axiosClient.delete(`/product-documents/${pdf.dbId}`);
-        showToast("Document deleted", "success");
-      } catch {
-        showToast("Failed to delete document", "error");
-        return;
+  const removePdf = (id: string) => {
+    setPdfFiles((prev) => {
+      const found = prev.find((p) => p.id === id);
+      if (found?.dbId) {
+        setDeletedPdfs((del) => [...del, found.dbId!]);
       }
-    }
-    setPdfFiles((prev) => prev.filter((p) => p.id !== id));
+      return prev.filter((p) => p.id !== id);
+    });
   };
 
-  // === Save Basic ===
-  const handleSaveBasic = async () => {
-    if (!formData.name.trim()) return showToast("Product name is required", "error");
-    if (!formData.category) return showToast("Category is required", "error");
-    if (!formData.price || isNaN(Number(formData.price))) return showToast("Valid price required", "error");
+  // ── Save / Publish logic ───────────────────────────────────────────────
+  const saveProduct = async (shouldPublish = false) => {
+    if (!formData.name.trim()) return showToast("Product name required", "error");
+    if (!formData.category) return showToast("Category required", "error");
 
-    setSavingBasic(true);
+
+    const isNew = !productId;
+    const currentId = productId || 0;
+
+    setSaving(true);
+    if (shouldPublish) setPublishing(true);
+
     try {
-      const payload: any = {
+      const basePayload = {
         name: formData.name.trim(),
         sku: formData.sku || undefined,
         category_id: parseInt(formData.category),
         price: parseFloat(formData.price),
         description: formData.description || null,
         is_active: formData.isActive,
-        tags: tags.length > 0 ? tags : undefined,
-      };
-
-      if (isEditMode) {
-        await axiosClient.put(`/products/${productId}`, payload);
-        showToast("Product updated successfully", "success");
-      } else {
-        payload.status = "draft";
-        const res = await axiosClient.post("/products", payload);
-        const newId = res.data?.data?.id || res.data?.id;
-        if (newId) {
-          router.replace(`/products/edit?id=${newId}`);
-          showToast("Product created! Now upload media.", "success");
-        }
-      }
-      setActiveTab("media");
-    } catch (err: any) {
-      showToast(err.response?.data?.message || "Save failed", "error");
-    } finally {
-      setSavingBasic(false);
-    }
-  };
-
-  // === Save Media ===
-  const handleSaveMedia = async () => {
-    if (!productId) {
-      showToast("Product ID is required", "error");
-      return;
-    }
-
-    setSavingMedia(true);
-    try {
-      // Prepare FormData with files and other data
-      const uploadFormData = new FormData();
-      
-      // Add video_url if provided
-      if (formData.videoUrl) {
-        uploadFormData.append("video_url", formData.videoUrl);
-      }
-
-      // Add only new image files (those with .file property)
-      let imageCount = 0;
-      selectedImages.forEach((img) => {
-        if (img.file) {
-          uploadFormData.append("images[]", img.file);
-          imageCount++;
-          console.log("Adding image file:", img.file.name, img.file.type, img.file.size);
-        }
-      });
-
-      // Add only new PDF files (those with .file property)
-      let pdfCount = 0;
-      pdfFiles.forEach((pdf) => {
-        if (pdf.file) {
-          uploadFormData.append("pdfs[]", pdf.file);
-          pdfCount++;
-          console.log("Adding PDF file:", pdf.file.name, pdf.file.type, pdf.file.size);
-        }
-      });
-
-      console.log(`Uploading ${imageCount} images and ${pdfCount} PDFs to product ${productId}`);
-      
-      // Log FormData contents for debugging
-      for (const pair of uploadFormData.entries()) {
-        if (pair[1] instanceof File) {
-          console.log(`FormData entry: ${pair[0]} = File(${pair[1].name}, ${pair[1].size} bytes)`);
-        } else {
-          console.log(`FormData entry: ${pair[0]} = ${pair[1]}`);
-        }
-      }
-
-      // Send to backend update endpoint
-      // Use POST with _method=PUT for file uploads (Laravel handles this via method spoofing)
-      uploadFormData.append("_method", "PUT");
-      const response = await axiosClient.post(`/products/${productId}`, uploadFormData);
-
-      // Update state to clear file objects and keep only uploaded files
-      // Convert files to URLs for already uploaded items
-      setSelectedImages((prev) => 
-        prev.map((img) => {
-          if (img.file) {
-            // Find the uploaded image from response
-            const uploadedImage = response.data?.data?.images?.find((uploaded: any) => 
-              uploaded.name === img.file?.name || img.id.toString().includes(uploaded.id.toString())
-            );
-            if (uploadedImage) {
-              return {
-                id: uploadedImage.id.toString(),
-                dbId: uploadedImage.id,
-                url: uploadedImage.url,
-                s3_key: uploadedImage.s3_key,
-                position: uploadedImage.position,
-              };
-            }
-          }
-          return img;
-        }).filter((img) => img.file || img.url) // Keep files or existing URLs
-      );
-
-      setPdfFiles((prev) =>
-        prev.map((pdf) => {
-          if (pdf.file) {
-            // Find the uploaded PDF from response
-            const uploadedPdf = response.data?.data?.documents?.find((uploaded: any) =>
-              uploaded.name === pdf.file?.name || pdf.id.toString().includes(uploaded.id.toString())
-            );
-            if (uploadedPdf) {
-              return {
-                id: uploadedPdf.id.toString(),
-                dbId: uploadedPdf.id,
-                name: uploadedPdf.name,
-                url: uploadedPdf.url,
-                s3_key: uploadedPdf.s3_key,
-              };
-            }
-          }
-          return pdf;
-        }).filter((pdf) => pdf.file || pdf.url) // Keep files or existing URLs
-      );
-
-      // Reload product data to ensure we have the latest from server
-      await loadProduct();
-
-      showToast("Media uploaded and saved successfully!", "success");
-      setActiveTab("seo");
-    } catch (err: any) {
-      showToast(err?.response?.data?.message || err?.message || "Media upload failed", "error");
-    } finally {
-      setSavingMedia(false);
-    }
-  };
-
-  // === Publish ===
-  const handlePublish = async () => {
-    if (!productId) return;
-
-    setPublishing(true);
-    try {
-      const payload: any = {
+        tags: tags.length ? tags : undefined,
         video_url: formData.videoUrl || null,
         meta_title: formData.metaTitle || formData.name,
-        meta_description: formData.metaDescription || formData.description?.slice(0, 160),
-        keywords: formData.keywords || null,
+        meta_description: formData.metaDescription || null,
+        keywords: formData.keywords.join(", ") || null,
         url_slug: formData.urlSlug || slugify(formData.name),
-        status: "published",
+        status: shouldPublish ? "published" : "draft",
       };
 
-      await axiosClient.put(`/products/${productId}`, payload);
-      showToast("Product published successfully!", "success");
-    } catch (err: any) {
-      showToast(err.response?.data?.message || "Publish failed", "error");
-    } finally {
-      setPublishing(false);
-    }
-  };
+      let id = currentId;
 
-  const handlePreview = () => {
-    setPreviewLoading(true);
-    setTimeout(() => {
-      setPreviewLoading(false);
-      setShowPreview(true);
-    }, 600);
-  };
-
-  const handleAddTag = () => {
-    const tag = newTag.trim();
-    if (tag && !tags.includes(tag)) {
-      setTags((prev) => [...prev, tag]);
-      setNewTag("");
-    }
-  };
-
-  const removeTag = (idx: number) => {
-    setTags((prev) => prev.filter((_, i) => i !== idx));
-  };
-
-  const getSelectedCategoryName = () => {
-    const findName = (cats: Category[]): string | undefined => {
-      for (const cat of cats) {
-        if (cat.id.toString() === formData.category) return cat.name;
-        if (cat.children.length > 0) {
-          const found = findName(cat.children);
-          if (found) return found;
-        }
+      if (isNew) {
+        const res = await axiosClient.post("/products", basePayload);
+        id = res.data?.data?.id || res.data?.id;
+      } else {
+        await axiosClient.put(`/products/${id}`, basePayload);
       }
-    };
-    return findName(treeCategories) || "Select category";
+
+      // Upload media if any new files
+      const hasNewMedia =
+        selectedImages.some((i) => !!i.file) || pdfFiles.some((p) => !!p.file);
+
+      if (hasNewMedia) {
+        const fd = new FormData();
+        selectedImages.forEach((img) => img.file && fd.append("images[]", img.file));
+        pdfFiles.forEach((pdf) => pdf.file && fd.append("pdfs[]", pdf.file));
+        fd.append("_method", "PUT");
+        await axiosClient.post(`/products/${id}`, fd);
+      }
+
+      // Delete removed media
+      await Promise.all([
+        ...deletedImages.map((imgId) => axiosClient.delete(`/product-images/${imgId}`)),
+        ...deletedPdfs.map((docId) => axiosClient.delete(`/product-documents/${docId}`)),
+      ]);
+
+      // Clear deleted lists after successful deletion
+      setDeletedImages([]);
+      setDeletedPdfs([]);
+
+      showToast(
+        shouldPublish ? "Product published!" : "Product saved successfully",
+        "success"
+      );
+
+      if (isNew && !shouldPublish) {
+        router.replace(`/products/edit?id=${id}`);
+      }
+
+      return id;
+    } catch (err: any) {
+      showToast(err.response?.data?.message || "Save failed", "error");
+      return null;
+    } finally {
+      setSaving(false);
+      if (shouldPublish) setPublishing(false);
+    }
+  };
+
+  const handleSaveDraft = () => saveProduct(false);
+  const handlePublish = () => saveProduct(true);
+
+  const handleSaveAndBack = async () => {
+    const saved = await saveProduct(false);
+    if (saved) {
+      router.push("/products");
+    }
   };
 
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <Spinner className="size-8" />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Spinner className="size-10" />
         </div>
       </DashboardLayout>
     );
@@ -540,243 +509,368 @@ export default function ProductPage(): React.ReactElement {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-slate-50 p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex items-center justify-between">
+      <div className="min-h-screen  p-6">
+        <div className="max-w-5xl mx-auto space-y-8">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-slate-900">
-                {isEditMode ? "Edit Product" : "Add New Product"}
+                {productId ? "Edit Product" : "Create New Product"}
               </h1>
-              <p className="text-sm text-slate-600 mt-1">
-                {isEditMode ? `Product ID: ${productId}` : "Step-by-step product creation"}
+              <p className="text-slate-600 mt-1">
+                {productId ? "Update product details" : "Fill in the details below"}
               </p>
+              {productId && (
+                <p className="text-xs text-blue-600 mt-1">Product ID: {productId}</p>
+              )}
             </div>
 
-            <div className="flex gap-2">
-              {!isEditMode && (
-                <Button variant="outline" disabled>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Draft
-                </Button>
-              )}
-              <Button variant="outline" onClick={handlePreview} disabled={previewLoading}>
-                {previewLoading ? <Spinner className="size-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
-                Preview
+            <div className="flex flex-wrap gap-3">
+              <Button variant="outline" onClick={handleSaveAndBack} disabled={saving}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Save & Back
               </Button>
-              {activeTab === "seo" && productId && (
-                <Button onClick={handlePublish} disabled={publishing} className="bg-green-600 hover:bg-green-700">
-                  {publishing ? <Spinner className="size-4 mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
-                  Publish Product
-                </Button>
-              )}
+              <Button variant="outline" onClick={handleSaveDraft} disabled={saving}>
+                <Save className="h-4 w-4 mr-2" />
+                Save Draft
+              </Button>
+              <Button
+                onClick={handlePublish}
+                disabled={saving || publishing}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {publishing || saving ? (
+                  <Spinner className="mr-2" />
+                ) : (
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                )}
+                Publish
+              </Button>
             </div>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="basic">Basic Info</TabsTrigger>
-              <TabsTrigger value="media" disabled={!productId}>Demo Media</TabsTrigger>
-              <TabsTrigger value="seo" disabled={!productId}>SEO & Publish</TabsTrigger>
-            </TabsList>
+          {/* ── Basic ──────────────────────────────────────────────────────── */}
+          <div className="rounded-2xl  border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6  hover:shadow transition-shadow">
 
-            {/* === BASIC INFO === */}
-            <TabsContent value="basic" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Product Details</CardTitle>
-                  <CardDescription>Fill in basic product information</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Product Name *</Label>
-                      <Input id="name" value={formData.name} onChange={(e) => handleInputChange("name", e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="sku">SKU (optional)</Label>
-                      <Input id="sku" value={formData.sku} onChange={(e) => handleInputChange("sku", e.target.value)} />
-                    </div>
-                  </div>
-
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="category">Category *</Label>
-                      <Select value={formData.category} onValueChange={(v) => handleInputChange("category", v)} disabled={loadingCategories}>
-                        <SelectTrigger>
-                          <SelectValue placeholder={loadingCategories ? "Loading..." : "Select category"}>
-                            {getSelectedCategoryName()}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent className="max-h-96">
-                          {treeCategories.length > 0 ? renderCategoryTree(treeCategories) : <div className="p-4 text-center text-muted-foreground">No categories found</div>}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="price">Price *</Label>
-                      <Input id="price" type="number" value={formData.price} onChange={(e) => handleInputChange("price", e.target.value)} />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea id="description" rows={5} value={formData.description} onChange={(e) => handleInputChange("description", e.target.value)} />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Tags</Label>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {tags.map((tag, i) => (
-                        <Badge key={i} variant="secondary" className="gap-1">
-                          {tag}
-                          <button onClick={() => removeTag(i)}><X className="h-3 w-3" /></button>
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
-                      <Input placeholder="Add tag..." value={newTag} onChange={(e) => setNewTag(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddTag())} />
-                      <Button onClick={handleAddTag} size="sm"><Plus className="h-4 w-4 mr-1" />Add</Button>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between rounded-lg border p-4">
-                    <div>
-                      <p className="font-medium">Product Active</p>
-                      <p className="text-sm text-slate-500">Visible to customers after publish</p>
-                    </div>
-                    <Switch checked={formData.isActive} onCheckedChange={(c) => handleInputChange("isActive", c)} />
-                  </div>
-
-                  <div className="flex justify-end gap-3 pt-4">
-                    <Button onClick={handleSaveBasic} disabled={savingBasic} size="lg">
-                      {savingBasic ? <Spinner className="mr-2" /> : null}
-                      {isEditMode ? "Update & Continue" : "Save & Continue to Media"}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* === MEDIA TAB === */}
-            <TabsContent value="media" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Demo Media</CardTitle>
-                  <CardDescription>Upload images, PDFs, and video</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="video">Video URL (optional)</Label>
-                    <Input id="video" placeholder="https://youtube.com/..." value={formData.videoUrl} onChange={(e) => handleInputChange("videoUrl", e.target.value)} />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Product Images</Label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                      {selectedImages.map((img, i) => (
-                        <div key={img.id} className="relative group aspect-square">
-                          <img src={img.url} alt="" className="w-full h-full rounded-lg object-cover" />
-                          <button onClick={() => removeImage(img.id)} className="absolute top-2 right-2 bg-red-500 rounded-full p-1 opacity-0 group-hover:opacity-100 transition">
-                            <X className="h-3 w-3 text-white" />
-                          </button>
-                          {i === 0 && <Badge className="absolute bottom-2 left-2">Primary</Badge>}
-                        </div>
-                      ))}
-                      <label className="flex aspect-square items-center justify-center rounded-lg border-2 border-dashed cursor-pointer hover:bg-slate-50">
-                        <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
-                        <Upload className="h-8 w-8 text-slate-400" />
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>PDF Documents</Label>
-                    {pdfFiles.map((pdf) => (
-                      <div key={pdf.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-5 w-5 text-red-500" />
-                          <span>{pdf.name}</span>
-                        </div>
-                        <Button variant="ghost" size="sm" onClick={() => removePdf(pdf.id)}>
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                    <label className="flex w-full items-center justify-center rounded-lg border-2 border-dashed p-8 cursor-pointer hover:bg-slate-50">
-                      <input type="file" accept=".pdf" multiple onChange={handlePdfUpload} className="hidden" />
-                      <div className="text-center">
-                        <FileText className="mx-auto h-12 w-12 text-slate-400" />
-                        <p className="mt-2 font-medium">Upload PDF</p>
-                      </div>
-                    </label>
-                  </div>
-
-                  <div className="flex justify-end pt-4">
-                    <Button onClick={handleSaveMedia} disabled={savingMedia} size="lg">
-                      {savingMedia ? <Spinner className="mr-2" /> : null}
-                      Save Media & Continue to SEO
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* === SEO TAB === */}
-            <TabsContent value="seo" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>SEO & Final Settings</CardTitle>
-                  <CardDescription>Optimize for search engines and publish</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="meta-title">Meta Title</Label>
-                    <Input id="meta-title" value={formData.metaTitle} onChange={(e) => handleInputChange("metaTitle", e.target.value)} />
-                    <p className="text-xs text-slate-500">{formData.metaTitle.length}/60 characters</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="meta-description">Meta Description</Label>
-                    <Textarea id="meta-description" rows={3} value={formData.metaDescription} onChange={(e) => handleInputChange("metaDescription", e.target.value)} />
-                    <p className="text-xs text-slate-500">{formData.metaDescription.length}/160 characters</p>
-                  </div>
-
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="keywords">Keywords</Label>
-                      <Input id="keywords" value={formData.keywords} onChange={(e) => handleInputChange("keywords", e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="url-slug">URL Slug</Label>
-                      <Input id="url-slug" value={formData.urlSlug} onChange={(e) => handleInputChange("urlSlug", e.target.value)} />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-3 pt-6 border-t">
-                    <Button variant="outline" onClick={() => setActiveTab("media")}>Back to Media</Button>
-                    <Button onClick={handlePublish} disabled={publishing} size="lg" className="bg-green-600 hover:bg-green-700">
-                      {publishing ? <Spinner className="mr-2" /> : <CheckCircle className="h-5 w-5 mr-2" />}
-                      Publish Product
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-
-          {/* Preview Dialog */}
-          <Dialog open={showPreview} onOpenChange={setShowPreview}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Product Preview</DialogTitle>
-                <DialogDescription>How your product will appear to customers</DialogDescription>
-              </DialogHeader>
-              {/* Add your preview content here if needed */}
-              <div className="py-8 text-center text-muted-foreground">
-                Preview content can be expanded here.
+            <CardHeader>
+              <CardTitle>Basic Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-5 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Product Name *</Label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
+                    placeholder="e.g. Wireless Noise Cancelling Headphones"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>SKU (optional)</Label>
+                  <Input
+                    value={formData.sku}
+                    onChange={(e) => setFormData((p) => ({ ...p, sku: e.target.value }))}
+                    placeholder="e.g. HEADPHONE-X001"
+                  />
+                </div>
               </div>
-            </DialogContent>
-          </Dialog>
+
+              <div className="grid gap-5 md:grid-cols-2">
+  <div className="space-y-2">
+    <Label>Category *</Label>
+    <div className="flex items-center gap-2">
+     
+        <Select
+          value={formData.category}
+          onValueChange={(v) => setFormData((p) => ({ ...p, category: v }))}
+          disabled={loadingCategories}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select category" />
+          </SelectTrigger>
+          <SelectContent>{renderCategoryTree(treeCategories)}</SelectContent>
+        </Select>
+      
+
+      <Button
+        type="button"
+      
+        size="icon"
+        className="h-10 w-10"
+        onClick={() => {
+        router.push("/products/settings/product-category")
+        }}
+      >
+        <Plus className="h-4 w-4" />
+      </Button>
+    </div>
+  </div>
+
+  <div className="space-y-2">
+    <Label>Price </Label>
+    <Input
+      type="number"
+      value={formData.price}
+      onChange={(e) => setFormData((p) => ({ ...p, price: e.target.value }))}
+      placeholder="0.00"
+    />
+  </div>
+</div>
+
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Textarea
+                  rows={5}
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, description: e.target.value }))
+                  }
+                  placeholder="Describe your product in detail..."
+                />
+              </div>
+
+              {/* Tags */}
+              <div className="space-y-2">
+                <Label>
+                  Tags <span className="text-xs text-muted-foreground">(space or enter to add)</span>
+                </Label>
+                <div
+                  className={`
+                    flex flex-wrap gap-2 p-2 border rounded-md bg-white 
+                    focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2
+                    min-h-[42px]
+                  `}
+                >
+                  {tags.map((tag, i) => (
+                    <Badge key={i} variant="secondary" className="px-3 py-1 gap-1">
+                      {tag}
+                      <X
+                        className="h-3.5 w-3.5 cursor-pointer hover:text-destructive"
+                        onClick={() => setTags((prev) => prev.filter((_, idx) => idx !== i))}
+                      />
+                    </Badge>
+                  ))}
+                  <input
+                    type="text"
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    onKeyDown={handleTagKeyDown}
+                    placeholder="e.g. wireless premium summer-sale"
+                    className="flex-1 min-w-[180px] outline-none bg-transparent text-sm placeholder:text-muted-foreground"
+                    style={{ border: "none" }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between border p-4 rounded-lg">
+                <div>
+                  <p className="font-medium">Active</p>
+                  <p className="text-sm text-muted-foreground">
+                    Visible on site after publishing
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.isActive}
+                  onCheckedChange={(c) => setFormData((p) => ({ ...p, isActive: c }))}
+                />
+              </div>
+            </CardContent>
+          </div>
+
+          {/* ── Media ──────────────────────────────────────────────────────── */}
+          <div className="rounded-2xl  border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6  hover:shadow transition-shadow">
+
+            <CardHeader>
+              <CardTitle>Media</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label>Video URL (optional)</Label>
+                <Input
+                  value={formData.videoUrl}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, videoUrl: e.target.value }))
+                  }
+                  placeholder="https://www.youtube.com/watch?v=..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Product Images</Label>
+                <p className="text-xs text-muted-foreground">
+    Max size: <span className="font-medium">1MB</span> • Formats:
+    <span className="font-medium"> JPG, JPEG, PNG</span> •
+    Ratio: <span className="font-medium">1:1 (Square)</span>
+  </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {selectedImages.map((img) => (
+                    <div key={img.id} className="relative aspect-square group">
+                      <img
+                        src={img.url}
+                        alt=""
+                        className="w-full h-full object-cover rounded-lg border"
+                      />
+                      <button
+                        onClick={() => removeImage(img.id)}
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <label className="aspect-square flex items-center justify-center border-2 border-dashed rounded-lg cursor-pointer hover:bg-slate-50">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png"
+                      multiple
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <Upload className="h-8 w-8 text-muted-foreground" />
+                  </label>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Documents</Label>
+                <p className="text-xs text-muted-foreground">
+    Max size: <span className="font-medium">1MB</span> • Allowed formats:
+    <span className="font-medium"> PDF, DOC, DOCX</span>
+  </p>
+                {pdfFiles.map((file) => (
+                  <div
+                    key={file.id}
+                    className="flex justify-between items-center p-3 bg-slate-50 rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-red-600" />
+                      <span className="text-sm truncate max-w-[300px]">{file.name}</span>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => removePdf(file.id)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <label className="flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-lg cursor-pointer hover:bg-slate-50">
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    multiple
+                    onChange={handlePdfUpload}
+                    className="hidden"
+                  />
+                  <FileText className="h-10 w-10 text-muted-foreground mb-3" />
+                  <span className="text-sm font-medium">Click to upload PDF / Word</span>
+                </label>
+              </div>
+            </CardContent>
+          </div>
+
+          {/* ── SEO ────────────────────────────────────────────────────────── */}
+          <div className="rounded-2xl  border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6  hover:shadow transition-shadow">
+
+            <CardHeader>
+              <CardTitle>SEO Settings</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label>Meta Title</Label>
+                  <div className="text-xs text-muted-foreground">
+                    {countCharacters(formData.metaTitle)} / ~60 chars •{" "}
+                    {countWords(formData.metaTitle)} words
+                    {countCharacters(formData.metaTitle) > 70 && (
+                      <span className="text-amber-600 ml-2">→ too long</span>
+                    )}
+                  </div>
+                </div>
+                <Input
+                  value={formData.metaTitle}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, metaTitle: e.target.value }))
+                  }
+                  placeholder="Best Wireless Noise Cancelling Headphones 2025 | Brand"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label>Meta Description</Label>
+                  <div className="text-xs text-muted-foreground">
+                    {countCharacters(formData.metaDescription)} / ~160 chars •{" "}
+                    {countWords(formData.metaDescription)} words
+                    {countCharacters(formData.metaDescription) > 170 && (
+                      <span className="text-amber-600 ml-2">→ will be truncated</span>
+                    )}
+                    {countCharacters(formData.metaDescription) > 0 &&
+                      countCharacters(formData.metaDescription) < 100 && (
+                        <span className="text-amber-600 ml-2">→ too short</span>
+                      )}
+                  </div>
+                </div>
+                <Textarea
+                  rows={3}
+                  value={formData.metaDescription}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, metaDescription: e.target.value }))
+                  }
+                  placeholder="Discover premium wireless noise-cancelling headphones..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>
+                  Keywords <span className="text-xs text-muted-foreground">(space to add)</span>
+                </Label>
+                <div
+                  className={`
+                    flex flex-wrap gap-2 p-2.5 border rounded-md bg-white
+                    focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2
+                    min-h-[42px]
+                  `}
+                >
+                  {formData.keywords.map((kw, i) => (
+                    <Badge
+                      key={i}
+                      variant="secondary"
+                      className="px-3 py-1 gap-1.5 text-sm"
+                    >
+                      {kw}
+                      <X
+                        className="h-3.5 w-3.5 cursor-pointer hover:text-destructive"
+                        onClick={() =>
+                          setFormData((p) => ({
+                            ...p,
+                            keywords: p.keywords.filter((_, idx) => idx !== i),
+                          }))
+                        }
+                      />
+                    </Badge>
+                  ))}
+                  <input
+                    type="text"
+                    value={newKeyword}
+                    onChange={(e) => setNewKeyword(e.target.value)}
+                    onKeyDown={handleKeywordKeyDown}
+                    placeholder="wireless noise-cancelling bluetooth premium ..."
+                    className="flex-1 min-w-[180px] outline-none bg-transparent text-sm placeholder:text-muted-foreground"
+                    style={{ border: "none" }}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>URL Slug</Label>
+                <Input
+                  value={formData.urlSlug}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, urlSlug: e.target.value }))
+                  }
+                  placeholder="wireless-noise-cancelling-headphones"
+                />
+              </div>
+            </CardContent>
+          </div>
         </div>
       </div>
     </DashboardLayout>
