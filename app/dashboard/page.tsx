@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { ProductEventMetrics } from "@/components/dashboardanalytics/ProductEventMetrics";
 import React from "react";
 import MonthlyTarget from "@/components/dashboardanalytics/MonthlyTarget";
-import MonthlySalesChart from "@/components/dashboardanalytics/MonthlySalesChart";
+import MonthlyScanChart from "@/components/dashboardanalytics/MonthlyScanChart";
 import StatisticsChart from "@/components/dashboardanalytics/StatisticsChart";
-import RecentOrders from "@/components/dashboardanalytics/RecentOrders";
+import RecentContacts from "@/components/dashboardanalytics/RecentContacts";
 import DemographicCard from "@/components/dashboardanalytics/DemographicCard";
 import { DashboardLayout } from "@/components/dashboard/layout"
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export default function Ecommerce() {
       <div className="col-span-12 space-y-6 xl:col-span-7">
         <ProductEventMetrics />
 
-        <MonthlySalesChart />
+        <MonthlyScanChart />
       </div>
 
       <div className="col-span-12 xl:col-span-5">
@@ -37,7 +37,7 @@ export default function Ecommerce() {
       </div>
 
       <div className="col-span-12 xl:col-span-7">
-        <RecentOrders />
+        <RecentContacts />
       </div>
     </div>
     </DashboardLayout>
