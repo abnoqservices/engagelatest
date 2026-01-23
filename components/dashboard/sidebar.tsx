@@ -4,22 +4,22 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  BarChartBig as ChartPie,
-  Package,
-  Calendar,
-  BookOpen,
-  FileText,
-  GitBranch,
-  Megaphone,
-  Percent,
+  LayoutDashboard,
+  Box,
+  CalendarDays,
+  LayoutGrid,
+  Book,
+  ClipboardList,
+  Workflow,
+  Radio,
   Users,
-  BarChart3,
-  Settings,
+  TrendingUp,
+  Puzzle,
+  Cog,
+  CreditCard,
   ChevronDown,
   Menu,
   X,
-  Plug,
-  Layout,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -34,11 +34,11 @@ import whiteLogo from "@/public/white_logo.png"
 import whiteLogoCollapsed from "@/public/white_logo_full.png"
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: ChartPie },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   {
     name: "Products",
     href: "/products",
-    icon: Package,
+    icon: Box,
     children: [
       { name: "List", href: "/products" },
       { name: "Add Product", href: "/products/new" },
@@ -56,7 +56,7 @@ const navigation = [
   {
     name: "Events",
     href: "/events",
-    icon: Calendar,
+    icon: CalendarDays,
     children: [
       { name: "List", href: "/events" },
       { name: "Create Event", href: "/events/new" },
@@ -66,17 +66,16 @@ const navigation = [
   {
     name: "Landing Pages",
     href: "/landing-pages",
-    icon: Layout,
+    icon: LayoutGrid,
     children: [
       { name: "List", href: "/landing-pages" },
       { name: "Create New", href: "/landing-pages/new" },
     ],
   },
-  { name: "Catalogs", href: "/catalogs", icon: BookOpen },
-  { name: "Forms", href: "/forms", icon: FileText },
-  { name: "Workflows", href: "/workflows", icon: GitBranch },
-  { name: "Campaigns", href: "/campaigns", icon: Megaphone },
-  // { name: "Offers", href: "/offers", icon: Percent },
+  { name: "Catalogs", href: "/catalogs", icon: Book },
+  { name: "Forms", href: "/forms", icon: ClipboardList },
+  { name: "Workflows", href: "/workflows", icon: Workflow },
+  { name: "Campaigns", href: "/campaigns", icon: Radio },
   {
     name: "Customers",
     href: "/customers",
@@ -86,9 +85,10 @@ const navigation = [
       { name: "Personas", href: "/customers/personas" },
     ],
   },
-  { name: "Analytics", href: "/analytics", icon: BarChart3 },
-  { name: "Integrations", href: "/integrations", icon: Plug },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Analytics", href: "/analytics", icon: TrendingUp },
+  { name: "Integrations", href: "/integrations", icon: Puzzle },
+  { name: "Billing", href: "/billing", icon: CreditCard },
+  { name: "Settings", href: "/settings", icon: Cog },
 ]
 
 interface SidebarProps {
@@ -119,7 +119,7 @@ export function Sidebar({
         className={cn(
           "fixed overflow-x-hidden inset-y-0 left-0 z-50 h-screen overflow-hidden",
           "bg-pexifly-dark text-white border-r border-white/10",
-          "transition-[width] duration-300 ease-in-out",
+          "transition-all duration-500 ease-in-out",
           isCollapsed ? "w-16" : "w-64",
           isOpen ? "translate-x-0" : "-translate-x-full",
           "lg:static lg:translate-x-0"
@@ -127,10 +127,10 @@ export function Sidebar({
       >
         <div className="flex h-full flex-col overflow-x-hidden">
           {/* Header */}
-          <div className="flex h-16 items-center justify-between px-4 border-b border-white/10">
+          <div className="flex h-16 items-center justify-between px-4 border-b border-white/10 shadow-sm">
             <div
               className={cn(
-                "transition-all duration-300 overflow-hidden",
+                "transition-all duration-500 ease-in-out overflow-hidden",
                 isCollapsed
                   ? "opacity-0 w-0 translate-x-[-10px]"
                   : "opacity-100 w-auto translate-x-0"
@@ -167,8 +167,8 @@ export function Sidebar({
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto px-2 py-4">
-            <div className="space-y-1">
+          <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4">
+            <div className="space-y-1.5">
               {navigation.map((item) => (
                 <NavItem
                   key={item.name}
@@ -208,18 +208,26 @@ function NavItem({
             title={isCollapsed ? item.name : undefined}
             className={cn(
               "flex w-full items-center rounded-lg px-3 py-2.5",
-              "transition-colors duration-200 hover:bg-white/10",
-              isActive || isOpen ? "bg-white/15 text-white" : "text-white/80",
+              "transition-all duration-300 ease-in-out",
+              "hover:bg-white/10 hover:translate-x-1",
+              isActive || isOpen ? "bg-white/15 text-white shadow-sm" : "text-white/80",
               isCollapsed ? "justify-center" : "justify-between"
             )}
           >
-            <div className="flex items-center gap-3">
-              {item.icon && <item.icon className="h-5 w-5 shrink-0" />}
+            <div className="flex items-center gap-3 min-w-0">
+              {item.icon && (
+                <item.icon 
+                  className={cn(
+                    "h-5 w-5 shrink-0 transition-all duration-300",
+                    isActive || isOpen ? "text-white scale-110" : "text-white/70"
+                  )} 
+                />
+              )}
               <span
                 className={cn(
-                  "transition-all duration-300",
+                  "transition-all duration-500 ease-in-out whitespace-nowrap",
                   isCollapsed
-                    ? "opacity-0 w-0 translate-x-[-8px]"
+                    ? "opacity-0 w-0 translate-x-[-8px] overflow-hidden"
                     : "opacity-100 w-auto translate-x-0"
                 )}
               >
@@ -230,29 +238,36 @@ function NavItem({
             {!isCollapsed && (
               <ChevronDown
                 className={cn(
-                  "h-4 w-4 transition-transform duration-300",
-                  isOpen && "rotate-180"
+                  "h-4 w-4 shrink-0 transition-all duration-500 ease-in-out",
+                  isOpen ? "rotate-180 text-white" : "text-white/60"
                 )}
               />
             )}
           </button>
         </CollapsibleTrigger>
 
-        <CollapsibleContent className="pl-11 mt-1 space-y-1 transition-all">
-          {item.children.map((child: any) => (
-            <NavItem
-              key={child.name}
-              item={child}
-              pathname={pathname}
-              onClose={onClose}
-              isCollapsed={isCollapsed}
-            />
-          ))}
+        <CollapsibleContent 
+          className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
+        >
+          <div className="pl-11 mt-1 space-y-1 pt-1">
+            {item.children.map((child: any) => (
+              <NavItem
+                key={child.name}
+                item={child}
+                pathname={pathname}
+                onClose={onClose}
+                isCollapsed={isCollapsed}
+              />
+            ))}
+          </div>
         </CollapsibleContent>
       </Collapsible>
     )
   }
 
+  // Check if this is a nested child (has parent)
+  const isNested = !item.icon && item.href
+  
   return (
     <Link
       href={item.href}
@@ -260,17 +275,29 @@ function NavItem({
       title={isCollapsed ? item.name : undefined}
       className={cn(
         "flex items-center rounded-lg px-3 py-2.5",
-        "transition-all duration-200 hover:bg-white/10",
-        isActive ? "bg-white/15 text-white" : "text-white/80",
-        isCollapsed ? "justify-center" : "gap-3"
+        "transition-all duration-300 ease-in-out",
+        "hover:bg-white/10 hover:translate-x-1",
+        isActive ? "bg-white/15 text-white shadow-sm font-medium" : "text-white/70",
+        isCollapsed ? "justify-center" : "gap-3",
+        isNested && "pl-6 text-sm"
       )}
     >
-      {item.icon && <item.icon className="h-5 w-5 shrink-0" />}
+      {item.icon && (
+        <item.icon 
+          className={cn(
+            "h-5 w-5 shrink-0 transition-all duration-300",
+            isActive ? "text-white scale-110" : "text-white/60"
+          )} 
+        />
+      )}
+      {isNested && !item.icon && (
+        <div className="h-1 w-1 rounded-full bg-white/40 shrink-0" />
+      )}
       <span
         className={cn(
-          "transition-all duration-300",
+          "transition-all duration-500 ease-in-out whitespace-nowrap",
           isCollapsed
-            ? "opacity-0 w-0 translate-x-[-8px]"
+            ? "opacity-0 w-0 translate-x-[-8px] overflow-hidden"
             : "opacity-100 w-auto translate-x-0"
         )}
       >

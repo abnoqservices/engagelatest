@@ -9,6 +9,7 @@ export type StepType = "condition" | "action" | "delay";
 export type ConditionType = 
   | "email_exists"
   | "phone_exists"
+  | "whatsapp_opt_in"
   | "form_field_equals"
   | "form_field_greater_than";
 
@@ -35,6 +36,9 @@ export interface ConditionConfig {
 export interface ActionConfig {
   action_type: ActionType;
   template_id?: string;
+  message?: string; // For WhatsApp messages
+  whatsapp_account_id?: string; // WhatsApp account to use
+  template_params?: Record<string, any>; // Template parameters
 }
 
 export interface DelayConfig {

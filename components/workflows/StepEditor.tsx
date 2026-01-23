@@ -4,6 +4,7 @@ import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
@@ -232,6 +233,36 @@ interface ActionConfigEditorProps {
 }
 
 function ActionConfigEditor({ config, onUpdate }: ActionConfigEditorProps) {
+  const [whatsappAccounts, setWhatsappAccounts] = React.useState<any[]>([]);
+  const [loadingAccounts, setLoadingAccounts] = React.useState(false);
+
+  React.useEffect(() => {
+    if (config.action_type === "send_whatsapp") {
+      loadWhatsAppAccounts();
+    }
+  }, [config.action_type]);
+
+  const loadWhatsAppAccounts = async () => {
+    try {
+      setLoadingAccounts(true);
+      const response = await fetch("/api/whatsapp/accounts", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setWhatsappAccounts(data.data || []);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load WhatsApp accounts:", error);
+    } finally {
+      setLoadingAccounts(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -254,17 +285,94 @@ function ActionConfigEditor({ config, onUpdate }: ActionConfigEditorProps) {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-2">
-        <Label>Template ID (optional)</Label>
-        <Input
-          value={config.template_id || ""}
-          onChange={(e) => onUpdate({ template_id: e.target.value })}
-          placeholder="e.g., welcome_email_1"
-        />
-        <p className="text-xs text-muted-foreground">
-          Template ID for the notification (handled by Laravel backend)
-        </p>
-      </div>
+
+      {config.action_type === "send_whatsapp" && (
+        <>
+          <div className="space-y-2">
+            <Label>WhatsApp Account</Label>
+            <Select
+              value={config.whatsapp_account_id || ""}
+              onValueChange={(value) => onUpdate({ whatsapp_account_id: value })}
+              disabled={loadingAccounts}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={loadingAccounts ? "Loading..." : "Select WhatsApp account"} />
+              </SelectTrigger>
+              <SelectContent>
+                {whatsappAccounts.length === 0 ? (
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                    No WhatsApp accounts connected
+                  </div>
+                ) : (
+                  whatsappAccounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id.toString()}>
+                      {account.phone_number} {account.status === "connected" ? "✓" : ""}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {whatsappAccounts.length === 0 && (
+                <a href="/settings/integrations" className="text-blue-600 hover:underline">
+                  Connect a WhatsApp account
+                </a>
+              )}
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label>Message</Label>
+            <Textarea
+              value={config.message || ""}
+              onChange={(e) => onUpdate({ message: e.target.value })}
+              placeholder="Enter your WhatsApp message..."
+              rows={4}
+            />
+            <p className="text-xs text-muted-foreground">
+              You can use variables like {"{"}name{"}"}, {"{"}email{"}"}, {"{"}phone{"}"} which will be replaced with form data
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label>Template ID (optional)</Label>
+            <Input
+              value={config.template_id || ""}
+              onChange={(e) => onUpdate({ template_id: e.target.value })}
+              placeholder="e.g., welcome_message_1"
+            />
+            <p className="text-xs text-muted-foreground">
+              Use a pre-approved WhatsApp template instead of a custom message
+            </p>
+          </div>
+        </>
+      )}
+
+      {config.action_type === "send_email" && (
+        <div className="space-y-2">
+          <Label>Template ID (optional)</Label>
+          <Input
+            value={config.template_id || ""}
+            onChange={(e) => onUpdate({ template_id: e.target.value })}
+            placeholder="e.g., welcome_email_1"
+          />
+          <p className="text-xs text-muted-foreground">
+            Template ID for the email notification
+          </p>
+        </div>
+      )}
+
+      {config.action_type === "send_sms" && (
+        <div className="space-y-2">
+          <Label>Template ID (optional)</Label>
+          <Input
+            value={config.template_id || ""}
+            onChange={(e) => onUpdate({ template_id: e.target.value })}
+            placeholder="e.g., welcome_sms_1"
+          />
+          <p className="text-xs text-muted-foreground">
+            Template ID for the SMS notification
+          </p>
+        </div>
+      )}
     </div>
   )
 }

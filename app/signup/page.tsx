@@ -18,12 +18,16 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { QrCode, ArrowLeft, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { QrCode, ArrowLeft, ArrowRight, Eye, EyeOff, Mail } from "lucide-react";
 import axiosClient from "@/lib/axiosClient";
+import Logo from "@/public/pexifly_logo.png";
+import Image from "next/image";
+import TestimonialsCarousel from "@/components/Signin/TestimonialsCarousel";
+import MiddleContent from "@/components/Signin/MiddleContent";
+import TrustedByMarquee from "@/components/Signin/TrustedByMarquee";
 
 export default function SignUpPage() {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = React.useState(1);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
@@ -48,37 +52,8 @@ export default function SignUpPage() {
     agreeToTerms: false,
     organization: {
       name: "",
-      slug: "",
-      description: "",
     },
   });
-
-  const generateSlug = (name: string) =>
-    name
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, "")
-      .replace(/[\s_-]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-
-  const handleOrganizationNameChange = (name: string) => {
-    setFormData((prev) => {
-      const previousGenerated = generateSlug(prev.organization.name);
-      const isCurrentlyDefault =
-        !prev.organization.slug || prev.organization.slug === previousGenerated;
-
-      const newSlug = isCurrentlyDefault ? generateSlug(name) : prev.organization.slug;
-
-      return {
-        ...prev,
-        organization: {
-          ...prev.organization,
-          name,
-          slug: newSlug,
-        },
-      };
-    });
-  };
 
   const validateStep1 = () => {
     const { name, email, password, password_confirmation, agreeToTerms } = formData;
@@ -111,79 +86,21 @@ export default function SignUpPage() {
     return true;
   };
 
-  const validateStep2 = () => {
-    if (!formData.organization.name) {
-      setError("Organization name is required.");
-      return false;
-    }
-    const organization = formData.organization;
-
-    if (organization.name.length > 255) {
-      setError("Organization name must be less than 255 characters.");
-      return false;
-    }
-
-    if (organization.slug) {
-      if (organization.slug.length > 255) {
-        setError("Organization slug must be less than 255 characters.");
-        return false;
-      }
-
-      const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-      if (!slugRegex.test(organization.slug)) {
-        setError(
-          "Slug can only contain lowercase letters, numbers, and single hyphens (no consecutive hyphens)."
-        );
-        return false;
-      }
-
-      if (organization.slug.length < 3) {
-        setError("Slug must be at least 3 characters long.");
-        return false;
-      }
-    }
-
-    return true;
-  };
-
-  const handleNext = () => {
-    setError("");
-    if (currentStep === 1 && validateStep1()) {
-      setCurrentStep(2);
-    }
-  };
-
-  const handleBack = () => {
-    setError("");
-    setCurrentStep(1);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!validateStep2()) return;
+    if (!validateStep1()) return;
 
     setLoading(true);
     try {
-      const { name, email, password, password_confirmation, organization } = formData;
-
-      const orgData: any = {
-        name: organization.name,
-      };
-
-      if (organization.slug) {
-        orgData.slug = organization.slug;
-      }
-
-      if (organization.description?.trim()) {
-        orgData.description = organization.description.trim();
-      }
       const res = await axiosClient.post("/auth/register", {
         name: formData.name,
         email: formData.email,
         password: formData.password,
         password_confirmation: formData.password_confirmation,
-        organization: formData.organization,
+        organization: {
+          name: formData.organization.name,
+        },
       });
 
       if (res.data?.data?.access_token) {
@@ -194,11 +111,17 @@ export default function SignUpPage() {
         localStorage.setItem("user", JSON.stringify(res.data.data.user));
       }
 
+      // After successful signup, redirect to account setup
       setSignupSuccess(true);
       setMessage({
         text: "Account created successfully! Please check your email to verify your account.",
         type: "success",
       });
+      
+      // Redirect to account setup after a short delay
+      setTimeout(() => {
+        router.push("/account-setup");
+      }, 2000);
     } catch (err: any) {
       console.error("Signup error:", err);
 
@@ -263,14 +186,30 @@ export default function SignUpPage() {
     }
   };
 
-  const autoSlug = generateSlug(formData.organization.name);
-  const slugIsCustom =
-    formData.organization.slug && formData.organization.slug !== autoSlug;
+  const handleGoogleSignup = async () => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+    // Ensure we have the full path with /api prefix
+    const baseUrl = apiUrl.endsWith('/api') 
+      ? `${apiUrl}/auth/google` 
+      : `${apiUrl}/api/auth/google`;
+    
+    // Pass organization name as query parameter
+    const params = new URLSearchParams();
+    if (formData.organization.name) {
+      params.append('org_name', formData.organization.name);
+    }
+    
+    const googleAuthUrl = params.toString() 
+      ? `${baseUrl}?${params.toString()}` 
+      : baseUrl;
+    
+    window.location.href = googleAuthUrl;
+  };
 
   if (signupSuccess) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md border-none bg-transparent">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
             <svg className="h-10 w-10 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -330,253 +269,210 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
-        {/* LEFT — FORM */}
-        <div className="flex items-center justify-center p-4">
-          <Card className="w-full max-w-md">
-            <CardHeader className="space-y-1 text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                <QrCode className="h-6 w-6 text-blue-600" />
-              </div>
-              <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
-              <CardDescription>
-                Get started with EngageIQ today — no credit card required
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-              {/* Progress */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
-                  <span className={currentStep >= 1 ? "font-medium text-blue-600" : ""}>
-                    Step 1: Your Details
-                  </span>
-                  <span className={currentStep >= 2 ? "font-medium text-blue-600" : ""}>
-                    Step 2: Organization
-                  </span>
-                </div>
-                <Progress value={(currentStep / 2) * 100} className="h-2" />
-              </div>
-
-              {error && (
-                <div className="rounded-md bg-red-50 p-3">
-                  <p className="text-red-600 text-sm">{error}</p>
-                </div>
-              )}
-
-              {/* Step 1 */}
-              {currentStep === 1 && (
-                <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input
-                      id="name"
-                      placeholder="John Doe"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="you@example.com"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        required
-                        className="pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                      >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Must be at least 8 characters long</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm_password">Confirm Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="confirm_password"
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        value={formData.password_confirmation}
-                        onChange={(e) => setFormData({ ...formData, password_confirmation: e.target.value })}
-                        required
-                        className="pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                      >
-                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="terms"
-                      checked={formData.agreeToTerms}
-                      onCheckedChange={(checked) =>
-                        setFormData({ ...formData, agreeToTerms: checked as boolean })
-                      }
-                    />
-                    <label htmlFor="terms" className="text-sm leading-none">
-                      I agree to the{" "}
-                      <Link href="/terms" className="text-blue-600 hover:underline">
-                        Terms of Service
-                      </Link>{" "}
-                      and{" "}
-                      <Link href="/privacy" className="text-blue-600 hover:underline">
-                        Privacy Policy
-                      </Link>
-                    </label>
-                  </div>
-
-                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-                    Next: Organization Details <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </form>
-              )}
-
-              {/* Step 2 */}
-              {currentStep === 2 && (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="org_name">Organization Name *</Label>
-                    <Input
-                      id="org_name"
-                      placeholder="Acme Corporation"
-                      value={formData.organization.name}
-                      onChange={(e) => handleOrganizationNameChange(e.target.value)}
-                      required
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      This will appear across the app
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="org_slug">Organization Slug</Label>
-                    <Input
-                      id="org_slug"
-                      placeholder="acme-corp"
-                      value={formData.organization.slug}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          organization: {
-                            ...formData.organization,
-                            slug: e.target.value.toLowerCase().trim(),
-                          },
-                        })
-                      }
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {slugIsCustom ? (
-                        <>Custom slug set — won't change when name is edited</>
-                      ) : formData.organization.name.trim() ? (
-                        <>
-                          Auto-generated:{" "}
-                          <span className="font-medium">app.engageiq.com/{autoSlug}</span>
-                        </>
-                      ) : (
-                        <>Will be auto-generated from organization name</>
-                      )}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="org_description">Description (optional)</Label>
-                    <Textarea
-                      id="org_description"
-                      placeholder="A leading technology company building the future of engagement analytics"
-                      value={formData.organization.description}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          organization: {
-                            ...formData.organization,
-                            description: e.target.value,
-                          },
-                        })
-                      }
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button type="button" variant="outline" onClick={handleBack}>
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      Back
-                    </Button>
-                    <Button type="submit" disabled={loading} className="flex-1">
-                      {loading ? "Creating Account..." : "Create Account"}
-                    </Button>
-                  </div>
-                </form>
-              )}
-            </CardContent>
-
-            <CardFooter className="justify-center">
-              <p className="text-sm text-muted-foreground">
-                Already have an account?{" "}
-                <Link href="/signin" className="text-blue-600 hover:underline">
-                  Sign in
-                </Link>
-              </p>
-            </CardFooter>
-          </Card>
-        </div>
-
-        {/* RIGHT — INFO / TESTIMONIALS */}
-        <div className="hidden lg:flex flex-col justify-center bg-gradient-to-br from-blue-600 to-purple-600 p-12 text-white">
-          <h2 className="text-3xl font-bold mb-6">
-            Build smarter engagement with EngageIQ
-          </h2>
-
-          <p className="mb-8 text-lg text-white/90">
-            Join thousands of teams using EngageIQ to understand users,
-            improve retention, and grow faster.
-          </p>
-
-          <ul className="space-y-4 mb-10">
-            <li>✔ AI-powered insights</li>
-            <li>✔ Designed for modern teams</li>
-            <li>✔ Secure & scalable</li>
-          </ul>
-
-          <div className="rounded-lg bg-white/10 p-6 backdrop-blur">
-            <p className="italic">
-              "EngageIQ completely changed how we understand user behavior."
-            </p>
-            <p className="mt-3 text-sm font-medium">
-              — Jamie Lee, Growth Lead
-            </p>
+      <div className="grid min-h-screen grid-cols-1 lg:grid-cols-7">
+        {/* LEFT — SIGNUP FORM */}
+        <div className="flex items-center justify-center p-4 col-span-3">
+          <div className="text-card-foreground flex flex-col gap-6 rounded-xl py-6 w-full max-w-md">
+        <CardHeader className="space-y-1 text-center">
+              <div className="mx-auto mb-4 flex items-center justify-center">
+                <Image src={Logo} alt="Logo" width={100} height={100} />
           </div>
+          <CardTitle className="text-2xl font-bold -mt-4">Create an account</CardTitle>
+          <CardDescription>
+            Get started with EngageIQ today — no credit card required
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGoogleSignup}
+            className="w-full border-gray-300 !shadow-none cursor-pointer hover:bg-gray-50"
+          >
+            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+              <path
+                fill="currentColor"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="currentColor"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="currentColor"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              />
+              <path
+                fill="currentColor"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              />
+            </svg>
+            Continue with Google
+          </Button>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <Separator />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">
+                Or continue with email
+              </span>
+            </div>
+          </div>
+
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+                
+
+                <div className="space-y-2 mt-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    placeholder="John Doe"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                    className="!shadow-none"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                    className="!shadow-none"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="org_name">Organization Name *</Label>
+                  <Input
+                    id="org_name"
+                    placeholder="Acme Corporation"
+                    value={formData.organization.name}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      organization: { ...formData.organization, name: e.target.value }
+                    })}
+                    required
+                    className="!shadow-none"
+                  />
+                  {/* <p className="text-xs text-muted-foreground">
+                    This will appear across the app
+                  </p> */}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      required
+                      className="pr-10 !shadow-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Must be at least 8 characters long</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirm_password">Confirm Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirm_password"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={formData.password_confirmation}
+                      onChange={(e) => setFormData({ ...formData, password_confirmation: e.target.value })}
+                      required
+                      className="pr-10 !shadow-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="terms"
+                  checked={formData.agreeToTerms}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, agreeToTerms: checked as boolean })
+                  }
+                />
+                <label htmlFor="terms" className="text-sm leading-none">
+                  I agree to the{" "}
+                  <Link href="/terms" className="text-blue-600 hover:underline text-pexifly">
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" className="text-blue-600 hover:underline text-pexifly">
+                    Privacy Policy
+                  </Link>
+                </label>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-pexifly cursor-pointer font-bold"
+              >
+                {loading ? "Creating Account..." : "Create Account"}
+              </Button>
+            </form>
+          </CardContent>
+
+          <CardFooter className="flex justify-center">
+            <p className="text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link
+                href="/signin"
+                className="font-medium text-pexifly hover:underline"
+              >
+                Sign in
+              </Link>
+            </p>
+          </CardFooter>
         </div>
+      </div>
+
+      {/* RIGHT — INFO / TESTIMONIALS */}
+      <div className="hidden col-span-4 relative lg:flex flex-col justify-between p-12 bg-pexifly overflow-hidden">
+        <div className="absolute inset-0 bg-purple-800/80" />
+
+        <div className="relative z-10 flex h-full flex-col">
+          <TestimonialsCarousel />
+          <MiddleContent />
+          <TrustedByMarquee />
+        </div>
+      </div>
       </div>
     </div>
   );

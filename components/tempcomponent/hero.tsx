@@ -16,7 +16,7 @@ export default function Header({
 
     {/* Shadow Wrapper */}
     <div className="rounded-full shadow-xl p-1 mb-4">
-      <div className="w-24 h-24 rounded-full overflow-hidden">
+      <div className="w-10 h-10 rounded-full overflow-hidden">
         <img
           src={logo?logo:"/blank.png"}
           alt="Brand Logo"
