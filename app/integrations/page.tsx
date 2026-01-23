@@ -1,12 +1,116 @@
+"use client"
+
+import * as React from "react"
 import { DashboardLayout } from "@/components/dashboard/layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
-import { CheckCircle2, Settings, Plug } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { CheckCircle2, Settings, Plug, Loader2, Trash2 } from 'lucide-react'
+import axiosClient from "@/lib/axiosClient"
+import { showToast } from "@/lib/showToast"
+
+interface WhatsAppAccount {
+  id: number
+  phone_number: string
+  status: 'connected' | 'disconnected' | 'expired'
+  business_account_name?: string
+  created_at?: string
+}
 
 export default function IntegrationsPage() {
+  const [whatsappAccounts, setWhatsappAccounts] = React.useState<WhatsAppAccount[]>([])
+  const [loading, setLoading] = React.useState(false)
+  const [connecting, setConnecting] = React.useState(false)
+  const [disconnectDialogOpen, setDisconnectDialogOpen] = React.useState(false)
+  const [accountToDisconnect, setAccountToDisconnect] = React.useState<number | null>(null)
+
+  React.useEffect(() => {
+    loadWhatsAppAccounts()
+    
+    // Check for OAuth callback success/error
+    const urlParams = new URLSearchParams(window.location.search)
+    const whatsappStatus = urlParams.get('whatsapp')
+    if (whatsappStatus === 'connected') {
+      showToast('WhatsApp account connected successfully!', 'success')
+      // Remove query param from URL
+      window.history.replaceState({}, '', '/integrations')
+      // Reload accounts
+      loadWhatsAppAccounts()
+    } else if (whatsappStatus === 'error') {
+      const errorMessage = urlParams.get('message') || 'Failed to connect WhatsApp account'
+      showToast(errorMessage, 'error')
+      // Remove query param from URL
+      window.history.replaceState({}, '', '/integrations')
+    }
+  }, [])
+
+  const loadWhatsAppAccounts = async () => {
+    try {
+      setLoading(true)
+      const response = await axiosClient.get('/whatsapp/accounts')
+      if (response.data.success) {
+        setWhatsappAccounts(response.data.data || [])
+      }
+    } catch (error: any) {
+      console.error('Failed to load WhatsApp accounts:', error)
+      if (error.response?.status !== 401) {
+        showToast('Failed to load WhatsApp accounts', 'error')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleConnectWhatsApp = async () => {
+    try {
+      setConnecting(true)
+      const response = await axiosClient.get('/whatsapp/auth-url')
+      if (response.data.success) {
+        // Redirect to Meta OAuth
+        window.location.href = response.data.data.auth_url
+      } else {
+        showToast(response.data.message || 'Failed to initiate WhatsApp connection', 'error')
+        setConnecting(false)
+      }
+    } catch (error: any) {
+      showToast(error.response?.data?.message || 'Failed to initiate WhatsApp connection', 'error')
+      setConnecting(false)
+    }
+  }
+
+  const handleDisconnectClick = (accountId: number) => {
+    setAccountToDisconnect(accountId)
+    setDisconnectDialogOpen(true)
+  }
+
+  const handleDisconnect = async () => {
+    if (!accountToDisconnect) return
+
+    try {
+      await axiosClient.delete(`/whatsapp/accounts/${accountToDisconnect}`)
+      showToast('WhatsApp account disconnected successfully', 'success')
+      setDisconnectDialogOpen(false)
+      setAccountToDisconnect(null)
+      loadWhatsAppAccounts()
+    } catch (error: any) {
+      showToast(error.response?.data?.message || 'Failed to disconnect account', 'error')
+    }
+  }
+
+  const isWhatsAppConnected = whatsappAccounts.some(acc => acc.status === 'connected')
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -17,7 +121,7 @@ export default function IntegrationsPage() {
           </p>
         </div>
 
-        <Tabs defaultValue="crm" className="space-y-6">
+        <Tabs defaultValue="communication" className="space-y-6">
           <TabsList>
             <TabsTrigger value="crm">CRM Systems</TabsTrigger>
             <TabsTrigger value="marketing">Marketing Automation</TabsTrigger>
@@ -164,9 +268,125 @@ export default function IntegrationsPage() {
 
           {/* Communication Platforms */}
           <TabsContent value="communication" className="space-y-6">
+            {/* WhatsApp Account Card - Full Width */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      WhatsApp Cloud API
+                      {isWhatsAppConnected && (
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      )}
+                    </CardTitle>
+                    <CardDescription className="mt-2">
+                      Automated messages & campaigns via WhatsApp Business API
+                    </CardDescription>
+                  </div>
+                  <Switch checked={isWhatsAppConnected} disabled />
+                </div>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : whatsappAccounts.length > 0 ? (
+                  <div className="space-y-3">
+                    {whatsappAccounts.map((account) => (
+                      <div
+                        key={account.id}
+                        className="flex items-center justify-between p-3 border rounded-lg bg-muted/50"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{account.phone_number}</p>
+                            <Badge
+                              variant={
+                                account.status === 'connected' ? 'default' : 'secondary'
+                              }
+                              className="text-xs"
+                            >
+                              {account.status}
+                            </Badge>
+                          </div>
+                          {account.business_account_name && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {account.business_account_name}
+                            </p>
+                          )}
+                          {account.created_at && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Connected {new Date(account.created_at).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDisconnectClick(account.id)}
+                          className="ml-4"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-4 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      No WhatsApp accounts connected. Click "Connect WhatsApp" to get started.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+              <CardFooter>
+                {isWhatsAppConnected ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={handleConnectWhatsApp}
+                    disabled={connecting}
+                  >
+                    {connecting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Connecting...
+                      </>
+                    ) : (
+                      <>
+                        <Plug className="h-4 w-4 mr-2" />
+                        Add Another Account
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    onClick={handleConnectWhatsApp}
+                    disabled={connecting}
+                  >
+                    {connecting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Connecting...
+                      </>
+                    ) : (
+                      <>
+                        <Plug className="h-4 w-4 mr-2" />
+                        Connect WhatsApp
+                      </>
+                    )}
+                  </Button>
+                )}
+              </CardFooter>
+            </Card>
+
+            {/* Other Communication Integrations */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[
-                { name: "WhatsApp Cloud API", purpose: "Automated messages & campaigns", connected: false },
                 { name: "SMS Gateways", purpose: "Transactional notifications", connected: true },
                 { name: "Email SMTP Providers", purpose: "Email delivery automation", connected: true },
                 { name: "Meta Pixel", purpose: "Retargeting", connected: false },
@@ -205,6 +425,30 @@ export default function IntegrationsPage() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Disconnect Confirmation Dialog */}
+        <AlertDialog open={disconnectDialogOpen} onOpenChange={setDisconnectDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Disconnect WhatsApp Account?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to disconnect this WhatsApp account? You won't be able to send
+                WhatsApp messages through workflows until you reconnect an account.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setAccountToDisconnect(null)}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDisconnect}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Disconnect
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   )

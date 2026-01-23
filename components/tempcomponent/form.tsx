@@ -333,6 +333,35 @@ export default function Form({ productId, form_title, form_id }: FormProps) {
         );
 
       case "checkbox":
+        // Check if this is a WhatsApp opt-in field
+        const isWhatsAppOptIn = field.key === "whatsapp_opt_in" || field.options?.is_whatsapp_opt_in;
+        
+        if (isWhatsAppOptIn) {
+          // Single checkbox for WhatsApp opt-in
+          return (
+            <div key={field.id} className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id={field.key}
+                  checked={value === true || value === "true"}
+                  onCheckedChange={(checked) => handleInputChange(field.key, checked)}
+                />
+                <Label htmlFor={field.key} className="font-normal cursor-pointer">
+                  {field.label || "I agree to receive WhatsApp messages"}
+                  {field.is_required && <span className="text-red-500 ml-1">*</span>}
+                </Label>
+              </div>
+              {field.options?.description && (
+                <p className="text-xs text-muted-foreground ml-6">
+                  {field.options.description}
+                </p>
+              )}
+              {hasError && <p className="text-sm text-red-500">{error}</p>}
+            </div>
+          );
+        }
+        
+        // Regular checkbox group
         return (
           <div key={field.id} className="space-y-2">
             <Label>

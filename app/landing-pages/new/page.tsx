@@ -154,7 +154,7 @@ export default function LandingPageBuilder({ productId }: { productId?: number }
   }, [productId]);
 
   const handleAddSection = async (sectionKey: string) => {
-    if (!productId || !sectionKey || activeSections.some((s) => s.sectionKey === sectionKey)) return;
+    if (!productId || !sectionKey) return;
 
     try {
       const res = await axiosClient.post(`/products/${productId}/landing-page/sections`, {
@@ -241,19 +241,30 @@ export default function LandingPageBuilder({ productId }: { productId?: number }
     }
   };
 
+  // Extract styles from customize_webpage section only if it exists AND is enabled
+  const customizeSection = activeSections.find((s) => s.sectionKey === 'customize_webpage' && s.enabled);
+  const customStyles = customizeSection?.content || {};
+
   const previewPayload = {
     templateName: "modern",
-    sections: activeSections.filter((s) => s.enabled).map((s) => ({ section: s.sectionKey, content: s.content })),
+    sections: activeSections
+      .filter((s) => s.enabled && s.sectionKey !== 'customize_webpage') // Exclude customize section from rendering
+      .map((s) => ({ section: s.sectionKey, content: s.content })),
     styles: {
-      primaryColor: "#ecedf4ff",
-      backgroundColor: "#000000",
-      textColor: "#a97d38",
+      primaryColor: customStyles.primary_text_color || "#000000",
+      backgroundColor: customStyles.background_color || "#FFFFFF",
+      textColor: customStyles.primary_text_color || "#000000",
+      secondaryTextColor: customStyles.secondary_text_color || "#666666",
+      accentColor: customStyles.accent_color || "#007BFF",
+      linkColor: customStyles.link_color || "#007BFF",
+      buttonBackgroundColor: customStyles.button_background_color || "#007BFF",
+      buttonTextColor: customStyles.button_text_color || "#FFFFFF",
       headlineSize: 28,
       paragraphSize: 16,
     },
   };
 
-  const pageTitle = productId ? `Product #${productId} Landing Page Builder` : "Global Landing Page Builder";
+  const pageTitle = productId ? `Customize Product Landing Page` : "Global Landing Page Builder";
 
   if (isLoading) {
     return (
@@ -269,165 +280,182 @@ export default function LandingPageBuilder({ productId }: { productId?: number }
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto space-y-8">
-        <h1 className="text-3xl font-bold">{pageTitle}</h1>
+        <h1 className="text-2xl font-bold">{pageTitle}</h1>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-5 gap-8">
           {/* Controls */}
-          <div className="space-y-6">
-            {productId && (
-              <Card className="border-border">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <Plus className="h-5 w-5 text-primary" />
-                    </div>
-                    <CardTitle className="text-lg">Add a New Section</CardTitle>
+          <div className="space-y-6 lg:col-span-3">
+            {/* Header */}
+            <div className="space-y-1">
+              <h2 className="text-xl font-semibold">Sections</h2>
+              <p className="text-sm text-muted-foreground">
+                Drag to reorder • Click to expand and edit content
+              </p>
+            </div>
+
+            {/* Sections List */}
+            {activeSections.length > 0 ? (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={onDragEnd}
+              >
+                <SortableContext
+                  items={activeSections.map((s) => s.sectionId!)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <Accordion type="multiple" className="space-y-4">
+                    {activeSections.map((item) => (
+                      <SortableSectionItem
+                        productId={productId}
+                        key={item.sectionId}
+                        item={item}
+                        onTogglePublish={() => togglePublish(item)}
+                        onRemove={() => removeSection(item)}
+                        onContentChange={(content) =>
+                          setActiveSections((prev) =>
+                            prev.map((s) =>
+                              s.sectionId === item.sectionId ? { ...s, content } : s
+                            )
+                          )
+                        }
+                        disabled={reordering}
+                      />
+                    ))}
+                  </Accordion>
+                </SortableContext>
+              </DndContext>
+            ) : (
+              <div className="border-2 border-dashed rounded-lg p-12 text-center">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="p-3 bg-muted rounded-full">
+                    <Plus className="h-6 w-6 text-muted-foreground" />
                   </div>
-                  <CardDescription>Search and select a section to add to your product.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        className="w-full justify-between font-normal"
-                      >
-                        <span className="truncate">
-                          {selectedValue
-                            ? globalSections.find((s) => s.key === selectedValue)?.name
-                            : "Search or select a section..."}
-                        </span>
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Search sections..." className="h-9" />
-                        <CommandList>
-                          <CommandEmpty>No sections found.</CommandEmpty>
-
-                          {Object.entries(groupedGlobals).map(([group, subGroups]) => (
-                            <CommandGroup
-                              key={group}
-                              heading={group.charAt(0).toUpperCase() + group.slice(1)}
-                            >
-                              {Object.entries(subGroups).map(([subGroup, secs]) => (
-                                <React.Fragment key={subGroup}>
-                                  {subGroup !== "null" && (
-                                    <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                      {subGroup}
-                                    </div>
-                                  )}
-                                  {secs
-                                    .filter((s) => !activeSections.some((a) => a.sectionKey === s.key))
-                                    .map((s) => (
-                                      <CommandItem
-                                        key={s.key}
-                                        value={s.key}
-                                        onSelect={(currentValue) => {
-                                          handleAddSection(currentValue);
-                                          setSelectedValue(currentValue);
-                                        }}
-                                      >
-                                        <Check
-                                          className={`mr-2 h-4 w-4 ${
-                                            selectedValue === s.key ? "opacity-100" : "opacity-0"
-                                          }`}
-                                        />
-                                        {s.name}
-                                      </CommandItem>
-                                    ))}
-                                </React.Fragment>
-                              ))}
-                            </CommandGroup>
-                          ))}
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    Already added sections are hidden from this list.
-                  </p>
-                </CardContent>
-              </Card>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">No sections yet</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {productId
+                        ? "Add your first section below to get started"
+                        : "Global mode – no sections available."}
+                    </p>
+                  </div>
+                </div>
+              </div>
             )}
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Sections</CardTitle>
-                <CardDescription>Drag to reorder • Edit content below</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {activeSections.length > 0 ? (
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={onDragEnd}
-                  >
-                    <SortableContext
-                      items={activeSections.map((s) => s.sectionId!)}
-                      strategy={verticalListSortingStrategy}
+            {/* Add Section Button - Appears after accordions */}
+            {productId && (
+              <div className="border-2 border-dashed rounded-lg p-6 hover:border-primary/50 transition-colors">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-between font-normal h-auto py-6 px-4 border-2 border-dashed hover:border-solid hover:bg-accent"
                     >
-                      <Accordion type="multiple" className="space-y-4">
-                        {activeSections.map((item) => (
-                          <SortableSectionItem
-                            productId={productId}
-                            key={item.sectionId}
-                            item={item}
-                            onTogglePublish={() => togglePublish(item)}
-                            onRemove={() => removeSection(item)}
-                            onContentChange={(content) =>
-                              setActiveSections((prev) =>
-                                prev.map((s) =>
-                                  s.sectionId === item.sectionId ? { ...s, content } : s
-                                )
-                              )
-                            }
-                            disabled={reordering}
-                          />
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                          <Plus className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="text-left">
+                          <div className="font-medium">Add a New Section</div>
+                          <div className="text-xs text-muted-foreground font-normal">
+                            Search and select a section to add
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[500px] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search sections..." className="h-9" />
+                      <CommandList className="max-h-[300px]">
+                        <CommandEmpty>No sections found.</CommandEmpty>
+
+                        {Object.entries(groupedGlobals).map(([group, subGroups]) => (
+                          <CommandGroup
+                            key={group}
+                            heading={group.charAt(0).toUpperCase() + group.slice(1)}
+                          >
+                            {Object.entries(subGroups).map(([subGroup, secs]) => (
+                              <React.Fragment key={subGroup}>
+                                {subGroup !== "null" && (
+                                  <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    {subGroup}
+                                  </div>
+                                )}
+                                {secs.map((s) => {
+                                  // Check if section is already added
+                                  const isAlreadyAdded = activeSections.some(
+                                    (active) => active.sectionKey === s.key
+                                  );
+                                  
+                                  return (
+                                    <CommandItem
+                                      key={s.key}
+                                      value={s.key}
+                                      onSelect={(currentValue) => {
+                                        if (!isAlreadyAdded) {
+                                          handleAddSection(currentValue);
+                                          setSelectedValue("");
+                                        }
+                                      }}
+                                      disabled={isAlreadyAdded}
+                                      className={isAlreadyAdded ? "opacity-50 cursor-not-allowed" : ""}
+                                    >
+                                      <Check
+                                        className={`mr-2 h-4 w-4 ${
+                                          selectedValue === s.key ? "opacity-100" : "opacity-0"
+                                        }`}
+                                      />
+                                      <span className="flex-1">{s.name}</span>
+                                      {isAlreadyAdded && (
+                                        <span className="text-xs text-muted-foreground ml-2">
+                                          (Added)
+                                        </span>
+                                      )}
+                                    </CommandItem>
+                                  );
+                                })}
+                              </React.Fragment>
+                            ))}
+                          </CommandGroup>
                         ))}
-                      </Accordion>
-                    </SortableContext>
-                  </DndContext>
-                ) : (
-                  <p className="text-center py-8 text-muted-foreground">
-                    {productId
-                      ? "No sections added yet. Use the dropdown above."
-                      : "Global mode – no sections available."}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
           </div>
 
           {productId && (
-            <div className="w-full lg:fixed lg:inset-y-0 lg:right-0 lg:w-1/2 lg:flex lg:items-center lg:justify-center lg:pointer-events-none lg:z-10">
+            <div className="-mt-30 fixed right-[5rem] w-[420px] !top-40 lg:inset-y-0 lg:col-span-2 lg:pointer-events-none lg:z-10">
               <div className="w-full h-[80%] lg:max-w-lg lg:pointer-events-auto">
                 {previewVisible && (
-                  <Card className="shadow-xl lg:shadow-2xl mx-auto lg:mx-0 transition-all duration-300">
+                  <Card className="shadow-none border-none bg-transparent mx-auto lg:mx-0 transition-all duration-300">
                     <CardHeader className="flex flex-row items-center justify-between">
-                      <div>
-                        <CardTitle className="text-lg lg:text-xl">Mobile Preview</CardTitle>
+                      {/* <div>
+                        <CardTitle className="text-lg lg:text-xl">Preview</CardTitle>
                         <CardDescription className="text-xs lg:text-sm">
                           Live view on mobile device
                         </CardDescription>
-                      </div>
+                      </div> */}
 
-                      <Button
+                      {/* <Button
                         variant="ghost"
                         size="icon"
                         className="rounded-full hover:bg-gray-100"
                         onClick={() => setPreviewVisible(false)}
                       >
                         <EyeOff className="h-5 w-5" />
-                      </Button>
+                      </Button> */}
                     </CardHeader>
 
                     <CardContent className="flex justify-center">
                       <div
-                        className="h-[700px] relative shadow-2xl w-full max-w-[360px] 
+                        className="h-[600px] relative shadow-2xl w-full max-w-[320px] 
                         aspect-[9/19.5] border-[14px] border-black rounded-[45px] bg-black overflow-hidden"
                       >
                         <div className="absolute inset-0 flex items-center justify-center">
@@ -436,7 +464,7 @@ export default function LandingPageBuilder({ productId }: { productId?: number }
                             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-6 bg-black rounded-b-3xl z-20" />
 
                             {/* Content */}
-                            <div className="w-full h-full overflow-y-auto scrollbar-hide pt-8">
+                            <div className="w-full h-full overflow-y-auto scrollbar-hide">
                               <Perview data={previewPayload} productId={productId} />
                             </div>
                           </div>
@@ -447,7 +475,7 @@ export default function LandingPageBuilder({ productId }: { productId?: number }
                 )}
 
                 {!previewVisible && (
-                  <div className="fixed bottom-6 right-6 z-50 lg:bottom-8 lg:right-8">
+                  <div className="bottom-6 right-6 z-50 lg:bottom-8 lg:right-8">
                     <Button
                       size="lg"
                       className="shadow-2xl rounded-full px-6 py-3 flex items-center gap-2 font-medium"
@@ -475,6 +503,7 @@ function SortableSectionItem({
   onContentChange,
   disabled,
 }: {
+  productId?: number;
   item: ActiveSection;
   onTogglePublish: () => void;
   onRemove: () => void;
@@ -523,30 +552,41 @@ function SortableSectionItem({
   };
 
   return (
-    <AccordionItem value={item.sectionKey} className="border rounded-lg bg-white" ref={setNodeRef} style={style}>
-      <div className="flex items-center justify-between px-4 py-3">
-        <AccordionTrigger className="flex items-center gap-3 flex-1 hover:no-underline text-left">
+    <AccordionItem 
+      value={item.sectionKey} 
+      className="border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow" 
+      ref={setNodeRef} 
+      style={style}
+    >
+      <div className="flex items-center justify-between px-4 py-3 border-b">
+        <AccordionTrigger className="flex items-center gap-3 flex-1 hover:no-underline text-left py-0">
           <GripVertical
-            className="h-5 w-5 text-gray-400 cursor-grab"
+            className="h-5 w-5 text-gray-400 cursor-grab active:cursor-grabbing"
             {...attributes}
             {...listeners}
           />
 
-          <span className="font-medium">{item.label}</span>
+          <span className="font-medium text-base">{item.label}</span>
 
           {/* You can add saving indicator here if you track it */}
         </AccordionTrigger>
 
-        <div className="flex items-center gap-4 ml-4">
-          <Switch
-            checked={item.enabled}
-            onCheckedChange={onTogglePublish}
-            onClick={(e) => e.stopPropagation()}
-          />
+        <div className="flex items-center gap-3 ml-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              {item.enabled ? "Published" : "Draft"}
+            </span>
+            <Switch
+              checked={item.enabled}
+              onCheckedChange={onTogglePublish}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
 
           <Button
             variant="ghost"
             size="icon"
+            className="h-8 w-8"
             onClick={(e) => {
               e.stopPropagation();
               onRemove();
@@ -557,7 +597,7 @@ function SortableSectionItem({
         </div>
       </div>
 
-      <AccordionContent className="px-6 pb-6 space-y-6 pt-5 bg-gray-100">
+      <AccordionContent className="px-6 pb-6 space-y-6 pt-6 bg-gray-50/50">
   {item.schema?.fields?.length > 0 ? (
     item.schema.fields.map((field: any) => (
       <div key={field.key} className="space-y-2">

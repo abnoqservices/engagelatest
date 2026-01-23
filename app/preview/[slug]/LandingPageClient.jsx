@@ -28,16 +28,39 @@ export default function LandingPageClient({ slug }) {
             .filter((sec) => sec.is_published)
             .sort((a, b) => a.sort_order - b.sort_order);
 
+          // Extract styles from customize_webpage section only if it exists AND is published
+          const customizeSection = activeSections.find((sec) => 
+            sec.global_section.key === 'customize_webpage' && sec.is_published
+          );
+          const customStyles = customizeSection?.content || {};
+
+          // Get department logo from response
+          const departmentLogoUrl = res.data?.data?.department?.logo_url || null;
+
           setPayload({
             templateName: "modern",
-            sections: activeSections.map((sec) => ({
-              section: sec.global_section.key,
-              content: sec.content ?? {},
-            })),
+            sections: activeSections
+              .filter((sec) => sec.global_section.key !== 'customize_webpage') // Exclude customize section from rendering
+              .map((sec) => {
+                const content = sec.content ?? {};
+                // Add department logo to brand_header sections by default
+                if (sec.global_section.key === 'brand_header' && departmentLogoUrl && !content.logo_url) {
+                  content.logo_url = departmentLogoUrl;
+                }
+                return {
+                  section: sec.global_section.key,
+                  content: content,
+                };
+              }),
             styles: {
-              primaryColor: "#ecedf4ff",
-              backgroundColor: "#000000",
-              textColor: "#a97d38",
+              primaryColor: customStyles.primary_text_color || "#000000",
+              backgroundColor: customStyles.background_color || "#FFFFFF",
+              textColor: customStyles.primary_text_color || "#000000",
+              secondaryTextColor: customStyles.secondary_text_color || "#666666",
+              accentColor: customStyles.accent_color || "#007BFF",
+              linkColor: customStyles.link_color || "#007BFF",
+              buttonBackgroundColor: customStyles.button_background_color || "#007BFF",
+              buttonTextColor: customStyles.button_text_color || "#FFFFFF",
               headlineSize: 28,
               paragraphSize: 16,
             },

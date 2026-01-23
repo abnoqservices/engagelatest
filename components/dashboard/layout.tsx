@@ -33,9 +33,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
           <TopNav onMenuClick={() => setIsSidebarOpen(true)} />
 
-          <main className="flex-1 overflow-y-auto bg-background p-4 lg:p-6">
-            {children}
-          </main>
+          <main className="flex-1 overflow-y-auto bg-gray-50 p-4 lg:p-6
+  bg-[radial-gradient(circle,rgba(0,0,0,0.15)_1px,transparent_1px)]
+  dark:bg-[radial-gradient(circle,rgba(255,255,255,0.05)_1px,transparent_1px)]
+  [background-size:20px_20px]">
+  {children}
+</main>
+
         </div>
       </div>
     </AuthWrapper>
