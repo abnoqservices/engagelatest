@@ -3,48 +3,80 @@
 import { DashboardLayout } from "@/components/dashboard/layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2, Download, ArrowRight, X } from 'lucide-react'
-import { useState } from "react"
+import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2, Download, ArrowRight, X, Sparkles, Loader2 } from 'lucide-react'
+import { useState, useRef } from "react"
+import * as React from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import axiosClient from "@/lib/axiosClient"
+import { useToast } from "@/components/ui/use-toast"
+import { useRouter } from "next/navigation"
 
 const productFields = [
   { value: "name", label: "Product Name", required: true },
   { value: "sku", label: "SKU", required: true },
   { value: "description", label: "Description", required: false },
-  { value: "price", label: "Price", required: true },
-  { value: "category", label: "Category", required: true },
+  { value: "price", label: "Price", required: false },
+  { value: "category", label: "Category", required: false },
+  { value: "category_id", label: "Category ID", required: false },
   { value: "tags", label: "Tags", required: false },
-  { value: "stock", label: "Stock Quantity", required: false },
-  { value: "weight", label: "Weight", required: false },
-  { value: "dimensions", label: "Dimensions", required: false },
-  { value: "brand", label: "Brand", required: false },
+  { value: "meta_title", label: "Meta Title", required: false },
+  { value: "meta_description", label: "Meta Description", required: false },
+  { value: "keywords", label: "Keywords", required: false },
+  { value: "video_url", label: "Video URL", required: false },
+  { value: "url_slug", label: "URL Slug", required: false },
+  { value: "is_active", label: "Is Active", required: false },
+  { value: "status", label: "Status", required: false },
 ]
 
 export default function BulkImportPage() {
+  const { toast } = useToast()
+  const router = useRouter()
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [filePath, setFilePath] = useState<string>("")
   const [csvHeaders, setCsvHeaders] = useState<string[]>([])
   const [fieldMapping, setFieldMapping] = useState<Record<string, string>>({})
   const [showMapping, setShowMapping] = useState(false)
   const [previewData, setPreviewData] = useState<any[]>([])
+  const [sampleData, setSampleData] = useState<any>({})
+  const [sampleDataRows, setSampleDataRows] = useState<any[]>([])
+  const [totalRows, setTotalRows] = useState(0)
+  const mappingSectionRef = React.useRef<HTMLDivElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const [suggesting, setSuggesting] = useState(false)
+  const [importing, setImporting] = useState(false)
+  const [importOptions, setImportOptions] = useState({
+    skip_duplicates: true,
+    generate_seo: false,
+  })
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
+    setUploading(true)
     setUploadedFile(file)
-    
-    // Parse CSV/Excel to get headers
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const text = e.target?.result as string
-      const lines = text.split('\n')
-      if (lines.length > 0) {
-        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''))
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const res = await axiosClient.post('/products/import/upload-csv', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+
+      if (res.data.success) {
+        const { headers, sample_data, sample_data_rows, total_rows, file_path } = res.data.data
         setCsvHeaders(headers)
-        
-        // Auto-map fields with similar names
+        setSampleData(sample_data)
+        setSampleDataRows(sample_data_rows || [])
+        setTotalRows(total_rows)
+        setFilePath(file_path)
+
+        // Basic auto-mapping
         const autoMapping: Record<string, string> = {}
-        headers.forEach(header => {
+        headers.forEach((header: string) => {
           const normalized = header.toLowerCase()
           const match = productFields.find(f => 
             normalized.includes(f.value) || f.value.includes(normalized)
@@ -54,35 +86,170 @@ export default function BulkImportPage() {
           }
         })
         setFieldMapping(autoMapping)
-        
-        // Parse preview data (first 5 rows)
-        const preview = lines.slice(1, 6).map(line => {
-          const values = line.split(',').map(v => v.trim().replace(/"/g, ''))
-          const row: any = {}
-          headers.forEach((header, i) => {
-            row[header] = values[i] || ''
-          })
-          return row
-        }).filter(row => Object.values(row).some(v => v))
-        
+
+        // Parse preview data from sample
+        const preview = sample_data_rows && sample_data_rows.length > 0 
+          ? sample_data_rows.slice(0, 5) 
+          : [sample_data]
         setPreviewData(preview)
         setShowMapping(true)
+
+        // Auto-scroll to mapping section
+        setTimeout(() => {
+          mappingSectionRef.current?.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          })
+        }, 300)
+
+        toast({
+          title: "File uploaded",
+          description: `Found ${total_rows} rows. Map your fields to continue.`,
+        })
       }
+    } catch (err: any) {
+      toast({
+        title: "Upload failed",
+        description: err.response?.data?.message || "Failed to upload file",
+        variant: "destructive",
+      })
+    } finally {
+      setUploading(false)
     }
-    reader.readAsText(file)
+  }
+
+  const handleAISuggestions = async () => {
+    if (csvHeaders.length === 0) return
+
+    setSuggesting(true)
+    try {
+      const res = await axiosClient.post('/products/import/suggest-mappings', {
+        csv_headers: csvHeaders,
+        sample_data: sampleData,
+        sample_data_rows: sampleDataRows, // Send multiple rows for better AI understanding
+      })
+
+      if (res.data.success) {
+        const suggestions = res.data.data.mappings
+        // Only update non-empty mappings (don't overwrite user selections with null)
+        const updatedMapping = { ...fieldMapping }
+        Object.keys(suggestions).forEach(key => {
+          if (suggestions[key] && suggestions[key] !== 'skip') {
+            updatedMapping[key] = suggestions[key]
+          }
+        })
+        setFieldMapping(updatedMapping)
+        toast({
+          title: "AI suggestions applied",
+          description: "Field mappings have been updated with AI suggestions.",
+        })
+      }
+    } catch (err: any) {
+      console.error('AI suggestion error:', err)
+      toast({
+        title: "Failed to get suggestions",
+        description: err.response?.data?.message || err.response?.data?.error || "AI service unavailable. You can map fields manually.",
+        variant: "destructive",
+      })
+    } finally {
+      setSuggesting(false)
+    }
   }
 
   const handleMappingChange = (csvHeader: string, productField: string) => {
     setFieldMapping(prev => ({
       ...prev,
-      [csvHeader]: productField
+      [csvHeader]: productField === "skip" ? "" : productField
     }))
   }
 
-  const handleImport = () => {
-    console.log('[v0] Importing with mapping:', fieldMapping)
-    // Import logic would go here
-    alert(`Importing ${previewData.length} products with field mapping`)
+  const handleImport = async () => {
+    console.log('Import button clicked', { filePath, fieldMapping, importOptions })
+    
+    // Validate file path exists
+    if (!filePath) {
+      console.error('No file path')
+      toast({
+        title: "No file selected",
+        description: "Please upload a CSV file first",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validate required fields are mapped
+    const requiredFields = productFields.filter(f => f.required)
+    const mappedFields = Object.values(fieldMapping).filter(v => v && v !== "skip" && v !== "")
+    
+    console.log('Required fields check', { requiredFields: requiredFields.map(f => f.value), mappedFields })
+    
+    const missingRequired = requiredFields.filter(f => !mappedFields.includes(f.value))
+    if (missingRequired.length > 0) {
+      console.error('Missing required fields', missingRequired)
+      toast({
+        title: "Missing required fields",
+        description: `Please map: ${missingRequired.map(f => f.label).join(', ')}`,
+        variant: "destructive",
+      })
+      return
+    }
+
+    console.log('Starting import...')
+    setImporting(true)
+    try {
+      const payload = {
+        file_path: filePath,
+        field_mapping: fieldMapping,
+        options: importOptions,
+      }
+      console.log('Import payload:', payload)
+      
+      const res = await axiosClient.post('/products/import/import', payload)
+      console.log('Import response:', res.data)
+
+      if (res.data.success) {
+        const { success, failed, skipped, errors } = res.data.data
+        
+        toast({
+          title: "Import completed",
+          description: `Successfully imported ${success} products. ${failed > 0 ? `${failed} failed.` : ''} ${skipped > 0 ? `${skipped} skipped.` : ''}`,
+        })
+
+        if (errors.length > 0 && errors.length <= 10) {
+          console.log('Import errors:', errors)
+        }
+
+        // Redirect to products page after successful import
+        setTimeout(() => {
+          router.push('/products')
+        }, 2000)
+      } else {
+        throw new Error(res.data.message || 'Import failed')
+      }
+    } catch (err: any) {
+      console.error('Import error:', err)
+      console.error('Error response:', err.response)
+      toast({
+        title: "Import failed",
+        description: err.response?.data?.message || err.response?.data?.error || err.message || "Failed to import products",
+        variant: "destructive",
+      })
+    } finally {
+      setImporting(false)
+    }
+  }
+
+  const downloadTemplate = () => {
+    // Create CSV template
+    const headers = productFields.filter(f => f.required || f.value === 'description').map(f => f.label)
+    const csvContent = headers.join(',') + '\n'
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'product_import_template.csv'
+    a.click()
+    window.URL.revokeObjectURL(url)
   }
 
   return (
@@ -91,7 +258,7 @@ export default function BulkImportPage() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Bulk Import Products</h1>
           <p className="text-muted-foreground mt-2">
-            Import multiple products at once using CSV or Excel files
+            Import multiple products at once using CSV files with AI-powered field mapping
           </p>
         </div>
 
@@ -110,7 +277,7 @@ export default function BulkImportPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 Download our CSV template with all required fields
               </p>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={downloadTemplate}>
                 <Download className="h-4 w-4 mr-2" />
                 Download Template
               </Button>
@@ -139,12 +306,12 @@ export default function BulkImportPage() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                   <span className="text-lg font-bold text-primary">3</span>
                 </div>
-                <CardTitle className="text-base">Upload File</CardTitle>
+                <CardTitle className="text-base">Upload & Import</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Upload your completed file and review the preview before importing
+                Upload your completed file, map fields with AI assistance, and import
               </p>
             </CardContent>
           </Card>
@@ -155,15 +322,24 @@ export default function BulkImportPage() {
           <CardHeader>
             <CardTitle>Upload File</CardTitle>
             <CardDescription>
-              Supported formats: CSV, Excel (.xlsx, .xls)
+              Supported formats: CSV (max 10MB)
             </CardDescription>
           </CardHeader>
           <CardContent>
             <label className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-12 hover:border-primary/50 transition-colors cursor-pointer">
-              <Upload className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-sm font-medium mb-1">Click to upload or drag and drop</p>
-              <p className="text-xs text-muted-foreground">CSV or Excel files (max 10MB)</p>
-              {uploadedFile && (
+              {uploading ? (
+                <>
+                  <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
+                  <p className="text-sm font-medium">Uploading...</p>
+                </>
+              ) : (
+                <>
+                  <Upload className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-sm font-medium mb-1">Click to upload or drag and drop</p>
+                  <p className="text-xs text-muted-foreground">CSV files (max 10MB)</p>
+                </>
+              )}
+              {uploadedFile && !uploading && (
                 <div className="mt-4 flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-lg">
                   <FileSpreadsheet className="h-4 w-4 text-primary" />
                   <span className="text-sm font-medium">{uploadedFile.name}</span>
@@ -171,22 +347,44 @@ export default function BulkImportPage() {
               )}
               <input 
                 type="file" 
-                accept=".csv,.xlsx,.xls" 
+                accept=".csv,.txt" 
                 className="hidden"
                 onChange={handleFileUpload}
+                disabled={uploading}
               />
             </label>
           </CardContent>
         </Card>
 
         {showMapping && (
-          <>
+          <div ref={mappingSectionRef}>
             <Card>
               <CardHeader>
-                <CardTitle>Map Your Fields</CardTitle>
-                <CardDescription>
-                  Match your CSV/Excel columns to product fields
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Map Your Fields</CardTitle>
+                    <CardDescription>
+                      Match your CSV columns to product fields. Use AI to get smart suggestions.
+                    </CardDescription>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleAISuggestions}
+                    disabled={suggesting}
+                  >
+                    {suggesting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Get AI Suggestions
+                      </>
+                    )}
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -236,6 +434,27 @@ export default function BulkImportPage() {
                     </div>
                   </div>
                 </div>
+
+                <div className="mt-4 space-y-2">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={importOptions.skip_duplicates}
+                      onChange={(e) => setImportOptions({ ...importOptions, skip_duplicates: e.target.checked })}
+                      className="rounded"
+                    />
+                    Skip duplicate products (by SKU)
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={importOptions.generate_seo}
+                      onChange={(e) => setImportOptions({ ...importOptions, generate_seo: e.target.checked })}
+                      className="rounded"
+                    />
+                    Generate SEO content (meta title, description, keywords) using AI
+                  </label>
+                </div>
               </CardContent>
             </Card>
 
@@ -243,7 +462,7 @@ export default function BulkImportPage() {
               <CardHeader>
                 <CardTitle>Preview Data</CardTitle>
                 <CardDescription>
-                  Review how your data will be imported (showing first 5 rows)
+                  Review how your data will be imported (showing sample row from {totalRows} total rows)
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -251,7 +470,7 @@ export default function BulkImportPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b">
-                        {Object.keys(fieldMapping).filter(h => fieldMapping[h] !== 'skip').map(header => (
+                        {csvHeaders.filter(h => fieldMapping[h] && fieldMapping[h] !== "skip").map(header => (
                           <th key={header} className="text-left p-3 font-medium">
                             {productFields.find(f => f.value === fieldMapping[header])?.label || header}
                           </th>
@@ -261,8 +480,8 @@ export default function BulkImportPage() {
                     <tbody>
                       {previewData.map((row, i) => (
                         <tr key={i} className="border-b hover:bg-slate-50">
-                          {Object.keys(fieldMapping).filter(h => fieldMapping[h] !== 'skip').map(header => (
-                            <td key={header} className="p-3">{row[header]}</td>
+                          {csvHeaders.filter(h => fieldMapping[h] && fieldMapping[h] !== "skip").map(header => (
+                            <td key={header} className="p-3">{row[header] || '-'}</td>
                           ))}
                         </tr>
                       ))}
@@ -271,62 +490,48 @@ export default function BulkImportPage() {
                 </div>
 
                 <div className="flex gap-3 mt-6">
-                  <Button onClick={handleImport} className="flex-1">
-                    Import {previewData.length} Products
+                  <Button 
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      console.log('Import button clicked')
+                      handleImport()
+                    }} 
+                    className="flex-1"
+                    disabled={importing || !filePath}
+                  >
+                    {importing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Importing...
+                      </>
+                    ) : (
+                      <>
+                        Import {totalRows} Products
+                      </>
+                    )}
                   </Button>
-                  <Button variant="outline" onClick={() => setShowMapping(false)}>
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setShowMapping(false)
+                      setUploadedFile(null)
+                      setFieldMapping({})
+                      setFilePath("")
+                    }}
+                    disabled={importing}
+                  >
                     Cancel
                   </Button>
                 </div>
               </CardContent>
             </Card>
-          </>
+          </div>
         )}
-
-        {/* Import History */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Imports</CardTitle>
-            <CardDescription>View your import history and status</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { file: "products_batch_1.csv", date: "2025-01-15 14:30", status: "success", count: 125 },
-                { file: "new_products.xlsx", date: "2025-01-10 09:15", status: "success", count: 48 },
-                { file: "product_update.csv", date: "2025-01-05 16:45", status: "partial", count: 89 },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-lg border">
-                  <div className="flex items-center gap-4">
-                    <FileSpreadsheet className="h-8 w-8 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{item.file}</p>
-                      <p className="text-sm text-muted-foreground">{item.date}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="text-sm font-medium">{item.count} products</p>
-                      {item.status === "success" && (
-                        <div className="flex items-center gap-1 text-green-600">
-                          <CheckCircle2 className="h-4 w-4" />
-                          <span className="text-xs">Success</span>
-                        </div>
-                      )}
-                      {item.status === "partial" && (
-                        <div className="flex items-center gap-1 text-amber-600">
-                          <AlertCircle className="h-4 w-4" />
-                          <span className="text-xs">Partial</span>
-                        </div>
-                      )}
-                    </div>
-                    <Button variant="ghost" size="sm">View Details</Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </DashboardLayout>
   )
