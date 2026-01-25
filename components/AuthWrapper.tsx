@@ -16,7 +16,7 @@ export default function AuthWrapper({
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    const publicRoutes = ["/signin", "/signup", "/forgot-password", "/select-department", "/account-setup", "/plans"];
+    const publicRoutes = ["/signin", "/signup", "/forgot-password", "/select-department", "/account-setup", "/plans", "/verify-email"];
 
     // Not logged in → block protected routes
     if (!token && !publicRoutes.includes(pathname)) {
@@ -48,8 +48,8 @@ export default function AuthWrapper({
       return;
     }
 
-    // Check account setup status for protected routes (excluding account-setup itself)
-    if (token && !publicRoutes.includes(pathname) && pathname !== "/account-setup") {
+    // Check account setup status for protected routes (excluding account-setup and verify-email)
+    if (token && !publicRoutes.includes(pathname) && pathname !== "/account-setup" && pathname !== "/verify-email") {
       const checkAccountSetup = async () => {
         try {
           const res = await axiosClient.get("/account-setup/status");

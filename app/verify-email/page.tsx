@@ -55,7 +55,7 @@ function VerifyEmailForm() {
   // Auto verify on mount
   useEffect(() => {
    
-    if (!hash || !hash || !expires || !signature) {
+    if (!id || !hash || !expires || !signature) {
       setStatus("failed");
       showToast("Invalid or missing verification link parameters.", "error");
       return;
@@ -83,6 +83,34 @@ function VerifyEmailForm() {
           setStatus("success");
           showToast(message, "success");
           localStorage.removeItem("pendingVerificationEmail"); // Clean up
+          
+          // Check if user is logged in and account setup status
+          const token = localStorage.getItem("token");
+          if (token) {
+            try {
+              const setupRes = await axiosClient.get("/account-setup/status");
+              if (setupRes.data.success) {
+                const isAccountSetUp = setupRes.data.data.is_account_set_up;
+                if (!isAccountSetUp) {
+                  // Redirect to account-setup if incomplete
+                  setTimeout(() => {
+                    router.push("/account-setup");
+                  }, 1500);
+                  return;
+                } else {
+                  // Account is set up, redirect to dashboard
+                  setTimeout(() => {
+                    router.push("/dashboard");
+                  }, 1500);
+                  return;
+                }
+              }
+            } catch (error) {
+              // If check fails, continue with normal flow (user will sign in)
+              console.error("Failed to check account setup status:", error);
+            }
+          }
+          // If not logged in, user will need to sign in, and AuthWrapper will handle redirect
         }
       } catch (error: any) {
         const message =
@@ -95,7 +123,7 @@ function VerifyEmailForm() {
     };
 
     verifyEmail();
-  }, [id, hash, expires, signature]);
+  }, [id, hash, expires, signature, router]);
 
   // Resend verification email
   const handleResend = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -207,14 +235,30 @@ function VerifyEmailForm() {
             </div>
           )}
 
-          {/* Continue to Sign In after success */}
+          {/* Continue to Sign In or Account Setup after success */}
           {(status === "success" || status === "already_verified") && (
             <div className="text-center pt-6">
               <Button
-                onClick={() => router.push("/signin")}
+                onClick={async () => {
+                  // Check account setup status before redirecting
+                  try {
+                    const setupRes = await axiosClient.get("/account-setup/status");
+                    if (setupRes.data.success) {
+                      const isAccountSetUp = setupRes.data.data.is_account_set_up;
+                      if (!isAccountSetUp) {
+                        router.push("/account-setup");
+                        return;
+                      }
+                    }
+                  } catch (error) {
+                    console.error("Failed to check account setup status:", error);
+                  }
+                  // If account is set up or check fails, go to sign in
+                  router.push("/signin");
+                }}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                Continue to Sign In
+                Continue
               </Button>
             </div>
           )}
