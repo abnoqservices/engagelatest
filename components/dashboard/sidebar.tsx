@@ -88,7 +88,7 @@ const navigation = [
   { name: "Analytics", href: "/analytics", icon: TrendingUp },
   { name: "Integrations", href: "/integrations", icon: Puzzle },
   { name: "Billing", href: "/billing", icon: CreditCard },
-  { name: "Settings", href: "/settings", icon: Cog },
+  // { name: "Settings", href: "/settings", icon: Cog },
 ]
 
 interface SidebarProps {

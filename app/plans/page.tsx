@@ -42,15 +42,25 @@ declare global {
   }
 }
 
+interface CurrentPlan {
+  id: number;
+  name: string;
+  slug: string;
+  subscription_status?: string;
+  billing_period?: string;
+}
+
 export default function PlansPage() {
   const router = useRouter();
   const [plans, setPlans] = React.useState<Plan[]>([]);
+  const [currentPlan, setCurrentPlan] = React.useState<CurrentPlan | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [processing, setProcessing] = React.useState<number | null>(null);
   const [billingPeriod, setBillingPeriod] = React.useState<"monthly" | "annual">("monthly");
 
   React.useEffect(() => {
     loadPlans();
+    loadCurrentPlan();
     loadRazorpayScript();
   }, []);
 
@@ -76,6 +86,22 @@ export default function PlansPage() {
       showToast("Failed to load plans. Please try again.", "error");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCurrentPlan = async () => {
+    try {
+      const res = await axiosClient.get("/plans/current");
+      if (res.data.success && res.data.data.current_plan) {
+        setCurrentPlan(res.data.data.current_plan);
+        // Set billing period from current plan if available
+        if (res.data.data.billing_period) {
+          setBillingPeriod(res.data.data.billing_period as "monthly" | "annual");
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load current plan:", error);
+      // Not critical, just log the error
     }
   };
 
@@ -110,29 +136,48 @@ export default function PlansPage() {
       }
 
       const subscriptionData = subscriptionRes.data.data;
+      const subscriptionId = subscriptionData.subscription_id; // Store subscription ID from backend
 
       // Initialize Razorpay checkout
       const options = {
         key: subscriptionData.razorpay_key_id,
-        subscription_id: subscriptionData.subscription_id,
+        subscription_id: subscriptionId,
         name: "EngageIQ",
         description: `${plan.name} Plan - ${billingPeriod === "annual" ? "Annual" : "Monthly"}`,
         handler: async function (response: any) {
           try {
-            // Verify subscription
+            // Log the response for debugging
+            console.log('Razorpay response:', response);
+            console.log('Response keys:', Object.keys(response));
+            
+            // Extract payment ID and signature - Razorpay may use different field names
+            const paymentId = response.razorpay_payment_id || 
+                            response.razorpay_paymentId || 
+                            response.payment_id ||
+                            response.razorpay_payment_id;
+            
+            const signature = response.razorpay_signature || 
+                            response.razorpaySignature || 
+                            response.signature;
+            
+            console.log('Extracted values:', { subscriptionId, paymentId, hasSignature: !!signature });
+            
+            // Verify subscription - use subscription_id from backend, not from Razorpay response
             const verifyRes = await axiosClient.post("/plans/verify-subscription", {
-              razorpay_subscription_id: response.razorpay_subscription_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
+              razorpay_subscription_id: subscriptionId, // Use the subscription ID from backend
+              razorpay_payment_id: paymentId,
+              razorpay_signature: signature,
               plan_id: plan.id,
               billing_period: billingPeriod,
             });
 
             if (verifyRes.data.success) {
               showToast("Subscription activated successfully!", "success");
+              // Reload plans and current plan to show updated subscription
+              await Promise.all([loadPlans(), loadCurrentPlan()]);
               setTimeout(() => {
                 router.push("/dashboard");
-              }, 1500);
+              }, 2000);
             } else {
               throw new Error(verifyRes.data.message || "Verification failed");
             }
@@ -247,6 +292,7 @@ export default function PlansPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {plans.map((plan) => {
             const isPopular = plan.slug === "pro";
+            const isCurrentPlan = currentPlan && currentPlan.id === plan.id;
             const savings = getSavings(plan);
 
             return (
@@ -254,10 +300,16 @@ export default function PlansPage() {
                 key={plan.id}
                 className={cn(
                   "relative flex flex-col",
-                  isPopular && "border-2 border-blue-500 shadow-lg scale-105"
+                  isCurrentPlan && "border-2 border-green-500 shadow-lg",
+                  isPopular && !isCurrentPlan && "border-2 border-blue-500 shadow-lg scale-105"
                 )}
               >
-                {isPopular && (
+                {isCurrentPlan && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-green-500 text-white">Current Plan</Badge>
+                  </div>
+                )}
+                {isPopular && !isCurrentPlan && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                     <Badge className="bg-blue-500 text-white">Most Popular</Badge>
                   </div>
@@ -343,23 +395,41 @@ export default function PlansPage() {
                 </CardContent>
 
                 <CardFooter>
-                  <Button
-                    className="w-full"
-                    variant={isPopular ? "default" : "outline"}
-                    onClick={() => handleSubscribe(plan)}
-                    disabled={processing === plan.id}
-                  >
-                    {processing === plan.id ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processing...
-                      </>
-                    ) : plan.price === 0 ? (
-                      "Get Started"
-                    ) : (
-                      "Subscribe"
-                    )}
-                  </Button>
+                  {currentPlan && currentPlan.id === plan.id ? (
+                    <div className="w-full">
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        disabled
+                      >
+                        <Check className="mr-2 h-4 w-4" />
+                        Current Plan
+                      </Button>
+                      {currentPlan.billing_period && (
+                        <p className="text-xs text-center text-muted-foreground mt-2">
+                          Billed {currentPlan.billing_period === "annual" ? "annually" : "monthly"}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <Button
+                      className="w-full"
+                      variant={isPopular ? "default" : "outline"}
+                      onClick={() => handleSubscribe(plan)}
+                      disabled={processing === plan.id}
+                    >
+                      {processing === plan.id ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : plan.price === 0 ? (
+                        "Get Started"
+                      ) : (
+                        "Subscribe"
+                      )}
+                    </Button>
+                  )}
                 </CardFooter>
               </Card>
             );
