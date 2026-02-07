@@ -32,6 +32,8 @@ import Link from "next/link"
 import axiosClient from "@/lib/axiosClient"
 import { showToast } from "@/lib/showToast"
 import { format } from "date-fns"
+import { usePermissions } from "@/lib/usePermissions"
+import { PermissionRestrictedButton, PermissionRestrictedMenuItem } from "@/components/PermissionRestrictedButton"
 
 interface Booth {
   id: number
@@ -65,6 +67,7 @@ const statusBadge = (isActive: boolean) => {
 }
 
 export default function EventsPage() {
+  const { hasPermission } = usePermissions();
   const [events, setEvents] = React.useState<Event[]>([])
   const [loading, setLoading] = React.useState(true)
   const [searchQuery, setSearchQuery] = React.useState("")
@@ -99,6 +102,11 @@ export default function EventsPage() {
   }, [searchQuery, activeFilter, page])
 
   const handleDelete = async (id: number) => {
+    if (!hasPermission("events", "delete")) {
+      showToast("You don't have permission to delete events", "error");
+      return;
+    }
+    
     if (!confirm("Are you sure you want to delete this event? This cannot be undone.")) return
 
     try {
@@ -111,6 +119,11 @@ export default function EventsPage() {
   }
 
   const handleToggleActive = async (id: number, current: boolean) => {
+    if (!hasPermission("events", "update")) {
+      showToast("You don't have permission to update events", "error");
+      return;
+    }
+    
     try {
       if (!current) {
         await axiosClient.patch(`/events/${id}/activate`)
@@ -137,12 +150,18 @@ export default function EventsPage() {
               Manage your exhibitions. Only one event can be active at a time.
             </p>
           </div>
-          <Link href="/events/new">
-            <Button className="gap-2">
+          <PermissionRestrictedButton
+            hasPermission={hasPermission("events", "create")}
+            requiredPermission="Create Events"
+            resource="events"
+            action="create"
+            asChild
+          >
+            <Link href="/events/new">
               <Plus className="h-4 w-4" />
               Create Event
-            </Button>
-          </Link>
+            </Link>
+          </PermissionRestrictedButton>
         </div>
 
         {/* Filters */}
@@ -238,36 +257,83 @@ export default function EventsPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <Link href={`/events/${event.id}/edit`}>
-                            <DropdownMenuItem>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
+                          <PermissionRestrictedMenuItem
+                            hasPermission={hasPermission("events", "update")}
+                            requiredPermission="Update Events"
+                            resource="events"
+                            action="edit"
+                          >
+                            <Link href={`/events/${event.id}/edit`}>
+                              <DropdownMenuItem>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                            </Link>
+                          </PermissionRestrictedMenuItem>
+                          
+                          <PermissionRestrictedMenuItem
+                            hasPermission={hasPermission("analytics", "view")}
+                            requiredPermission="View Analytics"
+                            resource="analytics"
+                            action="view"
+                          >
+                            <Link href={`/events/${event.id}/analytics`}>
+                              <DropdownMenuItem>
+                                <BarChart3 className="mr-2 h-4 w-4" />
+                                Analytics
+                              </DropdownMenuItem>
+                            </Link>
+                          </PermissionRestrictedMenuItem>
+                          
+                          <PermissionRestrictedMenuItem
+                            hasPermission={hasPermission("events", "update")}
+                            requiredPermission="Update Events"
+                            resource="events"
+                            action="update status"
+                            onClick={() => handleToggleActive(event.id, event.is_active)}
+                          >
+                            <DropdownMenuItem onSelect={() => handleToggleActive(event.id, event.is_active)}>
+                              {event.is_active ? (
+                                <>
+                                  <ToggleLeft className="mr-2 h-4 w-4" />
+                                  Deactivate
+                                </>
+                              ) : (
+                                <>
+                                  <ToggleRight className="mr-2 h-4 w-4" />
+                                  Activate
+                                </>
+                              )}
                             </DropdownMenuItem>
-                          </Link>
-                          <Link href={`/events/${event.id}/analytics`}>
-                            <DropdownMenuItem>
-                              <BarChart3 className="mr-2 h-4 w-4" />
-                              Analytics
-                            </DropdownMenuItem>
-                          </Link>
-                          <DropdownMenuItem onSelect={() => handleToggleActive(event.id, event.is_active)}>
-                            {event.is_active ? (
-                              <>
-                                <ToggleLeft className="mr-2 h-4 w-4" />
-                                Deactivate
-                              </>
-                            ) : (
-                              <>
-                                <ToggleRight className="mr-2 h-4 w-4" />
-                                Activate
-                              </>
-                            )}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive" onSelect={() => handleDelete(event.id)}>
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
+                          </PermissionRestrictedMenuItem>
+                          
+                          {hasPermission("events", "delete") ? (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="text-destructive" onSelect={() => handleDelete(event.id)}>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </>
+                          ) : (
+                            <>
+                              <DropdownMenuSeparator />
+                              <PermissionRestrictedMenuItem
+                                hasPermission={false}
+                                requiredPermission="Delete Events"
+                                resource="events"
+                                action="delete"
+                              >
+                                <DropdownMenuItem
+                                  className="text-destructive opacity-50 cursor-not-allowed"
+                                  disabled
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </PermissionRestrictedMenuItem>
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

@@ -421,7 +421,10 @@ export default function EditProductPage() {
     if (shouldPublish) setPublishing(true);
 
     try {
-      const basePayload = {
+      // Get the active department ID from localStorage (the one shown in navbar)
+      const selectedDepartmentId = localStorage.getItem("selectedDepartmentId");
+      
+      const basePayload: any = {
         name: formData.name.trim(),
         sku: formData.sku || undefined,
         category_id: parseInt(formData.category),
@@ -436,6 +439,12 @@ export default function EditProductPage() {
         url_slug: formData.urlSlug || slugify(formData.name),
         status: shouldPublish ? "published" : "draft",
       };
+      
+      // Always associate product with the active department (for new products)
+      // For updates, department_id should already be set, but we can include it for consistency
+      if (selectedDepartmentId) {
+        basePayload.department_id = parseInt(selectedDepartmentId);
+      }
 
       let id = currentId;
 

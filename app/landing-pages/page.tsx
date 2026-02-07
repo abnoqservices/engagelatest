@@ -27,6 +27,15 @@ import { DashboardLayout } from "@/components/dashboard/layout";
 import { usePageStore } from "@/lib/pageStore";
 import LandingPageBuilder from "@/app/landing-pages/new/page";
 import dynamic from "next/dynamic";
+import { usePermissions } from "@/lib/usePermissions";
+import { showToast as showToastLib } from "@/lib/showToast";
+import { PermissionRestrictedButton } from "@/components/PermissionRestrictedButton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 
 
@@ -159,6 +168,7 @@ type LandingPage = {
 };
 
 export default function LandingPagesPage() {
+  const { hasPermission } = usePermissions();
   const [loading, setLoading] = React.useState(true);
   const [pages, setPages] = React.useState<LandingPage[]>([]);
   const [activePage, setActivePage] = React.useState<LandingPage | null>(null);
@@ -257,6 +267,11 @@ export default function LandingPagesPage() {
   };
 
   const handleActivatePage = async (page: LandingPage) => {
+    if (!hasPermission("landing_pages", "update")) {
+      showToastLib("You don't have permission to activate landing pages", "error");
+      return;
+    }
+    
     setActivatingId(page.id);
 
     try {
@@ -284,6 +299,11 @@ export default function LandingPagesPage() {
 
   const handleDeactivateActivePage = async () => {
     if (!activePage) return;
+
+    if (!hasPermission("landing_pages", "update")) {
+      showToastLib("You don't have permission to deactivate landing pages", "error");
+      return;
+    }
 
     setDeactivating(true);
 
@@ -392,11 +412,15 @@ export default function LandingPagesPage() {
                       <Button variant="outline" onClick={() => handleGenerateLink(activePage)}>
                         <Link2 className="h-4 w-4 mr-2" /> Share Link
                       </Button>
-                      <Button
+                      <PermissionRestrictedButton
+                        hasPermission={hasPermission("landing_pages", "update")}
+                        requiredPermission="Update Landing Pages"
+                        resource="landing pages"
+                        action="deactivate"
                         variant="outline"
                         className="text-red-600 border-red-300"
                         onClick={handleDeactivateActivePage}
-                        disabled={deactivating}
+                        disabled={deactivating || !hasPermission("landing_pages", "update")}
                       >
                         {deactivating ? (
                           <>
@@ -409,7 +433,7 @@ export default function LandingPagesPage() {
                             Deactivate
                           </>
                         )}
-                      </Button>
+                      </PermissionRestrictedButton>
                     </div>
                   </div>
                 </div>
@@ -450,7 +474,19 @@ export default function LandingPagesPage() {
               /* List View */
               <div className="space-y-4">
                 {availablePages.map((page) => (
-                  <Card key={page.id} className="overflow-hidden hover: transition-all cursor-pointer group bg-white border" onClick={() => handleActivatePage(page)}>
+                  <Card 
+                    key={page.id} 
+                    className={`overflow-hidden hover: transition-all group bg-white border ${
+                      hasPermission("landing_pages", "update") ? "cursor-pointer" : "cursor-not-allowed opacity-75"
+                    }`} 
+                    onClick={() => {
+                      if (hasPermission("landing_pages", "update")) {
+                        handleActivatePage(page);
+                      } else {
+                        showToastLib("You don't have permission to activate landing pages", "error");
+                      }
+                    }}
+                  >
                     <div className="flex items-center gap-4 p-4">
                       <div className="relative flex-shrink-0">
                         <div className="w-20 h-28 rounded-lg overflow-hidden bg-gray-100 ">
@@ -483,11 +519,15 @@ export default function LandingPagesPage() {
                           />
                         </div>
 
-                        <Button
+                        <PermissionRestrictedButton
+                          hasPermission={hasPermission("landing_pages", "update")}
+                          requiredPermission="Update Landing Pages"
+                          resource="landing pages"
+                          action="activate"
                           size="sm"
                           className="h-9 px-3"
                           onClick={(e) => { e.stopPropagation(); handleActivatePage(page); }}
-                          disabled={activatingId === page.id}
+                          disabled={activatingId === page.id || !hasPermission("landing_pages", "update")}
                         >
                           {activatingId === page.id ? (
                             <>
@@ -500,15 +540,19 @@ export default function LandingPagesPage() {
                               Activate
                             </>
                           )}
-                        </Button>
+                        </PermissionRestrictedButton>
                       </div>
 
                       <div className="sm:hidden">
-                        <Button
+                        <PermissionRestrictedButton
+                          hasPermission={hasPermission("landing_pages", "update")}
+                          requiredPermission="Update Landing Pages"
+                          resource="landing pages"
+                          action="activate"
                           size="sm"
                           className="h-10 px-4 text-sm"
                           onClick={(e) => { e.stopPropagation(); handleActivatePage(page); }}
-                          disabled={activatingId === page.id}
+                          disabled={activatingId === page.id || !hasPermission("landing_pages", "update")}
                         >
                           {activatingId === page.id ? (
                             <>
@@ -518,7 +562,7 @@ export default function LandingPagesPage() {
                           ) : (
                             "Activate"
                           )}
-                        </Button>
+                        </PermissionRestrictedButton>
                       </div>
                     </div>
                   </Card>
@@ -546,11 +590,15 @@ export default function LandingPagesPage() {
                       <h4 className="font-semibold text-lg mb-2 line-clamp-1">{page.name}</h4>
                       <p className="text-sm text-gray-500 mb-4">Last updated: {new Date(page.lastModified).toLocaleDateString()}</p>
                       <div className="flex gap-2">
-                        <Button
+                        <PermissionRestrictedButton
+                          hasPermission={hasPermission("landing_pages", "update")}
+                          requiredPermission="Update Landing Pages"
+                          resource="landing pages"
+                          action="activate"
                           size="sm"
                           className="flex-1"
                           onClick={() => handleActivatePage(page)}
-                          disabled={activatingId === page.id}
+                          disabled={activatingId === page.id || !hasPermission("landing_pages", "update")}
                         >
                           {activatingId === page.id ? (
                             <>
@@ -563,7 +611,7 @@ export default function LandingPagesPage() {
                               Activate
                             </>
                           )}
-                        </Button>
+                        </PermissionRestrictedButton>
                         <CustomizeButton 
                           size="sm"
                           onClick={() => openCustomizeModal(page)}

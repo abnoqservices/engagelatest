@@ -34,6 +34,7 @@ import axiosClient from "@/lib/axiosClient";
 import { showToast } from "@/lib/showToast";
 import { DashboardLayout } from "@/components/dashboard/layout";
 import { useRouter } from "next/navigation";
+import { usePermissions } from "@/lib/usePermissions";
 
 // ── Interfaces ──────────────────────────────────────────────────
 interface Category {
@@ -78,6 +79,8 @@ const ALLOWED_DOC_TYPES = [
 ];
 
 export default function NewProductPage() {
+  const { hasPermission, loading: permissionsLoading } = usePermissions();
+  const router = useRouter();
   const [formData, setFormData] = React.useState<FormDataType>({
     name: "",
     sku: "",
@@ -105,7 +108,13 @@ export default function NewProductPage() {
   const [isSaving, setIsSaving] = React.useState(false);
   const [newKeyword, setNewKeyword] = React.useState("");
 
-  const router = useRouter();
+  // Check permission on mount
+  React.useEffect(() => {
+    if (!permissionsLoading && !hasPermission("products", "create")) {
+      showToast("You don't have permission to create products", "error");
+      router.push("/products");
+    }
+  }, [permissionsLoading, hasPermission, router]);
 
   // ── Load Categories ─────────────────────────────────────────────
   React.useEffect(() => {
@@ -345,10 +354,19 @@ export default function NewProductPage() {
     if (!formData.name.trim()) return showToast("Product name is required", "error");
     if (!formData.category) return showToast("Category is required", "error");
 
+    // Check permission
+    const action = productId ? "update" : "create";
+    if (!hasPermission("products", action)) {
+      showToast(`You don't have permission to ${action} products`, "error");
+      return null;
+    }
 
     setIsSaving(true);
 
     try {
+      // Get the active department ID from localStorage (the one shown in navbar)
+      const selectedDepartmentId = localStorage.getItem("selectedDepartmentId");
+      
       const payload: any = {
         name: formData.name.trim(),
         sku: formData.sku || generateSafeSku(formData.name),
@@ -363,6 +381,11 @@ export default function NewProductPage() {
         keywords: formData.keywords.join(", ") || null,
         url_slug: formData.urlSlug || slugify(formData.name),
       };
+      
+      // Always associate product with the active department
+      if (selectedDepartmentId) {
+        payload.department_id = parseInt(selectedDepartmentId);
+      }
 
       let response;
       let currentProductId = productId;
