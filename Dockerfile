@@ -15,7 +15,7 @@ ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # Copy application files - .dockerignore will exclude .env files
 # But we'll verify and remove any that might slip through
