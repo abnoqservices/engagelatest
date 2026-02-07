@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -78,7 +79,7 @@ const ALLOWED_DOC_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
-export default function EditProductPage() {
+function EditProductContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const productId = searchParams.get("id") ? Number(searchParams.get("id")) : null;
@@ -883,5 +884,13 @@ export default function EditProductPage() {
         </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function EditProductPage() {
+  return (
+    <Suspense fallback={<DashboardLayout><div className="flex items-center justify-center p-12"><Spinner /></div></DashboardLayout>}>
+      <EditProductContent />
+    </Suspense>
   );
 }

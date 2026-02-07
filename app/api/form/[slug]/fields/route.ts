@@ -1,6 +1,6 @@
 // src/app/api/forms/[id]/fields/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db"; // adjust this to your actual DB import
+// import { db } from "@/lib/db"; // adjust this to your actual DB import
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const formId = params.id;
