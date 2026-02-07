@@ -11,8 +11,9 @@ ARG NEXT_PUBLIC_API_URL=https://api.pexifly.com/api
 ENV NEXT_BUILDER=webpack
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
-# Copy package files
+# Copy package files and npm config (legacy-peer-deps for dependency resolution)
 COPY package*.json ./
+COPY .npmrc ./
 
 # Install dependencies
 RUN npm ci
@@ -59,8 +60,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy package files
+# Copy package files and npm config
 COPY package*.json ./
+COPY .npmrc ./
 
 # Install only production dependencies
 RUN npm ci --omit=dev && npm cache clean --force
@@ -79,12 +81,16 @@ RUN groupadd --system --gid 1001 nodejs && \
 # Change ownership
 RUN chown -R nextjs:nodejs /app
 
+
 # Set environment variables
 ENV DB_USER=postgres
-ENV DB_HOST=localhost
-ENV DB_NAME=productmanagement
-ENV DB_PASSWORD=sky.1765
+ENV DB_HOST=18.215.173.28
+ENV DB_NAME=postgres
+ENV DB_PASSWORD=postgres
 ENV DB_PORT=5432
+
+# Runtime env - DB credentials must be provided at container start (docker run -e, ECS task def, etc.)
+# Example: DB_USER, DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT
 ENV NEXT_PUBLIC_API_URL=https://api.pexifly.com/api
 
 USER nextjs
