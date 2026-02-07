@@ -20,6 +20,7 @@ import {
   ChevronDown,
   Menu,
   X,
+  QrCode
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -48,7 +49,7 @@ const navigation = [
         children: [
           { name: "Product Category", href: "/products/settings/product-category" },
           { name: "Custom Fields", href: "/products/settings/custom-fields" },
-          { name: "QR Code Templates", href: "/products/settings/qr-codes" },
+         
         ],
       },
     ],
@@ -62,6 +63,33 @@ const navigation = [
       { name: "Create Event", href: "/events/new" },
       { name: "Booths", href: "/events/booths" },
     ],
+  },
+  {
+    name: "QR Code Tags",
+    href: "/qr-code-tags",
+    icon: QrCode,
+    children: [
+     
+      {
+        name: "Settings",
+        children: [
+          { name: "Product QR tags", href: "/settings/product-qr-tags" },
+          { name: "Event/Booth Qr tags", href: "/settings/event-booth-qr-tag" },
+         
+        ],
+      },
+
+      {
+        name: "Print QR",
+        children: [
+          { name: "Product QR tags", href: "/qr-manager" },
+          { name: "Product QR", href: "/bulk-qr" },
+          { name: "Event/Booth QR tags", href: "/bulk-qr" },
+         
+        ],
+      },
+    ],
+    
   },
   {
     name: "Landing Pages",

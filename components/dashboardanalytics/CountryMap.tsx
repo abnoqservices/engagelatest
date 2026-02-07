@@ -1,123 +1,78 @@
-import React from "react";
-// import { VectorMap } from "@react-jvectormap/core";
-import { worldMill } from "@react-jvectormap/world";
-import dynamic from "next/dynamic";
+'use client';  // Must be at the very top
 
-const VectorMap = dynamic(
-  () => import("@react-jvectormap/core").then((mod) => mod.VectorMap),
-  { ssr: false }
-);
+import React, { useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
 
-// Define the component props
-interface CountryMapProps {
-  mapColor?: string;
-}
+// Optional: lazy-load the heavy map logic
+const CountryMap = dynamic(
+  () => Promise.resolve().then(() => {
+    // Import inside dynamic to avoid any SSR touch
+    const jsVectorMap = require('jsvectormap').default;
+    require('jsvectormap/dist/maps/world');  // world map data
 
-type MarkerStyle = {
-  initial: {
-    fill: string;
-    r: number; // Radius for markers
-  };
-};
+    return function InnerCountryMap({ mapColor = '#D0D5DD' }: { mapColor?: string }) {
+      const mapRef = useRef<HTMLDivElement>(null);
+      const mapInstance = useRef<any>(null);
 
-type Marker = {
-  latLng: [number, number];
-  name: string;
-  style?: {
-    fill: string;
-    borderWidth: number;
-    borderColor: string;
-    stroke?: string;
-    strokeOpacity?: number;
-  };
-};
+      useEffect(() => {
+        if (!mapRef.current) return;
 
-const CountryMap: React.FC<CountryMapProps> = ({ mapColor }) => {
-  return (
-    <VectorMap
-      map={worldMill}
-      backgroundColor="transparent"
-      markerStyle={
-        {
-          initial: {
-            fill: "#465FFF",
-            r: 4, // Custom radius for markers
-          }, // Type assertion to bypass strict CSS property checks
-        } as MarkerStyle
-      }
-      markersSelectable={true}
-      markers={
-        [
-          {
-            latLng: [37.2580397, -104.657039],
-            name: "United States",
-            style: {
-              fill: "#465FFF",
-              borderWidth: 1,
-              borderColor: "white",
-              stroke: "#383f47",
-            },
-          },
-          {
-            latLng: [20.7504374, 73.7276105],
-            name: "India",
-            style: { fill: "#465FFF", borderWidth: 1, borderColor: "white" },
-          },
-          {
-            latLng: [53.613, -11.6368],
-            name: "United Kingdom",
-            style: { fill: "#465FFF", borderWidth: 1, borderColor: "white" },
-          },
-          {
-            latLng: [-25.0304388, 115.2092761],
-            name: "Sweden",
-            style: {
-              fill: "#465FFF",
-              borderWidth: 1,
-              borderColor: "white",
+        // Destroy previous instance (important for re-renders/hot reload)
+        if (mapInstance.current) {
+          mapInstance.current.destroy();
+        }
+
+        mapInstance.current = new jsVectorMap({
+          container: mapRef.current,
+          map: 'world',
+          backgroundColor: 'transparent',
+          zoomOnScroll: false,
+          zoomMax: 12,
+          zoomMin: 1,
+          zoomAnimate: true,
+          zoomStep: 1.5,
+          regionStyle: {
+            initial: {
+              fill: mapColor,
+              fillOpacity: 1,
+              stroke: 'none',
+              strokeWidth: 0,
               strokeOpacity: 0,
             },
+            hover: {
+              fillOpacity: 0.7,
+              cursor: 'pointer',
+              fill: '#465fff',
+              stroke: 'none',
+            },
+            selected: {
+              fill: '#465FFF',
+            },
           },
-        ] as Marker[]
-      }
-      zoomOnScroll={false}
-      zoomMax={12}
-      zoomMin={1}
-      zoomAnimate={true}
-      zoomStep={1.5}
-      regionStyle={{
-        initial: {
-          fill: mapColor || "#D0D5DD",
-          fillOpacity: 1,
-          fontFamily: "Outfit",
-          stroke: "none",
-          strokeWidth: 0,
-          strokeOpacity: 0,
-        },
-        hover: {
-          fillOpacity: 0.7,
-          cursor: "pointer",
-          fill: "#465fff",
-          stroke: "none",
-        },
-        selected: {
-          fill: "#465FFF",
-        },
-        selectedHover: {},
-      }}
-      regionLabelStyle={{
-        initial: {
-          fill: "#35373e",
-          fontWeight: 500,
-          fontSize: "13px",
-          stroke: "none",
-        },
-        hover: {},
-        selected: {},
-        selectedHover: {},
-      }}
-    />
-  );
-};
+          markerStyle: {
+            initial: {
+              fill: '#465FFF',
+              r: 4,
+            },
+          },
+          markers: [
+            { name: 'United States', coords: [37.2580397, -104.657039] },
+            { name: 'India', coords: [20.7504374, 73.7276105] },
+            { name: 'United Kingdom', coords: [53.613, -11.6368] },
+            { name: 'Sweden', coords: [-25.0304388, 115.2092761] },
+          ],
+          // Add tooltips, labels, events if needed
+        });
+
+        return () => {
+          if (mapInstance.current) mapInstance.current.destroy();
+        };
+      }, [mapColor]);
+
+      return <div ref={mapRef} style={{ width: '100%', height: '500px' }} />;
+    };
+  }),
+  { ssr: false, loading: () => <div style={{ height: '500px' }}>Loading map...</div> }
+);
 
 export default CountryMap;

@@ -26,19 +26,21 @@ function createAutomationClient() {
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
+   
+     
     },
   });
-
+ 
   // Add org ID and auth token to every request
   client.interceptors.request.use((config) => {
     if (typeof window !== "undefined") {
       const orgId = getOrganizationId();
       const token = localStorage.getItem("token");
-
+     
       if (orgId) {
         config.headers["X-ORG-ID"] = orgId;
       }
-
+      
       // Include Authorization header (may be verified by backend middleware)
       if (token) {
         config.headers["Authorization"] = `Bearer ${token}`;
@@ -98,7 +100,9 @@ export const automationsApi = {
     const response = await automationClient.put<Automation>(`/automations/${id}`, payload);
     return response.data;
   },
-
+  
+  
+  
   /**
    * Activate an automation
    */

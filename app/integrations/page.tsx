@@ -35,23 +35,38 @@ export default function IntegrationsPage() {
   const [connecting, setConnecting] = React.useState(false)
   const [disconnectDialogOpen, setDisconnectDialogOpen] = React.useState(false)
   const [accountToDisconnect, setAccountToDisconnect] = React.useState<number | null>(null)
-
+  
   React.useEffect(() => {
+    // Load Facebook SDK
+    window.fbAsyncInit = function () {
+      window.FB.init({
+        appId: "1954879162132993",
+        cookie: true,
+        xfbml: true,
+        version: "v24.0", // Keep updated — check latest at developers.facebook.com
+      });
+    };
+
+    (function (d: any, s: any, id: any) {
+      if (d.getElementById(id)) return;
+      const js = d.createElement(s);
+      js.id = id;
+      js.src = "https://connect.facebook.net/en_US/sdk.js";
+      d.getElementsByTagName(s)[0].parentNode.insertBefore(js, null);
+    })(document, "script", "facebook-jssdk");
+
     loadWhatsAppAccounts()
     
-    // Check for OAuth callback success/error
+    // Check for OAuth/callback success/error (you can keep or remove depending on future flow)
     const urlParams = new URLSearchParams(window.location.search)
     const whatsappStatus = urlParams.get('whatsapp')
     if (whatsappStatus === 'connected') {
       showToast('WhatsApp account connected successfully!', 'success')
-      // Remove query param from URL
       window.history.replaceState({}, '', '/integrations')
-      // Reload accounts
       loadWhatsAppAccounts()
     } else if (whatsappStatus === 'error') {
       const errorMessage = urlParams.get('message') || 'Failed to connect WhatsApp account'
       showToast(errorMessage, 'error')
-      // Remove query param from URL
       window.history.replaceState({}, '', '/integrations')
     }
   }, [])
@@ -73,21 +88,45 @@ export default function IntegrationsPage() {
     }
   }
 
-  const handleConnectWhatsApp = async () => {
-    try {
-      setConnecting(true)
-      const response = await axiosClient.get('/whatsapp/auth-url')
-      if (response.data.success) {
-        // Redirect to Meta OAuth
-        window.location.href = response.data.data.auth_url
-      } else {
-        showToast(response.data.message || 'Failed to initiate WhatsApp connection', 'error')
-        setConnecting(false)
-      }
-    } catch (error: any) {
-      showToast(error.response?.data?.message || 'Failed to initiate WhatsApp connection', 'error')
-      setConnecting(false)
+  const handleConnectWhatsApp = () => {
+    if (!window.FB) {
+      showToast("Facebook SDK not loaded. Please refresh the page.", "error")
+      return
     }
+  
+    setConnecting(true)
+  
+    window.FB.login(
+      function (response: any) {
+        setConnecting(false)
+  
+        if (response.authResponse) {
+          console.log("Facebook Access Token:", response.authResponse.accessToken)
+          showToast("Facebook login successful — you now need to onboard phone number in Meta dashboard", "success")
+          
+          // === IMPORTANT ===
+          // You can send this short-lived token to backend to exchange for long-lived / debug
+          // But Embedded Signup is NOT available → user must onboard manually:
+          //
+          // 1. Go to: https://business.facebook.com/wa/manage/home
+          // 2. Add phone number → follow steps
+          // 3. Get Phone Number ID + Permanent Token
+          // 4. Send them to your backend via a form or API
+          //
+          // After that your backend can use Cloud API normally
+          
+          // Optional: send token to backend anyway (for debugging or other scopes)
+          // axiosClient.post('/whatsapp/store-token', { token: response.authResponse.accessToken })
+        } else {
+          showToast("Login cancelled or failed", "error")
+        }
+      },
+      {
+        scope: "business_management,whatsapp_business_management,whatsapp_business_messaging",
+        return_scopes: true,
+        // IMPORTANT: Removed extras / feature → prevents the BSP/TP error
+      }
+    )
   }
 
   const handleDisconnectClick = (accountId: number) => {
@@ -128,8 +167,9 @@ export default function IntegrationsPage() {
             <TabsTrigger value="communication">Communication</TabsTrigger>
           </TabsList>
 
-          {/* CRM Integrations */}
+          {/* CRM Integrations – unchanged */}
           <TabsContent value="crm" className="space-y-6">
+            {/* ... your existing CRM cards and features card ... */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[
                 { name: "HubSpot CRM", type: "API + Webhook", features: ["Contacts sync", "Deal sync", "Workflows"], connected: true },
@@ -183,7 +223,6 @@ export default function IntegrationsPage() {
               ))}
             </div>
 
-            {/* CRM Integration Features */}
             <Card>
               <CardHeader>
                 <CardTitle>CRM Integration Features</CardTitle>
@@ -209,7 +248,7 @@ export default function IntegrationsPage() {
             </Card>
           </TabsContent>
 
-          {/* Marketing Automation */}
+          {/* Marketing Automation – unchanged */}
           <TabsContent value="marketing" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[
@@ -268,7 +307,6 @@ export default function IntegrationsPage() {
 
           {/* Communication Platforms */}
           <TabsContent value="communication" className="space-y-6">
-            {/* WhatsApp Account Card - Full Width */}
             <Card>
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -333,58 +371,43 @@ export default function IntegrationsPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="py-4 text-center">
-                    <p className="text-sm text-muted-foreground">
-                      No WhatsApp accounts connected. Click "Connect WhatsApp" to get started.
+                  <div className="py-6 text-center space-y-4">
+                    <p className="text-muted-foreground">
+                      No WhatsApp accounts connected yet.
                     </p>
+                    <div className="text-sm text-muted-foreground max-w-lg mx-auto">
+                      <strong>Quick start (no BSP needed):</strong><br />
+                      1. Go to <a href="https://business.facebook.com/wa/manage/home" target="_blank" className="underline">Meta WhatsApp Manager</a><br />
+                      2. Add & verify your business phone number<br />
+                      3. Get Phone Number ID + Permanent Token<br />
+                      4. Add them in your dashboard / send to backend
+                    </div>
                   </div>
                 )}
               </CardContent>
               <CardFooter>
-                {isWhatsAppConnected ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={handleConnectWhatsApp}
-                    disabled={connecting}
-                  >
-                    {connecting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Connecting...
-                      </>
-                    ) : (
-                      <>
-                        <Plug className="h-4 w-4 mr-2" />
-                        Add Another Account
-                      </>
-                    )}
-                  </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    onClick={handleConnectWhatsApp}
-                    disabled={connecting}
-                  >
-                    {connecting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Connecting...
-                      </>
-                    ) : (
-                      <>
-                        <Plug className="h-4 w-4 mr-2" />
-                        Connect WhatsApp
-                      </>
-                    )}
-                  </Button>
-                )}
+                <Button
+                  size="sm"
+                  className="w-full"
+                  onClick={handleConnectWhatsApp}
+                  disabled={connecting}
+                >
+                  {connecting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <Plug className="h-4 w-4 mr-2" />
+                      {isWhatsAppConnected ? "Add Another Account / Re-authenticate" : "Connect WhatsApp"}
+                    </>
+                  )}
+                </Button>
               </CardFooter>
             </Card>
 
-            {/* Other Communication Integrations */}
+            {/* Other Communication Integrations – unchanged */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[
                 { name: "SMS Gateways", purpose: "Transactional notifications", connected: true },
@@ -426,7 +449,6 @@ export default function IntegrationsPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Disconnect Confirmation Dialog */}
         <AlertDialog open={disconnectDialogOpen} onOpenChange={setDisconnectDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>

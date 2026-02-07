@@ -60,21 +60,54 @@ export default function WorkflowDetailPage() {
   }, [workflowId, router])
 
   React.useEffect(() => {
+    EventInternals()
     if (workflowId) {
       fetchData()
     }
   }, [workflowId, fetchData])
 
+ 
+    const EventInternals = async () => {
+    const response = await fetch("http://localhost:8001/internal/events", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-ORG-ID": "1",
+        "X-SERVICE-TOKEN": "dev-token"
+      },
+      body: JSON.stringify({
+        event_name: "lead.form_submitted",
+        entity_id: '16',
+        event_id: "9",
+        product_id: "21",
+        data: {
+          email: "surendra@abnoq.com",
+          phone: "+917755844830",
+          form_fields: {}
+        },
+        occurred_at: new Date().toISOString()
+      })
+    });
+  
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+  
+    return await response.json();
+  }
+  
   // Handle activate/pause
   const handleToggleStatus = async () => {
     if (!workflow) return
-
+   
     try {
       setProcessingId(workflow.id)
       if (workflow.is_active) {
         await automationsApi.pause(workflow.id)
         showToast("Workflow paused", "success")
       } else {
+        EventInternals()
+       
         await automationsApi.activate(workflow.id)
         showToast("Workflow activated", "success")
       }
