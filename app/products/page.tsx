@@ -71,6 +71,9 @@ import {
 } from "@/components/ui/tooltip";
 import axiosClient from "@/lib/axiosClient";
 import { useToast } from "@/components/ui/use-toast";
+import { usePermissions } from "@/lib/usePermissions";
+import { showToast } from "@/lib/showToast";
+import { PermissionRestrictedButton, PermissionRestrictedMenuItem } from "@/components/PermissionRestrictedButton";
 
 type Category = {
   id: number;
@@ -102,6 +105,7 @@ type Product = {
 };
 
 export default function ProductsPage() {
+  const { hasPermission, loading: permissionsLoading } = usePermissions();
   const [products, setProducts] = React.useState<Product[]>([]);
   const [categories, setCategories] = React.useState<Category[]>([]);
   const [selectedProducts, setSelectedProducts] = React.useState<string[]>([]);
@@ -165,10 +169,18 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
+      // Get the active department ID from localStorage (the one shown in navbar)
+      const selectedDepartmentId = localStorage.getItem("selectedDepartmentId");
+      
       const params: any = { page, per_page: perPage };
       if (searchQuery.trim()) params.search = searchQuery.trim();
       if (categoryFilter !== "all") params.category_id = categoryFilter;
       if (statusFilter !== "all") params.is_active = statusFilter === "active" ? 1 : 0;
+      
+      // Always filter by department to ensure products are scoped to the active department
+      if (selectedDepartmentId) {
+        params.department_id = parseInt(selectedDepartmentId);
+      }
 
       const res = await axiosClient.get("/products", { params });
 
@@ -285,6 +297,13 @@ export default function ProductsPage() {
 
   const saveProduct = async () => {
     if (!editingProduct) return;
+    
+    // Check permission
+    if (!hasPermission("products", "update")) {
+      showToast("You don't have permission to update products", "error");
+      return;
+    }
+    
     setIsSaving(true);
     try {
       const payload: any = {
@@ -312,6 +331,12 @@ export default function ProductsPage() {
   };
 
   const deleteProduct = async (productId: number) => {
+    // Check permission
+    if (!hasPermission("products", "delete")) {
+      showToast("You don't have permission to delete products", "error");
+      return;
+    }
+    
     if (!confirm("Are you sure you want to delete this product?")) return;
     setIsDeleting(true);
     try {
@@ -353,6 +378,10 @@ export default function ProductsPage() {
   };
 
   const openEditDrawer = async (product: Product) => {
+    if (!hasPermission("products", "view")) {
+      showToast("You don't have permission to view product details", "error");
+      return;
+    }
     setEditingProduct(product);
     await loadProductForEdit(product.id);
     setEditDrawerOpen(true);
@@ -396,12 +425,18 @@ export default function ProductsPage() {
               Manage your product catalog and QR codes
             </p>
           </div>
-          <Link href="/products/new">
-            <Button className="gap-2">
+          <PermissionRestrictedButton
+            hasPermission={hasPermission("products", "create")}
+            requiredPermission="Create Products"
+            resource="products"
+            action="create"
+            asChild
+          >
+            <Link href="/products/new">
               <Plus className="h-4 w-4" />
               Add Product
-            </Button>
-          </Link>
+            </Link>
+          </PermissionRestrictedButton>
         </div>
 
         {/* Filters */}
@@ -537,12 +572,25 @@ export default function ProductsPage() {
                         />
                       </TableCell>
                       <TableCell>
-                        <button
-                          onClick={() => openEditDrawer(p)}
-                          className="font-medium text-blue-600 hover:underline"
-                        >
-                          {p.name}
-                        </button>
+                        {hasPermission("products", "view") ? (
+                          <button
+                            onClick={() => openEditDrawer(p)}
+                            className="font-medium text-blue-600 hover:underline"
+                          >
+                            {p.name}
+                          </button>
+                        ) : (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="cursor-help text-muted-foreground">{p.name}</span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">You don't have permission to view product details</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                       </TableCell>
                       <TableCell className="font-mono text-sm">{p.sku}</TableCell>
                       <TableCell>
@@ -607,28 +655,81 @@ export default function ProductsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => openfullupdate(p)}>
-                              <Edit className="mr-2 h-4 w-4" /> Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Copy className="mr-2 h-4 w-4" /> Clone
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openQRCodeDialog(p)}>
-                              <QrCode className="mr-2 h-4 w-4" /> QR Code
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/products/${p.id}/landing-page`}>
-                                <Globe className="mr-2 h-4 w-4" /> Landing Page
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onClick={() => deleteProduct(p.id)}
-                              disabled={isDeleting}
+                            <PermissionRestrictedMenuItem
+                              hasPermission={hasPermission("products", "update")}
+                              requiredPermission="Update Products"
+                              resource="products"
+                              action="edit"
                             >
-                              <Trash2 className="mr-2 h-4 w-4" /> Delete
-                            </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openfullupdate(p)}>
+                                <Edit className="mr-2 h-4 w-4" /> Edit
+                              </DropdownMenuItem>
+                            </PermissionRestrictedMenuItem>
+                            
+                            <PermissionRestrictedMenuItem
+                              hasPermission={hasPermission("products", "create")}
+                              requiredPermission="Create Products"
+                              resource="products"
+                              action="clone"
+                            >
+                              <DropdownMenuItem>
+                                <Copy className="mr-2 h-4 w-4" /> Clone
+                              </DropdownMenuItem>
+                            </PermissionRestrictedMenuItem>
+                            
+                            <PermissionRestrictedMenuItem
+                              hasPermission={hasPermission("products", "view")}
+                              requiredPermission="View Products"
+                              resource="products"
+                              action="view"
+                            >
+                              <DropdownMenuItem onClick={() => openQRCodeDialog(p)}>
+                                <QrCode className="mr-2 h-4 w-4" /> QR Code
+                              </DropdownMenuItem>
+                            </PermissionRestrictedMenuItem>
+                            
+                            <PermissionRestrictedMenuItem
+                              hasPermission={hasPermission("products", "view")}
+                              requiredPermission="View Products"
+                              resource="products"
+                              action="view"
+                            >
+                              <DropdownMenuItem asChild>
+                                <Link href={`/products/${p.id}/landing-page`}>
+                                  <Globe className="mr-2 h-4 w-4" /> Landing Page
+                                </Link>
+                              </DropdownMenuItem>
+                            </PermissionRestrictedMenuItem>
+                            
+                            {hasPermission("products", "delete") ? (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onClick={() => deleteProduct(p.id)}
+                                  disabled={isDeleting}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                </DropdownMenuItem>
+                              </>
+                            ) : (
+                              <>
+                                <DropdownMenuSeparator />
+                                <PermissionRestrictedMenuItem
+                                  hasPermission={false}
+                                  requiredPermission="Delete Products"
+                                  resource="products"
+                                  action="delete"
+                                >
+                                  <DropdownMenuItem
+                                    className="text-destructive opacity-50 cursor-not-allowed"
+                                    disabled
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                  </DropdownMenuItem>
+                                </PermissionRestrictedMenuItem>
+                              </>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>

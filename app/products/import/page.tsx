@@ -31,6 +31,15 @@ const productFields = [
 export default function BulkImportPage() {
   const { toast } = useToast()
   const router = useRouter()
+  const [selectedDepartmentName, setSelectedDepartmentName] = React.useState<string | null>(null)
+  
+  // Get department name on mount
+  React.useEffect(() => {
+    const deptName = localStorage.getItem("selectedDepartmentName")
+    if (deptName) {
+      setSelectedDepartmentName(deptName)
+    }
+  }, [])
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [filePath, setFilePath] = useState<string>("")
   const [csvHeaders, setCsvHeaders] = useState<string[]>([])
@@ -197,12 +206,31 @@ export default function BulkImportPage() {
     console.log('Starting import...')
     setImporting(true)
     try {
-      const payload = {
+      // Get the active department ID from localStorage (the one shown in navbar)
+      const selectedDepartmentId = localStorage.getItem("selectedDepartmentId")
+      
+      if (!selectedDepartmentId) {
+        toast({
+          title: "Error",
+          description: "No department selected. Please select a department from the navbar.",
+          variant: "destructive",
+        })
+        setImporting(false)
+        return
+      }
+      
+      const departmentId = parseInt(selectedDepartmentId)
+      const payload: any = {
         file_path: filePath,
         field_mapping: fieldMapping,
         options: importOptions,
+        // CRITICAL: Always include department_id to ensure products are scoped to the active department
+        // This ensures duplicate checking (SKU, etc.) only happens within the department scope
+        department_id: departmentId,
       }
-      console.log('Import payload:', payload)
+      
+      console.log('Import payload with department_id:', payload)
+      console.log('Importing to department ID:', departmentId)
       
       const res = await axiosClient.post('/products/import/import', payload)
       console.log('Import response:', res.data)
@@ -210,13 +238,45 @@ export default function BulkImportPage() {
       if (res.data.success) {
         const { success, failed, skipped, errors } = res.data.data
         
-        toast({
-          title: "Import completed",
-          description: `Successfully imported ${success} products. ${failed > 0 ? `${failed} failed.` : ''} ${skipped > 0 ? `${skipped} skipped.` : ''}`,
-        })
+        // Check if errors are related to duplicate SKUs across departments
+        const duplicateErrors = errors?.filter((err: any) => 
+          err.message?.toLowerCase().includes('sku') && 
+          err.message?.toLowerCase().includes('already exists')
+        ) || []
+        
+        if (duplicateErrors.length > 0) {
+          console.warn('⚠️ BACKEND ISSUE: Duplicate SKU errors detected. These should be checked within department scope only.', {
+            department_id: departmentId,
+            department_name: localStorage.getItem("selectedDepartmentName"),
+            errors: duplicateErrors,
+            note: 'The backend is checking for duplicate SKUs globally instead of within the department scope. Same SKUs should be allowed in different departments.'
+          })
+          
+          // Show detailed error message
+          const errorDetails = duplicateErrors.map((err: any) => 
+            `Row ${err.row}: ${err.message}`
+          ).join('\n')
+          
+          toast({
+            title: "Import completed with warnings",
+            description: `Successfully imported ${success} products. ${failed > 0 ? `${failed} failed.` : ''} ${skipped > 0 ? `${skipped} skipped.` : ''}\n\n⚠️ ${duplicateErrors.length} duplicate SKU error(s) detected. These SKUs may exist in OTHER departments, not the current one (Department ID: ${departmentId}). The backend should check duplicates within department scope only.`,
+            variant: "default",
+            duration: 10000, // Show longer for important message
+          })
+          
+          // Also log full error details
+          console.error('Full duplicate error details:', errorDetails)
+        } else {
+          toast({
+            title: "Import completed",
+            description: `Successfully imported ${success} products. ${failed > 0 ? `${failed} failed.` : ''} ${skipped > 0 ? `${skipped} skipped.` : ''}`,
+          })
+        }
 
-        if (errors.length > 0 && errors.length <= 10) {
+        if (errors && errors.length > 0) {
           console.log('Import errors:', errors)
+          console.log('Department ID used:', departmentId)
+          console.log('Department Name:', localStorage.getItem("selectedDepartmentName"))
         }
 
         // Redirect to products page after successful import
@@ -229,11 +289,25 @@ export default function BulkImportPage() {
     } catch (err: any) {
       console.error('Import error:', err)
       console.error('Error response:', err.response)
-      toast({
-        title: "Import failed",
-        description: err.response?.data?.message || err.response?.data?.error || err.message || "Failed to import products",
-        variant: "destructive",
-      })
+      const departmentId = localStorage.getItem("selectedDepartmentId")
+      console.error('Department ID that was used:', departmentId)
+      
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || "Failed to import products"
+      
+      // Check if error is related to duplicate SKUs
+      if (errorMessage.toLowerCase().includes('sku') && errorMessage.toLowerCase().includes('already exists')) {
+        toast({
+          title: "Import failed - Duplicate SKU",
+          description: `${errorMessage}. Note: Duplicate checking should be scoped to the current department (ID: ${departmentId}). Please ensure the backend checks duplicates within department scope.`,
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Import failed",
+          description: errorMessage,
+          variant: "destructive",
+        })
+      }
     } finally {
       setImporting(false)
     }
@@ -256,10 +330,22 @@ export default function BulkImportPage() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Bulk Import Products</h1>
-          <p className="text-muted-foreground mt-2">
-            Import multiple products at once using CSV files with AI-powered field mapping
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Bulk Import Products</h1>
+              <p className="text-muted-foreground mt-2">
+                Import multiple products at once using CSV files with AI-powered field mapping
+              </p>
+            </div>
+            {selectedDepartmentName && (
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Importing to:</p>
+                <p className="text-sm font-semibold text-blue-600">
+                  {selectedDepartmentName}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Steps */}
@@ -443,7 +529,7 @@ export default function BulkImportPage() {
                       onChange={(e) => setImportOptions({ ...importOptions, skip_duplicates: e.target.checked })}
                       className="rounded"
                     />
-                    Skip duplicate products (by SKU)
+                    Skip duplicate products (by SKU within current department)
                   </label>
                   <label className="flex items-center gap-2 text-sm">
                     <input

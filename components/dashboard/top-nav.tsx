@@ -108,17 +108,58 @@ export function TopNav({ onMenuClick }: TopNavProps) {
 
   const fetchAvailableDepartments = async () => {
     try {
+      // Check localStorage first to see if we already have a selected department
+      const currentSelectedDeptId = localStorage.getItem("selectedDepartmentId")
+      const currentSelectedDeptName = localStorage.getItem("selectedDepartmentName")
+      
       // Try to get departments from /auth/me first
       const res = await axiosClient.get("/auth/me")
-      if (res.data?.data?.departments && Array.isArray(res.data.data.departments)) {
-        setAvailableDepartments(res.data.data.departments)
-        return
+      if (res.data?.data) {
+        // Check for departments array
+        if (res.data.data.departments && Array.isArray(res.data.data.departments)) {
+          setAvailableDepartments(res.data.data.departments)
+          
+          // If no selected department but departments exist, set the first one as default
+          if (!currentSelectedDeptName && res.data.data.departments.length > 0) {
+            const firstDept = res.data.data.departments[0]
+            setSelectedDepartmentName(firstDept.name)
+            setSelectedDepartmentId(firstDept.id)
+            localStorage.setItem("selectedDepartmentName", firstDept.name)
+            localStorage.setItem("selectedDepartmentId", firstDept.id.toString())
+          }
+          return
+        }
+        
+        // Also check if organization has departments (for primary account users)
+        if (res.data.data.organization?.departments && Array.isArray(res.data.data.organization.departments)) {
+          setAvailableDepartments(res.data.data.organization.departments)
+          
+          // If no selected department but departments exist, set the first one as default
+          if (!currentSelectedDeptName && res.data.data.organization.departments.length > 0) {
+            const firstDept = res.data.data.organization.departments[0]
+            setSelectedDepartmentName(firstDept.name)
+            setSelectedDepartmentId(firstDept.id)
+            localStorage.setItem("selectedDepartmentName", firstDept.name)
+            localStorage.setItem("selectedDepartmentId", firstDept.id.toString())
+          }
+          return
+        }
       }
       
       // Fallback: try to get from departments endpoint
       const deptRes = await axiosClient.get("/departments")
       if (deptRes.data?.success && deptRes.data?.data) {
-        setAvailableDepartments(deptRes.data.data)
+        const departments = Array.isArray(deptRes.data.data) ? deptRes.data.data : []
+        setAvailableDepartments(departments)
+        
+        // If no selected department but departments exist, set the first one as default
+        if (!currentSelectedDeptName && departments.length > 0) {
+          const firstDept = departments[0]
+          setSelectedDepartmentName(firstDept.name)
+          setSelectedDepartmentId(firstDept.id)
+          localStorage.setItem("selectedDepartmentName", firstDept.name)
+          localStorage.setItem("selectedDepartmentId", firstDept.id.toString())
+        }
       }
     } catch (error: any) {
       console.error("Failed to fetch departments:", error)
@@ -129,6 +170,16 @@ export function TopNav({ onMenuClick }: TopNavProps) {
           const data = JSON.parse(loginData)
           if (data.departments && Array.isArray(data.departments)) {
             setAvailableDepartments(data.departments)
+            
+            // If no selected department but departments exist, set the first one as default
+            const currentSelectedDeptName = localStorage.getItem("selectedDepartmentName")
+            if (!currentSelectedDeptName && data.departments.length > 0) {
+              const firstDept = data.departments[0]
+              setSelectedDepartmentName(firstDept.name)
+              setSelectedDepartmentId(firstDept.id)
+              localStorage.setItem("selectedDepartmentName", firstDept.name)
+              localStorage.setItem("selectedDepartmentId", firstDept.id.toString())
+            }
           }
         } catch (e) {
           console.error("Error parsing login data:", e)
@@ -191,18 +242,20 @@ export function TopNav({ onMenuClick }: TopNavProps) {
         if (res.data.data.department?.name) {
           setSelectedDepartmentName(res.data.data.department.name)
           localStorage.setItem("selectedDepartmentName", res.data.data.department.name)
+          if (res.data.data.department?.id) {
+            setSelectedDepartmentId(res.data.data.department.id)
+            localStorage.setItem("selectedDepartmentId", res.data.data.department.id.toString())
+          }
         } else {
           // Fallback to localStorage
           const deptName = localStorage.getItem("selectedDepartmentName")
           if (deptName) {
             setSelectedDepartmentName(deptName)
           }
-        }
-        
-        // Get selected department ID
-        const deptId = localStorage.getItem("selectedDepartmentId")
-        if (deptId) {
-          setSelectedDepartmentId(parseInt(deptId))
+          const deptId = localStorage.getItem("selectedDepartmentId")
+          if (deptId) {
+            setSelectedDepartmentId(parseInt(deptId))
+          }
         }
       }
     } catch (error: any) {
@@ -312,7 +365,7 @@ export function TopNav({ onMenuClick }: TopNavProps) {
         </div>
 
         <div className="flex items-center gap-3">
-          {selectedDepartmentName && availableDepartments.length > 0 && (
+          {availableDepartments.length > 0 && (
             <DropdownMenu open={isDepartmentDropdownOpen} onOpenChange={setIsDepartmentDropdownOpen}>
               <DropdownMenuTrigger asChild>
                 <button
@@ -320,7 +373,9 @@ export function TopNav({ onMenuClick }: TopNavProps) {
                   disabled={isSwitchingDepartment}
                 >
                   <Building2 className="h-4 w-4" />
-                  <span className="text-sm font-medium">{selectedDepartmentName}</span>
+                  <span className="text-sm font-medium">
+                    {selectedDepartmentName || availableDepartments[0]?.name || "Select Department"}
+                  </span>
                   <ChevronDown className="h-3 w-3" />
                 </button>
               </DropdownMenuTrigger>
