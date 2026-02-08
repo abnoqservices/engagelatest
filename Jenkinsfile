@@ -158,11 +158,12 @@ PYTHON_SCRIPT
                             sleep 10
                         fi
                         
-                        # Force new deployment with new task definition
-                        echo "Forcing new deployment..."
+                        # Force new deployment with newly registered task definition (contains new image)
+                        echo "Forcing new deployment with latest task definition..."
                         aws ecs update-service \
                             --cluster ${ECS_CLUSTER} \
                             --service ${ECS_SERVICE} \
+                            --task-definition ${ECS_TASK_DEFINITION} \
                             --force-new-deployment \
                             --region ${AWS_REGION}
                         
