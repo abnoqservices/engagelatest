@@ -1,6 +1,5 @@
 "use client"
-
-import * as React from "react"
+import { useState, useEffect, useCallback } from 'react';
 import { DashboardLayout } from "@/components/dashboard/layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -20,6 +19,7 @@ import {
 import { CheckCircle2, Settings, Plug, Loader2, Trash2 } from 'lucide-react'
 import axiosClient from "@/lib/axiosClient"
 import { showToast } from "@/lib/showToast"
+import HubSpotLoginButton from '@/components/HubSpotLoginButton'
 
 interface WhatsAppAccount {
   id: number
@@ -30,16 +30,75 @@ interface WhatsAppAccount {
 }
 
 export default function IntegrationsPage() {
-  const [whatsappAccounts, setWhatsappAccounts] = React.useState<WhatsAppAccount[]>([])
-  const [loading, setLoading] = React.useState(false)
-  const [connecting, setConnecting] = React.useState(false)
-  const [disconnectDialogOpen, setDisconnectDialogOpen] = React.useState(false)
-  const [accountToDisconnect, setAccountToDisconnect] = React.useState<number | null>(null)
 
-  React.useEffect(() => {
-    loadWhatsAppAccounts()
-    
-    // Check for OAuth callback success/error
+  const [whatsappAccounts, setWhatsappAccounts] = useState<WhatsAppAccount[]>([])
+  const [loading, setLoading] = useState(false)
+  const [connecting, setConnecting] = useState(false)
+  const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false)
+  const [accountToDisconnect, setAccountToDisconnect] = useState<number | null>(null)
+
+  // HubSpot state
+  const [hubspotConnected, setHubspotConnected] = useState(false)
+  const [hubspotExpiry, setHubspotExpiry] = useState<number | null>(null)
+  const [hubspotToken, setHubspotToken] = useState<string | null>(null) // better as string
+  const [hubspotStatusLoading, setHubspotStatusLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState("communication");
+  // ────────────────────────────────────────────────
+  // Fetch HubSpot status
+  // ────────────────────────────────────────────────
+  const fetchHubSpotStatus = useCallback(async () => {
+    try {
+      setHubspotStatusLoading(true)
+      const res = await fetch("/api/hubspot/status")
+      if (!res.ok) throw new Error("Status fetch failed")
+      
+      const data = await res.json()
+      
+      setHubspotConnected(!!data.connected)
+      setHubspotExpiry(data.expiresIn ?? null)
+      setHubspotToken(data.token ?? null)
+
+      // Optional: show current status on load (only once)
+      if (data.connected) {
+        showToast("HubSpot is connected", "success")
+      }
+    } catch (err) {
+      console.error("Failed to fetch HubSpot status", err)
+      showToast("Could not check HubSpot connection status", "error")
+    } finally {
+      setHubspotStatusLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchHubSpotStatus()
+
+    const params = new URLSearchParams(window.location.search)
+
+    /* CRM TAB ACTIVATION */
+    const tabParam = params.get("tab")
+    if (tabParam) {
+      setActiveTab(tabParam)
+    }
+    window.fbAsyncInit = function () {
+      window.FB.init({
+        appId: "1954879162132993",
+        cookie: true,
+        xfbml: true,
+        version: "v24.0",
+      })
+    }
+
+    ;(function (d: any, s: any, id: any) {
+      if (d.getElementById(id)) return
+      const js = d.createElement(s)
+      js.id = id
+      js.src = "https://connect.facebook.net/en_US/sdk.js"
+      d.getElementsByTagName(s)[0].parentNode.insertBefore(js, null)
+    })(document, "script", "facebook-jssdk")
+
+    // Handle WhatsApp OAuth callback
+
     const urlParams = new URLSearchParams(window.location.search)
     const whatsappStatus = urlParams.get('whatsapp')
     if (whatsappStatus === 'connected') {
@@ -49,12 +108,12 @@ export default function IntegrationsPage() {
       // Reload accounts
       loadWhatsAppAccounts()
     } else if (whatsappStatus === 'error') {
-      const errorMessage = urlParams.get('message') || 'Failed to connect WhatsApp account'
-      showToast(errorMessage, 'error')
-      // Remove query param from URL
+      const msg = urlParams.get('message') || 'Failed to connect WhatsApp account'
+      showToast(msg, 'error')
+
       window.history.replaceState({}, '', '/integrations')
     }
-  }, [])
+  }, [fetchHubSpotStatus])
 
   const loadWhatsAppAccounts = async () => {
     try {
@@ -65,13 +124,11 @@ export default function IntegrationsPage() {
       }
     } catch (error: any) {
       console.error('Failed to load WhatsApp accounts:', error)
-      if (error.response?.status !== 401) {
-        showToast('Failed to load WhatsApp accounts', 'error')
-      }
     } finally {
       setLoading(false)
     }
   }
+
 
   const handleConnectWhatsApp = async () => {
     try {
@@ -83,6 +140,8 @@ export default function IntegrationsPage() {
       } else {
         showToast(response.data.message || 'Failed to initiate WhatsApp connection', 'error')
         setConnecting(false)
+
+
       }
     } catch (error: any) {
       showToast(error.response?.data?.message || 'Failed to initiate WhatsApp connection', 'error')
@@ -100,13 +159,22 @@ export default function IntegrationsPage() {
 
     try {
       await axiosClient.delete(`/whatsapp/accounts/${accountToDisconnect}`)
-      showToast('WhatsApp account disconnected successfully', 'success')
+      showToast('WhatsApp account disconnected', 'success')
       setDisconnectDialogOpen(false)
       setAccountToDisconnect(null)
       loadWhatsAppAccounts()
     } catch (error: any) {
-      showToast(error.response?.data?.message || 'Failed to disconnect account', 'error')
+      showToast(error.response?.data?.message || 'Failed to disconnect', 'error')
     }
+  }
+
+  // ────────────────────────────────────────────────
+  // NEW: Call this when HubSpot disconnect happens
+  // (You need to implement disconnect logic in HubSpotLoginButton)
+  // ────────────────────────────────────────────────
+  const handleHubSpotDisconnectSuccess = () => {
+    showToast("HubSpot disconnected successfully", "success")
+    fetchHubSpotStatus() // ← refresh status → UI updates
   }
 
   const isWhatsAppConnected = whatsappAccounts.some(acc => acc.status === 'connected')
@@ -121,67 +189,130 @@ export default function IntegrationsPage() {
           </p>
         </div>
 
-        <Tabs defaultValue="communication" className="space-y-6">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-6"
+        >
           <TabsList>
             <TabsTrigger value="crm">CRM Systems</TabsTrigger>
             <TabsTrigger value="marketing">Marketing Automation</TabsTrigger>
             <TabsTrigger value="communication">Communication</TabsTrigger>
           </TabsList>
 
-          {/* CRM Integrations */}
+
+
           <TabsContent value="crm" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {[
-                { name: "HubSpot CRM", type: "API + Webhook", features: ["Contacts sync", "Deal sync", "Workflows"], connected: true },
-                { name: "Salesforce", type: "REST API", features: ["Contact sync", "Campaign attribution"], connected: false },
-                { name: "Zoho CRM", type: "API", features: ["Lead push", "Contact mapping", "Field sync"], connected: true },
-                { name: "Pipedrive", type: "API", features: ["Lead sync", "Activity log push"], connected: false },
-                { name: "Freshsales Suite", type: "API", features: ["Smart lead routing", "Pipeline updates"], connected: false },
-                { name: "Microsoft Dynamics 365", type: "API", features: ["Enterprise lead sync"], connected: false },
-              ].map((integration, i) => (
-                <Card key={i}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-base flex items-center gap-2">
-                          {integration.name}
-                          {integration.connected && (
-                            <CheckCircle2 className="h-4 w-4 text-green-600" />
-                          )}
-                        </CardTitle>
-                        <CardDescription>{integration.type}</CardDescription>
-                      </div>
-                      <Switch checked={integration.connected} />
+              {/* HubSpot Card – improved */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        HubSpot CRM
+                        {hubspotConnected && (
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        )}
+                      </CardTitle>
+                      <CardDescription>
+                        {hubspotConnected ? "Connected" : "Not connected"}
+                      </CardDescription>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">Features:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {integration.features.map((feature, j) => (
-                          <Badge key={j} variant="secondary" className="text-xs">
-                            {feature}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    {integration.connected ? (
-                      <Button variant="outline" size="sm" className="w-full">
-                        <Settings className="h-4 w-4 mr-2" />
-                        Configure
-                      </Button>
-                    ) : (
-                      <Button size="sm" className="w-full">
-                        <Plug className="h-4 w-4 mr-2" />
-                        Connect
-                      </Button>
-                    )}
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+                    <Switch checked={hubspotConnected} disabled />
+                  </div>
+                </CardHeader>
+
+                <CardContent>
+                  <p className="text-sm font-medium">Features:</p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <Badge variant="secondary">Contacts sync</Badge>
+                    <Badge variant="secondary">Deal sync</Badge>
+                    <Badge variant="secondary">Workflows</Badge>
+                  </div>
+
+                  {hubspotConnected && hubspotExpiry && (
+                    <p className="text-xs text-muted-foreground mt-4">
+                      Token expires in ~{Math.round(hubspotExpiry / 3600)} hours
+                    </p>
+                  )}
+                </CardContent>
+
+                <CardFooter>
+                  <HubSpotLoginButton
+                    connected={hubspotConnected}
+                    onDisconnectSuccess={handleHubSpotDisconnectSuccess} // ← new prop
+                  />
+                </CardFooter>
+              </Card>
+
+
+  {/* Salesforce */}
+  <Card>
+    <CardHeader>
+      <div className="flex items-start justify-between">
+        <div>
+          <CardTitle className="text-base">
+            Salesforce
+          </CardTitle>
+          <CardDescription>REST API</CardDescription>
+        </div>
+        <Switch />
+      </div>
+    </CardHeader>
+
+    <CardContent>
+      <p className="text-sm font-medium">Features:</p>
+      <div className="flex flex-wrap gap-2 mt-2">
+        <Badge variant="secondary" className="text-xs">Contact sync</Badge>
+        <Badge variant="secondary" className="text-xs">Campaign attribution</Badge>
+      </div>
+    </CardContent>
+
+    <CardFooter>
+      <Button size="sm" className="w-full">
+        <Plug className="h-4 w-4 mr-2" />
+        Connect
+      </Button>
+    </CardFooter>
+  </Card>
+
+
+  {/* Zoho CRM */}
+  <Card>
+    <CardHeader>
+      <div className="flex items-start justify-between">
+        <div>
+          <CardTitle className="text-base flex items-center gap-2">
+            Zoho CRM
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+          </CardTitle>
+          <CardDescription>API</CardDescription>
+        </div>
+        <Switch checked />
+      </div>
+    </CardHeader>
+
+    <CardContent>
+      <p className="text-sm font-medium">Features:</p>
+      <div className="flex flex-wrap gap-2 mt-2">
+        <Badge variant="secondary" className="text-xs">Lead push</Badge>
+        <Badge variant="secondary" className="text-xs">Contact mapping</Badge>
+        <Badge variant="secondary" className="text-xs">Field sync</Badge>
+      </div>
+    </CardContent>
+
+    <CardFooter>
+      <Button variant="outline" size="sm" className="w-full">
+        <Settings className="h-4 w-4 mr-2" />
+        Configure
+      </Button>
+    </CardFooter>
+  </Card>
+
+</div>
+
+            
 
             {/* CRM Integration Features */}
             <Card>

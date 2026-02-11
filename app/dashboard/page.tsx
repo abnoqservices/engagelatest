@@ -7,6 +7,8 @@ import StatisticsChart from "@/components/dashboardanalytics/StatisticsChart";
 import RecentContacts from "@/components/dashboardanalytics/RecentContacts";
 import DemographicCard from "@/components/dashboardanalytics/DemographicCard";
 import { DashboardLayout } from "@/components/dashboard/layout"
+
+
 export const metadata: Metadata = {
   title:
     "Next.js E-commerce Dashboard | TailAdmin - Next.js Dashboard Template",
@@ -14,6 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default function Ecommerce() {
+ 
   return (
     
 <DashboardLayout>
@@ -31,10 +34,10 @@ export default function Ecommerce() {
       <div className="col-span-12">
         <StatisticsChart />
       </div>
-
+{/* 
       <div className="col-span-12 xl:col-span-5">
         <DemographicCard />
-      </div>
+      </div> */}
 
       <div className="col-span-12 xl:col-span-7">
         <RecentContacts />

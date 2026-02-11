@@ -60,6 +60,7 @@ export default function WorkflowDetailPage() {
   }, [workflowId, router])
 
   React.useEffect(() => {
+    EventInternals()
     if (workflowId) {
       fetchData()
     }
