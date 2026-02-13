@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown,Award } from 'lucide-react';
 
 interface AboutSectionProps {
   about: string;
@@ -26,17 +26,46 @@ export default function AboutSection({ about, mission, vision }: AboutSectionPro
     <section className="py-16 sm:py-24 bg-gradient-to-b from-slate-50 to-white">
       <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
         {/* Heading */}
-        <div className="text-center mb-12 sm:mb-16">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 tracking-tight">
-            Who We Are
-          </h2>
-          <p className="mt-4 text-lg text-slate-600 max-w-3xl mx-auto">
-            Our purpose, values, and long-term aspirations
-          </p>
-        </div>
+    
 
         {/* Accordion */}
         <div className="max-w-4xl mx-auto space-y-4">
+        <div className="bg-white rounded-2xl p-8   border-gray-100">
+                <div className="flex items-center gap-3 mb-6">
+                  <Award className="h-6 w-6 text-amber-600" />
+                  <h3 className="font-serif text-xl font-bold text-gray-900">Quality Guarantee</h3>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="h-2 w-2 rounded-full bg-amber-500 mt-2" />
+                    <div>
+                      <h5 className="font-semibold text-gray-900 text-sm">Authentic Materials</h5>
+                      <p className="text-gray-600 text-xs mt-1">100% genuine craftsmanship</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="h-2 w-2 rounded-full bg-amber-500 mt-2" />
+                    <div>
+                      <h5 className="font-semibold text-gray-900 text-sm">Sustainable Sourcing</h5>
+                      <p className="text-gray-600 text-xs mt-1">Ethically made products</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="h-2 w-2 rounded-full bg-amber-500 mt-2" />
+                    <div>
+                      <h5 className="font-semibold text-gray-900 text-sm">Artisan Partnership</h5>
+                      <p className="text-gray-600 text-xs mt-1">Direct collaboration</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="h-2 w-2 rounded-full bg-amber-500 mt-2" />
+                    <div>
+                      <h5 className="font-semibold text-gray-900 text-sm">Quality Assured</h5>
+                      <p className="text-gray-600 text-xs mt-1">100% satisfaction</p>
+                    </div>
+                  </div>
+                </div>
+            </div>
           {items.map((item, index) => {
             const isOpen = openIndex === index;
 
@@ -96,8 +125,10 @@ export default function AboutSection({ about, mission, vision }: AboutSectionPro
               </div>
             );
           })}
+              
         </div>
       </div>
+      
     </section>
   );
 }
