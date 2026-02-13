@@ -20,7 +20,7 @@ import { CheckCircle2, Settings, Plug, Loader2, Trash2 } from 'lucide-react'
 import axiosClient from "@/lib/axiosClient"
 import { showToast } from "@/lib/showToast"
 import HubSpotLoginButton from '@/components/HubSpotLoginButton'
-
+import LeadsManager from '@/components/LeadsManager';
 interface WhatsAppAccount {
   id: number
   phone_number: string
@@ -43,6 +43,7 @@ export default function IntegrationsPage() {
   const [hubspotToken, setHubspotToken] = useState<string | null>(null) // better as string
   const [hubspotStatusLoading, setHubspotStatusLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("communication");
+  
   // ────────────────────────────────────────────────
   // Fetch HubSpot status
   // ────────────────────────────────────────────────

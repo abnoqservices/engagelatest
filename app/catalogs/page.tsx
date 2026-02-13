@@ -28,6 +28,7 @@ const catalogs = [
     downloads: 89,
     createdAt: "2024-01-15",
     updatedAt: "2024-01-20",
+    slug: "/demo-company",
   },
   {
     id: 2,
@@ -41,6 +42,7 @@ const catalogs = [
     downloads: 0,
     createdAt: "2024-01-22",
     updatedAt: "2024-01-22",
+    slug: "/apple-store",
   },
   {
     id: 3,
@@ -54,6 +56,7 @@ const catalogs = [
     downloads: 54,
     createdAt: "2024-01-10",
     updatedAt: "2024-01-18",
+    slug: "/acme-company",
   },
 ]
 
@@ -153,10 +156,12 @@ export default function CatalogsPage() {
                       Edit
                     </Button>
                   </Link>
+                  <Link href={`/catalogs/${catalog.slug}`}>
                   <Button variant="outline" size="sm">
                     <Eye className="h-4 w-4 mr-2" />
                     Preview
                   </Button>
+                </Link>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm">

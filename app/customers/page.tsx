@@ -48,18 +48,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent } from "@/components/ui/tabs" // removed unused TabsList/Trigger for now
 import {
   Search,
   Download,
   Mail,
   Phone,
-  MapPin,
-  Calendar,
   Tag,
-  TrendingUp,
-  ChevronLeft,
-  ChevronRight,
+  Calendar,
   Plus,
   MoreVertical,
   Pencil,
@@ -67,10 +63,13 @@ import {
   Eye,
   Save,
   X,
+  Upload,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 
 // ────────────────────────────────────────────────
-// Types
+// Types (same as before + minor extension)
 interface Contact {
   id: number
   first_name: string
@@ -106,10 +105,13 @@ interface PaginatedResponse {
 
 // ────────────────────────────────────────────────
 export default function CustomersPage() {
+  const router = useRouter()
+
   const [contacts, setContacts] = useState<Contact[]>([])
   const [selectedContact, setSelectedContact] = useState<DetailResponse["data"] | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState<Partial<Contact>>({})
+
   const [deleteId, setDeleteId] = useState<number | null>(null)
 
   const [searchQuery, setSearchQuery] = useState("")
@@ -118,7 +120,13 @@ export default function CustomersPage() {
   const [perPage, setPerPage] = useState(15)
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
-  const router = useRouter();
+
+  // ── Selection & Sync states ────────────────────────────────
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [selectAll, setSelectAll] = useState(false)
+  const [showSyncDialog, setShowSyncDialog] = useState(false)
+  const [syncCrm, setSyncCrm] = useState<"hubspot" | "">("")
+
   const fetchContacts = async () => {
     setLoading(true)
     try {
@@ -159,7 +167,7 @@ export default function CustomersPage() {
         showToast("Contact updated successfully", "success")
         setSelectedContact(res.data.data || { ...selectedContact, ...formData })
         setIsEditing(false)
-        fetchContacts() // refresh list
+        fetchContacts()
       }
     } catch (err: any) {
       showToast(err?.response?.data?.message || "Failed to update contact", "error")
@@ -183,11 +191,113 @@ export default function CustomersPage() {
     fetchContacts()
   }, [currentPage, perPage, searchQuery, statusFilter])
 
+  useEffect(() => {
+    // Reset selection when list/filter changes
+    setSelectAll(false)
+    setSelectedIds([])
+  }, [contacts])
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value)
     setCurrentPage(1)
   }
 
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    )
+  }
+
+  const toggleSelectAll = () => {
+    if (selectAll) {
+      setSelectedIds([])
+    } else {
+      setSelectedIds(contacts.map(c => c.id))
+    }
+    setSelectAll(!selectAll)
+  }
+  const handleSyncToHubSpot = async () => {
+    if (selectedIds.length === 0) return;
+  
+    const selectedContacts = contacts.filter(c => selectedIds.includes(c.id));
+  
+    // Build clean payload (same shape as your single create)
+    const payload = selectedContacts
+      .map(c => ({
+        firstname: c.first_name?.trim() || undefined,
+        lastname: c.last_name?.trim() || undefined,
+        email: c.email?.trim(),
+        company: c.company?.trim() || undefined,
+        phone: c.phone?.trim() || undefined,
+        // You can add more fields here if needed, e.g.:
+        // lifecyclestage: "lead",
+      }))
+      .filter(c => c.email?.trim()); // HubSpot requires email for upsert by email
+  
+    if (payload.length === 0) {
+      showToast("No contacts with valid email to sync", "error");
+      return;
+    }
+  
+    // Transform to HubSpot batch/upsert format (very similar to single, but wrapped)
+    const formattedInputs = payload.map(contact => ({
+      id: contact.email,  // ← required: the value used for matching
+      properties: {
+        email: contact.email,     // must be present & match id
+        firstname: contact.firstname,
+        lastname: contact.lastname,
+        phone: contact.phone,
+        company: contact.company,
+       
+      },
+    }));
+  
+    try {
+      const res = await fetch("/api/hubspot/contacts/batch", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          inputs: formattedInputs,
+          idProperty: "email",           // Tells HubSpot: match/create by email
+        }),
+      });
+  
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        data = { message: "Invalid JSON response from server" };
+      }
+  
+      if (res.ok && data?.success) {
+        showToast(`Synced ${data.synced ?? payload.length} contact(s) to HubSpot`, "success");
+        setSelectedIds([]);
+        setShowSyncDialog(false);
+        // Optional: refresh your local contacts list if needed
+        // await fetchContacts(); // or whatever your refresh function is
+      } else {
+        const errorMsg =
+          data?.message ||
+          data?.error ||
+          (res.status ? `Server error (${res.status}) - ${res.statusText}` : "Network or unknown error");
+  
+        console.error("HubSpot batch sync failed:", {
+          status: res.status,
+          statusText: res.statusText,
+          responseData: data,
+          payloadSize: payload.length,
+        });
+  
+        showToast(errorMsg, "error");
+      }
+    } catch (err: any) {
+      console.error("Sync fetch error:", err);
+      showToast(err.message || "Failed to reach sync endpoint", "error");
+    }
+  };
+  
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -199,26 +309,30 @@ export default function CustomersPage() {
               Manage your contacts and relationships
             </p>
           </div>
-          <div className="flex gap-3">
-         
-            <Button className="gap-2"  onClick={() => router.push("/customers/create")}>
+          <div className="flex flex-wrap gap-3">
+            <Button className="gap-2" onClick={() => router.push("/customers/create")}>
               <Plus className="h-4 w-4" />
               Add Contact
             </Button>
-           
+
             <Button variant="outline" className="gap-2">
               <Download className="h-4 w-4" />
               Export
             </Button>
+
+            {selectedIds.length > 0 && (
+              <Button
+                className="gap-2 bg-green-600 hover:bg-green-700"
+                onClick={() => setShowSyncDialog(true)}
+              >
+                <Upload className="h-4 w-4" />
+                Sync {selectedIds.length} to CRM
+              </Button>
+            )}
           </div>
         </div>
 
         <Tabs defaultValue="list" className="space-y-6">
-          {/* <TabsList>
-            <TabsTrigger value="list">Contact List</TabsTrigger>
-            <TabsTrigger value="personas">Personas</TabsTrigger>
-          </TabsList> */}
-
           <TabsContent value="list" className="space-y-6">
             {/* Filters */}
             <div className="flex flex-col gap-4 rounded-xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -246,7 +360,7 @@ export default function CustomersPage() {
 
                 <Select
                   value={perPage.toString()}
-                  onValueChange={(v) => {
+                  onValueChange={v => {
                     setPerPage(Number(v))
                     setCurrentPage(1)
                   }}
@@ -274,6 +388,14 @@ export default function CustomersPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-10">
+                          <input
+                            type="checkbox"
+                            checked={selectAll}
+                            onChange={toggleSelectAll}
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                        </TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead>Contact</TableHead>
                         <TableHead>Company</TableHead>
@@ -283,75 +405,86 @@ export default function CustomersPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {contacts.map((contact) => (
-                        <TableRow key={contact.id} className="hover:bg-muted/40">
-                          <TableCell
-                            className="cursor-pointer font-medium"
-                            onClick={() => fetchContactDetail(contact.id)}
-                          >
-                            {contact.first_name} {contact.last_name}
-                          </TableCell>
-                          <TableCell>
-                            <div className="space-y-1 text-sm">
-                              {contact.email && (
-                                <div className="flex items-center gap-2">
-                                  <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                                  {contact.email}
-                                </div>
-                              )}
-                              {contact.phone && (
-                                <div className="flex items-center gap-2">
-                                  <Phone className="h-3.5 w-3.5 text-muted-foreground" />
-                                  {contact.phone}
-                                </div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>{contact.company || "—"}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{contact.contact_source}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={contact.status === "active" ? "default" : "secondary"}
+                      {contacts.map(contact => {
+                        const isSelected = selectedIds.includes(contact.id)
+                        return (
+                          <TableRow key={contact.id} className="hover:bg-muted/40">
+                            <TableCell>
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleSelect(contact.id)}
+                                className="h-4 w-4 rounded border-gray-300"
+                              />
+                            </TableCell>
+                            <TableCell
+                              className="cursor-pointer font-medium"
+                              onClick={() => fetchContactDetail(contact.id)}
                             >
-                              {contact.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() => fetchContactDetail(contact.id)}
-                                  className="gap-2"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                  View
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => fetchContactDetail(contact.id)}
-                                  className="gap-2"
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="text-destructive focus:text-destructive gap-2"
-                                  onClick={() => setDeleteId(contact.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                              {contact.first_name} {contact.last_name}
+                            </TableCell>
+                            <TableCell>
+                              <div className="space-y-1 text-sm">
+                                {contact.email && (
+                                  <div className="flex items-center gap-2">
+                                    <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                                    {contact.email}
+                                  </div>
+                                )}
+                                {contact.phone && (
+                                  <div className="flex items-center gap-2">
+                                    <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                                    {contact.phone}
+                                  </div>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>{contact.company || "—"}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{contact.contact_source}</Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={contact.status === "active" ? "default" : "secondary"}
+                              >
+                                {contact.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => fetchContactDetail(contact.id)}
+                                    className="gap-2"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                    View
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => fetchContactDetail(contact.id)}
+                                    className="gap-2"
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive gap-2"
+                                    onClick={() => setDeleteId(contact.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
                     </TableBody>
                   </Table>
 
@@ -384,10 +517,6 @@ export default function CustomersPage() {
               )}
             </div>
           </TabsContent>
-
-          <TabsContent value="personas" className="py-12 text-center text-muted-foreground">
-            Personas / segmentation view coming soon...
-          </TabsContent>
         </Tabs>
 
         {/* Delete Confirmation */}
@@ -411,10 +540,51 @@ export default function CustomersPage() {
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Detail / Edit Sheet */}
+        {/* CRM Sync Dialog */}
+        <Sheet open={showSyncDialog} onOpenChange={setShowSyncDialog}>
+          <SheetContent className="sm:max-w-md">
+            <SheetHeader>
+              <SheetTitle>Sync to CRM</SheetTitle>
+              <SheetDescription>
+                Sync {selectedIds.length} selected contact{selectedIds.length !== 1 ? "s" : ""}.
+              </SheetDescription>
+            </SheetHeader>
+
+            <div className="py-6 space-y-4">
+              <div
+                className={`p-4 border rounded-lg cursor-pointer transition ${
+                  syncCrm === "hubspot"
+                    ? "border-primary bg-primary/5 ring-1 ring-primary"
+                    : "hover:border-primary/50"
+                }`}
+                onClick={() => setSyncCrm("hubspot")}
+              >
+                <div className="font-medium flex items-center gap-2">
+                  HubSpot
+                </div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  Create or update contacts (upsert by email)
+                </div>
+              </div>
+
+              {/* Add more CRMs here later */}
+            </div>
+
+            <SheetFooter className="gap-3">
+              <Button variant="outline" onClick={() => setShowSyncDialog(false)}>
+                Cancel
+              </Button>
+              <Button disabled={!syncCrm} onClick={handleSyncToHubSpot}>
+                Sync Now
+              </Button>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+
+        {/* Detail / Edit Sheet (unchanged) */}
         <Sheet
           open={!!selectedContact}
-          onOpenChange={(open) => {
+          onOpenChange={open => {
             if (!open) {
               setSelectedContact(null)
               setIsEditing(false)
@@ -425,9 +595,7 @@ export default function CustomersPage() {
             {selectedContact && (
               <>
                 <SheetHeader className="mb-6">
-                  <SheetTitle>
-                    {isEditing ? "Edit Contact" : "Contact Details"}
-                  </SheetTitle>
+                  <SheetTitle>{isEditing ? "Edit Contact" : "Contact Details"}</SheetTitle>
                   <SheetDescription>
                     {isEditing ? "Update contact information" : "View and manage contact"}
                   </SheetDescription>
@@ -435,16 +603,13 @@ export default function CustomersPage() {
 
                 <div className="space-y-6">
                   {isEditing ? (
-                    // ── EDIT FORM ───────────────────────────────────────────────
                     <div className="space-y-5 p-5">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="text-sm font-medium">First Name</label>
                           <Input
                             value={formData.first_name || ""}
-                            onChange={(e) =>
-                              setFormData({ ...formData, first_name: e.target.value })
-                            }
+                            onChange={e => setFormData({ ...formData, first_name: e.target.value })}
                             className="mt-1"
                           />
                         </div>
@@ -452,9 +617,7 @@ export default function CustomersPage() {
                           <label className="text-sm font-medium">Last Name</label>
                           <Input
                             value={formData.last_name || ""}
-                            onChange={(e) =>
-                              setFormData({ ...formData, last_name: e.target.value })
-                            }
+                            onChange={e => setFormData({ ...formData, last_name: e.target.value })}
                             className="mt-1"
                           />
                         </div>
@@ -465,9 +628,7 @@ export default function CustomersPage() {
                         <Input
                           type="email"
                           value={formData.email || ""}
-                          onChange={(e) =>
-                            setFormData({ ...formData, email: e.target.value })
-                          }
+                          onChange={e => setFormData({ ...formData, email: e.target.value })}
                           className="mt-1"
                         />
                       </div>
@@ -476,9 +637,7 @@ export default function CustomersPage() {
                         <label className="text-sm font-medium">Phone</label>
                         <Input
                           value={formData.phone || ""}
-                          onChange={(e) =>
-                            setFormData({ ...formData, phone: e.target.value })
-                          }
+                          onChange={e => setFormData({ ...formData, phone: e.target.value })}
                           className="mt-1"
                         />
                       </div>
@@ -487,9 +646,7 @@ export default function CustomersPage() {
                         <label className="text-sm font-medium">Company</label>
                         <Input
                           value={formData.company || ""}
-                          onChange={(e) =>
-                            setFormData({ ...formData, company: e.target.value })
-                          }
+                          onChange={e => setFormData({ ...formData, company: e.target.value })}
                           className="mt-1"
                         />
                       </div>
@@ -498,7 +655,7 @@ export default function CustomersPage() {
                         <label className="text-sm font-medium">Status</label>
                         <Select
                           value={formData.status}
-                          onValueChange={(v) =>
+                          onValueChange={v =>
                             setFormData({ ...formData, status: v as "active" | "archived" })
                           }
                         >
@@ -513,7 +670,6 @@ export default function CustomersPage() {
                       </div>
                     </div>
                   ) : (
-                    // ── VIEW MODE ───────────────────────────────────────────────
                     <div className="space-y-5 p-5">
                       <div className="space-y-3">
                         <div className="flex items-center gap-3">
@@ -555,7 +711,7 @@ export default function CustomersPage() {
                   )}
                 </div>
 
-                <SheetFooter className="mt-8 flex justify-end gap-3 sm:justify-end">
+                <SheetFooter className="mt-8 flex justify-end gap-3">
                   {isEditing ? (
                     <>
                       <Button variant="outline" onClick={() => setIsEditing(false)}>
